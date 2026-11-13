@@ -1,0 +1,31 @@
+<resources>
+    <string name="melo_home_eyebrow">SOUND ON. WORLD OFF.</string>
+    <string name="melo_home_title">Your music.\nNothing else.</string>
+    <string name="melo_home_subtitle">A little less noise. A lot more music.</string>
+    <string name="melo_discover">Discover music</string>
+    <string name="melo_intro">Made for listening.</string>
+    <string name="melo_intro_sources">Spotify. YouTube Music. Your files.\nAll in one quiet place.</string>
+    <string name="melo_edition">MELO / MUSIC, SIMPLIFIED</string>
+    <string name="melo_updates_unavailable">Melo updates are not configured for this build.</string>
+    <string name="melo_previous">Previous track</string>
+    <string name="melo_next">Next track</string>
+    <string name="melo_pause">Pause</string>
+    <string name="melo_player_description">Melo player: %1$s</string>
+    <string name="melo_home_compact_title">Your music</string>
+    <string name="melo_cover_of">Cover of %1$s</string>
+    <string name="melo_connecting">Connecting to device…</string>
+    <string name="melo_preparing">Preparing playback…</string>
+    <string name="melo_loading_audio">Loading audio…</string>
+    <string name="melo_advanced">Advanced</string>
+    <string name="melo_advanced_description">Blur and corner rendering</string>
+    <string name="melo_audio_details">Audio details</string>
+    <string name="melo_loading_library">Loading your music…</string>
+    <string name="melo_library_error_title">Could not refresh your music</string>
+    <string name="melo_retry">Try again</string>
+    <string name="melo_empty_home_title">Find your next favourite</string>
+    <string name="melo_empty_home_body">Play a song or save a playlist. Your music will appear here.</string>
+    <string name="melo_empty_library_title">Your collection starts here</string>
+    <string name="melo_empty_library_body">Save music you love to find it here.</string>
+    <string name="melo_empty_playlists_body">Create a playlist for the songs you want to keep together.</string>
+    <string name="melo_create_playlist">Create playlist</string>
+</resources>

@@ -1,0 +1,23 @@
+.DS_Store
+*.apkm
+*.apk
+*.so
+*.dex
+# Android build outputs
+build/
+.gradle/
+.gradle-local/
+.tooling/
+.signing/
+.apkmirror-page.html
+.artifacts/
+local.properties
+*.keystore
+*.jks
+.idea/
+*.iml
+
+.kotlin/
+
+# Release output
+dist/
