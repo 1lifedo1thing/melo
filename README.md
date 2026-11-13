@@ -19,7 +19,7 @@
 
 Melo is a native Android music player built with Kotlin and Jetpack Compose. Its interface stays quiet and monochrome so your music can bring the colour: album art, artist imagery, and playlists remain vivid.
 
-The app ID is **in.melo**. Melo is independent of Spotify, YouTube, Google, and Nothing.
+The app ID is **in.melo**. Melo is independent of Spotify, YouTube, Google.
 
 ## Made for listening
 
@@ -92,4 +92,4 @@ Melo is a better-maintained fork of Spotifeur.
 
 The YouTube Music integration credits [Resona](https://github.com/code-saksham-hash/Resona). The interface uses Jetpack Compose, AndroidX Media3, Coil, and OkHttp. Dot-matrix typography uses [Doto](https://github.com/google/fonts/tree/main/ofl/doto), distributed under the [SIL Open Font License](design/Doto-OFL.txt).
 
-The application source is distributed under the [GNU GPL v3](LICENSE). The unmodified Spotify runtime is third-party software and remains subject to its own terms. Melo is not affiliated with or endorsed by Spotify, YouTube, Google, or Nothing.
+The application source is distributed under the [GNU GPL v3](LICENSE). The unmodified Spotify runtime is third-party software and remains subject to its own terms. Melo is not affiliated with or endorsed by Spotify, YouTube, Google.
