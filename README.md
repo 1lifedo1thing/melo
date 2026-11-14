@@ -10,6 +10,7 @@
 <p align="center">
   <a href="https://github.com/aarush-io/melo/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/aarush-io/melo?style=for-the-badge&label=LATEST&color=f1f0ec&labelColor=171717" /></a>
   <img alt="Android 8+" src="https://img.shields.io/badge/ANDROID-8.0%2B-f1f0ec?style=for-the-badge&labelColor=171717" />
+  <a href="https://github.com/aarush-io/melo/releases"><img alt="Total GitHub release downloads" src="https://img.shields.io/github/downloads/aarush-io/melo/total?style=for-the-badge&label=DOWNLOADS&color=f1f0ec&labelColor=171717" /></a>
   <a href="LICENSE"><img alt="GPL v3" src="https://img.shields.io/badge/LICENSE-GPL_3.0-f1f0ec?style=for-the-badge&labelColor=171717" /></a>
 </p>
 
@@ -20,6 +21,24 @@
 Melo is a native Android music player built with Kotlin and Jetpack Compose. Its interface stays quiet and monochrome so your music can bring the colour: album art, artist imagery, and playlists remain vivid.
 
 The app ID is **in.melo**. Melo is independent of Spotify, YouTube, Google.
+
+## Screenshots
+
+<p align="center">
+  <img src="docs/assets/img/readme/melo-home-library-board.png" alt="Melo Home screen and music library" width="100%" />
+</p>
+
+<details>
+  <summary>See playback and customization screens</summary>
+
+  <p align="center">
+    <img src="docs/assets/img/readme/melo-playback-showcase.png" alt="Melo player, queue, and music search" width="100%" />
+  </p>
+
+  <p align="center">
+    <img src="docs/assets/img/readme/melo-customization-showcase.png" alt="Melo appearance, home layout, and equalizer settings" width="100%" />
+  </p>
+</details>
 
 ## Made for listening
 
