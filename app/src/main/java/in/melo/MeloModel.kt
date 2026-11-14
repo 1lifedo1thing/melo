@@ -63,6 +63,7 @@ import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.util.Locale
 import java.util.UUID
+import `in`.melo.utils.parseSongCount
 
 /** What a search reads. [All], the default, mixes Spotify (with an account), YouTube Music and device files. */
 enum class SearchSource { All, Spotify, YouTubeMusic, Local }
@@ -750,6 +751,24 @@ class MeloModel(private val app: Application) : AndroidViewModel(app) {
                     else -> playlist
                 }
             })
+        }
+        // Rootlist refreshes carry the latest playlist title and other metadata. Keep the entity
+        // cache and any already-open detail page in step with those refreshed library records;
+        // otherwise the track list updates while a cached detail continues showing the old name.
+        val refreshedPlaylists = visible.playlists.associateBy(Music::id)
+        refreshedPlaylists.values.forEach(ui::register)
+        if (refreshedPlaylists.isNotEmpty()) {
+            mutableDetails.update { details ->
+                details.mapValues { (id, state) ->
+                    val latest = refreshedPlaylists[id]
+                    val detail = state.content
+                    if (latest == null || detail == null) return@mapValues state
+                    val latestTrackCount = parseSongCount(latest.subtitle) ?: detail.total
+                    if (detail.item != latest || detail.total != latestTrackCount) {
+                        state.copy(content = detail.copy(item = latest, total = latestTrackCount))
+                    } else state
+                }
+            }
         }
         val warning = visible.warning.takeIf { online.value && visible.playlists.isEmpty() }
         mutableLibrary.value = LibraryUi(visible, loading, warning)

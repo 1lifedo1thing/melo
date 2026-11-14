@@ -53,6 +53,7 @@ import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material.icons.rounded.MusicNote
 import androidx.compose.material.icons.rounded.Palette
 import androidx.compose.material.icons.rounded.Storage
+import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.TouchApp
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -85,8 +86,10 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import coil.imageLoader
+import `in`.melo.presentation.components.PrivacyPolicyLink
 import `in`.melo.R
 import `in`.melo.MeloModel
+import `in`.melo.data.UsageAnalytics
 import `in`.melo.data.preferences.AlbumArtPaletteStyle
 import `in`.melo.data.preferences.AppSettings
 import `in`.melo.data.preferences.CarouselStyle
@@ -185,6 +188,8 @@ fun SettingsScreen(model: MeloModel, navController: NavHostController) {
             Icons.Rounded.Download) { `in`.melo.update.AppUpdater.get(context).check(manual = true) }
         CategoryRow(stringResource(R.string.diagnostics_title), stringResource(R.string.diagnostics_subtitle),
             Icons.Rounded.BugReport) { open("diagnostics") }
+        CategoryRow(stringResource(R.string.settings_privacy_title), stringResource(R.string.settings_privacy_subtitle),
+            Icons.Rounded.Lock) { open("privacy") }
     }
 }
 
@@ -202,6 +207,26 @@ fun SettingsCategoryScreen(model: MeloModel, navController: NavHostController, c
         "home" -> HomeSettings(model, navController)
         "pages" -> PageActionsSettings(model, navController)
         "diagnostics" -> DiagnosticsSettings(model, navController)
+        "privacy" -> PrivacySettings(model, navController)
+    }
+}
+
+@Composable
+private fun PrivacySettings(model: MeloModel, navController: NavHostController) {
+    val settings by model.ui.settings.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    SettingsScaffold(stringResource(R.string.settings_privacy_title), navController) {
+        SwitchSettingItem(
+            title = stringResource(R.string.settings_analytics_title),
+            subtitle = stringResource(R.string.settings_analytics_subtitle),
+            checked = settings.analyticsEnabled,
+            onCheckedChange = { enabled ->
+                model.ui.updateSettings { it.copy(analyticsEnabled = enabled) }
+                UsageAnalytics.setEnabled(context, enabled)
+            },
+            leadingIcon = { Icon(Icons.Rounded.Lock, null, tint = MaterialTheme.colorScheme.secondary) },
+        )
+        PrivacyPolicyLink()
     }
 }
 

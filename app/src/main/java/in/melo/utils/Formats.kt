@@ -30,6 +30,10 @@ fun formatRadioTitle(name: String): String =
 
 private val storedTrackCount = Regex("""^(\d+) (titres?|tracks?)$""")
 
+/** Parses a track count stored as the localized display subtitle. */
+fun parseSongCount(subtitle: String): Int? =
+    storedTrackCount.matchEntire(subtitle)?.groupValues?.get(1)?.toIntOrNull()
+
 /** Track counts are stored as display text; show them in the current language. */
 fun localizeTrackCount(subtitle: String): String =
-    storedTrackCount.matchEntire(subtitle)?.let { formatSongCount(it.groupValues[1].toInt()) } ?: subtitle
+    parseSongCount(subtitle)?.let(::formatSongCount) ?: subtitle

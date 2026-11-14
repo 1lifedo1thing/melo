@@ -5,11 +5,14 @@ import coil.ImageLoader
 import coil.ImageLoaderFactory
 import coil.disk.DiskCache
 import `in`.melo.data.NetworkMonitor
+import `in`.melo.data.UsageAnalytics
+import `in`.melo.data.preferences.SettingsStore
 import java.io.File
 
 class MeloApplication : Application(), ImageLoaderFactory {
     override fun onCreate() {
         super.onCreate()
+        UsageAnalytics.setEnabled(this, SettingsStore.get(this).settings.value.analyticsEnabled)
         `in`.melo.data.diagnostics.DiagnosticLog.init(this)
         `in`.melo.data.diagnostics.DiagnosticLog.catchCrashes()
         `in`.melo.data.diagnostics.DiagnosticLog.recordPastExits(this)

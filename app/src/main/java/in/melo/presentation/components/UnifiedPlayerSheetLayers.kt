@@ -121,6 +121,7 @@ internal fun BoxScope.UnifiedPlayerMiniAndFullLayers(
                     MiniPlayerContentInternal(
                         song = currentSongNonNull,
                         isPlaying = infrequentPlayerState.isPlaying,
+                        isBuffering = infrequentPlayerState.isBuffering,
                         isCastConnecting = isCastConnecting,
                         isPreparingPlayback = isPreparingPlayback,
                         onPlayPause = { playerViewModel.playPause() },
@@ -188,6 +189,9 @@ internal fun BoxScope.UnifiedPlayerMiniAndFullLayers(
                     val isPlayingProvider = remember {
                         { latestInfrequentPlayerState.value.isPlaying }
                     }
+                    val isBufferingProvider = remember {
+                        { latestInfrequentPlayerState.value.isBuffering }
+                    }
                     val playWhenReadyProvider = remember {
                         { latestInfrequentPlayerState.value.playWhenReady }
                     }
@@ -233,6 +237,7 @@ internal fun BoxScope.UnifiedPlayerMiniAndFullLayers(
                         playerViewModel = playerViewModel,
                         currentPositionProvider = currentPositionProvider,
                         isPlayingProvider = isPlayingProvider,
+                        isBufferingProvider = isBufferingProvider,
                         playWhenReadyProvider = playWhenReadyProvider,
                         repeatModeProvider = repeatModeProvider,
                         isShuffleEnabledProvider = isShuffleEnabledProvider,
@@ -300,6 +305,7 @@ internal fun UnifiedPlayerPrewarmLayer(
                 val latestInfrequentPlayerState = rememberUpdatedState(infrequentPlayerState)
                 val latestIsFavorite = rememberUpdatedState(isFavorite)
                 val isPlayingProvider = remember { { latestInfrequentPlayerState.value.isPlaying } }
+                val isBufferingProvider = remember { { latestInfrequentPlayerState.value.isBuffering } }
                 val playWhenReadyProvider = remember { { latestInfrequentPlayerState.value.playWhenReady } }
                 val repeatModeProvider = remember { { latestInfrequentPlayerState.value.repeatMode } }
                 val isShuffleEnabledProvider = remember { { latestInfrequentPlayerState.value.isShuffleEnabled } }
@@ -329,6 +335,7 @@ internal fun UnifiedPlayerPrewarmLayer(
                     playerViewModel = playerViewModel,
                     currentPositionProvider = currentPositionProvider,
                     isPlayingProvider = isPlayingProvider,
+                    isBufferingProvider = isBufferingProvider,
                     playWhenReadyProvider = playWhenReadyProvider,
                     repeatModeProvider = repeatModeProvider,
                     isShuffleEnabledProvider = isShuffleEnabledProvider,

@@ -35,9 +35,11 @@ data class AppSettings(
     val persistentShuffle: Boolean = false,
     val showQueueHistory: Boolean = true,
     val audioCacheLimitMb: Int = 4096,
-    val preloadTracks: Int = 10,
+    val preloadTracks: Int = 2,
     val preloadEntireQueue: Boolean = false,
-    val preloadOnMobile: Boolean = true,
+    val preloadOnMobile: Boolean = false,
+    val cachePlayedTracks: Boolean = true,
+    val preloadUpcomingTracks: Boolean = true,
     val offlineMode: Boolean = false,
     val tapBackgroundClosesPlayer: Boolean = false,
     val hapticsEnabled: Boolean = true,
@@ -65,6 +67,8 @@ data class AppSettings(
     val miniPlayerSwipe: String = MINI_SWIPE_TRACKS,
     /** The Spotify / YouTube / Device choice above search results. Hidden: every search reads all sources. */
     val showSearchSources: Boolean = false,
+    /** Firebase usage analytics is enabled by default and can be disabled in Privacy settings. */
+    val analyticsEnabled: Boolean = true,
 ) {
     fun actions(page: DetailPage): List<ActionSlot> =
         DetailActions.decode(page, if (page == DetailPage.ALBUM) albumActions else playlistActions)
@@ -81,7 +85,9 @@ data class AppSettings(
         .put("pauseOnVolumeZero", pauseOnVolumeZero).put("resumeOnHeadphones", resumeOnHeadphones)
         .put("persistentShuffle", persistentShuffle).put("showQueueHistory", showQueueHistory)
         .put("audioCacheLimitMb", audioCacheLimitMb).put("preloadTracks", preloadTracks)
-        .put("preloadEntireQueue", preloadEntireQueue).put("preloadOnMobile", preloadOnMobile).put("offlineMode", offlineMode)
+        .put("preloadEntireQueue", preloadEntireQueue).put("preloadOnMobile", preloadOnMobile)
+        .put("cachePlayedTracks", cachePlayedTracks).put("preloadUpcomingTracks", preloadUpcomingTracks)
+        .put("offlineMode", offlineMode)
         .put("tapBackgroundClosesPlayer", tapBackgroundClosesPlayer).put("hapticsEnabled", hapticsEnabled)
         .put("showSourceBadges", showSourceBadges).put("compactLists", compactLists).put("homeShelves", homeShelves)
         .put("albumActions", albumActions).put("playlistActions", playlistActions)
@@ -89,7 +95,7 @@ data class AppSettings(
         .put("streamingQualityWifi", streamingQualityWifi).put("streamingQualityMobile", streamingQualityMobile)
         .put("downloadQuality", downloadQuality).put("audioNormalization", audioNormalization)
         .put("showPlayerMenuButton", showPlayerMenuButton).put("miniPlayerSwipe", miniPlayerSwipe)
-        .put("showSearchSources", showSearchSources)
+        .put("showSearchSources", showSearchSources).put("analyticsEnabled", analyticsEnabled)
 
     companion object {
         const val THEME_SYSTEM = "system"
@@ -106,6 +112,8 @@ data class AppSettings(
         /** Unknown or missing fields keep their default, so old backups stay valid. */
         fun fromJson(json: JSONObject): AppSettings {
             val d = AppSettings()
+            val savedPreloadTracks = if (json.optBoolean("preloadEntireQueue", false)) 10
+                else json.optInt("preloadTracks", d.preloadTracks)
             return AppSettings(
                 themeMode = json.optString("themeMode", d.themeMode),
                 language = json.optString("language", d.language),
@@ -132,9 +140,11 @@ data class AppSettings(
                 persistentShuffle = json.optBoolean("persistentShuffle", d.persistentShuffle),
                 showQueueHistory = json.optBoolean("showQueueHistory", d.showQueueHistory),
                 audioCacheLimitMb = json.optInt("audioCacheLimitMb", d.audioCacheLimitMb).coerceIn(512, 32768),
-                preloadTracks = (if (json.optBoolean("preloadEntireQueue", false)) 10 else json.optInt("preloadTracks", d.preloadTracks)).coerceIn(0, 20),
+                preloadTracks = savedPreloadTracks.coerceIn(1, 20),
                 preloadEntireQueue = false,
                 preloadOnMobile = json.optBoolean("preloadOnMobile", d.preloadOnMobile),
+                cachePlayedTracks = json.optBoolean("cachePlayedTracks", d.cachePlayedTracks),
+                preloadUpcomingTracks = json.optBoolean("preloadUpcomingTracks", savedPreloadTracks != 0),
                 offlineMode = json.optBoolean("offlineMode", d.offlineMode),
                 tapBackgroundClosesPlayer = json.optBoolean("tapBackgroundClosesPlayer", d.tapBackgroundClosesPlayer),
                 hapticsEnabled = json.optBoolean("hapticsEnabled", d.hapticsEnabled),
@@ -153,6 +163,7 @@ data class AppSettings(
                 miniPlayerSwipe = json.optString("miniPlayerSwipe", d.miniPlayerSwipe)
                     .takeIf { it in setOf(MINI_SWIPE_TRACKS, MINI_SWIPE_DISMISS, MINI_SWIPE_OFF) } ?: d.miniPlayerSwipe,
                 showSearchSources = json.optBoolean("showSearchSources", d.showSearchSources),
+                analyticsEnabled = json.optBoolean("analyticsEnabled", d.analyticsEnabled),
             )
         }
     }

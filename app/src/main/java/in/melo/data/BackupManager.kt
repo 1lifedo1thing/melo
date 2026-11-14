@@ -31,9 +31,10 @@ class BackupManager(
         app.equalizerDataStore.data.first().asMap().forEach { (key, value) ->
             equalizer.put(key.name, JSONObject().put("type", value::class.java.simpleName).put("value", value.toString()))
         }
+        val exportSettings = settings.settings.value.toJson().apply { remove("analyticsEnabled") }
         return JSONObject()
             .put("format", FORMAT).put("version", VERSION)
-            .put("settings", settings.settings.value.toJson())
+            .put("settings", exportSettings)
             .put("pins", JSONArray(encodePins(pins.pins.value)))
             .put("localPlaylists", JSONArray(encodeLocalPlaylists(playlists.playlists.value)))
             .put("searchHistory", JSONArray(encodePins(searchHistory)))
@@ -45,7 +46,9 @@ class BackupManager(
     suspend fun restore(content: String): List<Music> {
         val root = JSONObject(content)
         require(root.optString("format") == FORMAT) { "Not a Melo backup" }
+        // A backup must not silently change this installation's privacy choice.
         val restoredSettings = AppSettings.fromJson(root.getJSONObject("settings"))
+            .copy(analyticsEnabled = settings.settings.value.analyticsEnabled)
         val restoredPins = decodePins(root.getJSONArray("pins").toString())
         val restoredPlaylists = decodeLocalPlaylists(root.getJSONArray("localPlaylists").toString())
         // Older backups hold typed queries (strings): only result entries are kept.

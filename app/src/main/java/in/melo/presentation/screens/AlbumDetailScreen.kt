@@ -192,6 +192,10 @@ internal fun CollapsingAlbumTopBar(
         BiasAlignment(horizontalBias = -1f, verticalBias = titleVerticalBias)
     val titleContainerHeight = lerp(88.dp, 56.dp, collapseFraction)
     val yOffsetCorrection = lerp((titleContainerHeight / 2) - 64.dp, 0.dp, collapseFraction)
+    val metaLine = listOfNotNull(
+        album.artist.takeIf(String::isNotBlank),
+        formatSongCount(songsCount),
+    ).joinToString(" · ")
 
     Box(
         modifier = Modifier
@@ -278,11 +282,7 @@ internal fun CollapsingAlbumTopBar(
                             overflow = TextOverflow.Ellipsis
                         )
                         Text(
-                            text = stringResource(
-                                R.string.album_detail_meta_line,
-                                album.artist,
-                                formatSongCount(songsCount)
-                            ),
+                            text = metaLine,
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             maxLines = 1,

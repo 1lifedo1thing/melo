@@ -16,11 +16,14 @@ import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import `in`.melo.R
@@ -31,6 +34,7 @@ import `in`.melo.presentation.components.LocalMaterialTheme
 @Composable
 fun AnimatedPlaybackControls(
     isPlayingProvider: () -> Boolean,
+    isBufferingProvider: () -> Boolean = { false },
     onPrevious: () -> Unit,
     onPlayPause: () -> Unit,
     onNext: () -> Unit,
@@ -41,7 +45,9 @@ fun AnimatedPlaybackControls(
     playPauseIconSize: Dp = 36.dp,
     iconSize: Dp = 32.dp,
 ) {
-    val playing = isPlayingProvider()
+    val buffering = isBufferingProvider()
+    val playing = isPlayingProvider() && !buffering
+    val bufferingDescription = stringResource(R.string.melo_preparing)
     val haptics = androidx.compose.ui.platform.LocalHapticFeedback.current
     fun feedback(action: () -> Unit) {
         haptics.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
@@ -57,9 +63,16 @@ fun AnimatedPlaybackControls(
         FilledIconButton(onClick = { feedback(onPlayPause) }, modifier = Modifier.size(height.coerceIn(64.dp, 80.dp)),
             shape = CircleShape, colors = IconButtonDefaults.filledIconButtonColors(
                 containerColor = colorPlayPause, contentColor = tintPlayPauseIcon)) {
-            Icon(if (playing) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
-                stringResource(if (playing) R.string.melo_pause else R.string.common_play),
-                Modifier.size(playPauseIconSize))
+            if (buffering) {
+                LoadingIndicator(
+                    modifier = Modifier.size(28.dp).semantics { contentDescription = bufferingDescription },
+                    color = tintPlayPauseIcon,
+                )
+            } else {
+                Icon(if (playing) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                    stringResource(if (playing) R.string.melo_pause else R.string.common_play),
+                    Modifier.size(playPauseIconSize))
+            }
         }
         IconButton(onClick = { feedback(onNext) }, modifier = Modifier.size(64.dp)) {
             Icon(Icons.Rounded.SkipNext, stringResource(R.string.melo_next),

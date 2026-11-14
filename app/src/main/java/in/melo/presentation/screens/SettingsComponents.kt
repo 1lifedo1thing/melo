@@ -376,7 +376,8 @@ fun SliderSettingsItem(
         steps: Int,
         onValueChange: (Float) -> Unit,
         onValueChangeFinished: (() -> Unit)? = null,
-        valueText: (Float) -> String
+        valueText: (Float) -> String,
+        enabled: Boolean = true,
 ) {
     Surface(
             color = MaterialTheme.colorScheme.surfaceContainer,
@@ -391,13 +392,13 @@ fun SliderSettingsItem(
                         text = label,
                         modifier = Modifier.weight(1f),
                         style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                         text = valueText(value),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.primary,
+                        color = if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
                         fontWeight = FontWeight.Bold,
                         maxLines = 1,
                         softWrap = false
@@ -408,7 +409,8 @@ fun SliderSettingsItem(
                 onValueChange = onValueChange,
                 onValueChangeFinished = onValueChangeFinished,
                 valueRange = valueRange,
-                steps = steps
+                steps = steps,
+                enabled = enabled,
             )
         }
     }

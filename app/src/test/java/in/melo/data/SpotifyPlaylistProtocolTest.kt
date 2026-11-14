@@ -26,7 +26,7 @@ class SpotifyPlaylistProtocolTest {
         val migrated = AppSettings.fromJson(JSONObject("{\"preloadTracks\":2}"))
         assertFalse(migrated.preloadEntireQueue)
         assertEquals(10, AppSettings.fromJson(JSONObject("{\"preloadEntireQueue\":true,\"preloadTracks\":100}")).preloadTracks)
-        assertTrue(migrated.preloadOnMobile)
+        assertFalse(migrated.preloadOnMobile)
         assertFalse(migrated.offlineMode)
         val chosen = migrated.copy(preloadEntireQueue = false, preloadTracks = 20, preloadOnMobile = false, offlineMode = true)
         assertEquals(chosen, AppSettings.fromJson(chosen.toJson()))

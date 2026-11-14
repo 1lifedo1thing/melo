@@ -236,6 +236,8 @@ fun LyricsSheet(
     lyricsTextStyle: TextStyle,
     colorScheme: ColorScheme,
     onBackClick: () -> Unit,
+    initialShowSyncedLyrics: Boolean?,
+    onLyricsModeChanged: (Boolean) -> Unit,
     onSeekTo: (Long) -> Unit,
     onPlayPause: () -> Unit,
     onNext: () -> Unit,
@@ -302,6 +304,8 @@ fun LyricsSheet(
     val isLoadingLyrics by remember(stablePlayerState) { derivedStateOf { stablePlayerState.isLoadingLyrics } }
     val lyrics by remember(stablePlayerState) { derivedStateOf { stablePlayerState.lyrics } }
     val isPlaying by remember(stablePlayerState) { derivedStateOf { stablePlayerState.isPlaying } }
+    val isBuffering by remember(stablePlayerState) { derivedStateOf { stablePlayerState.isBuffering } }
+    val showPause by remember(isPlaying, isBuffering) { derivedStateOf { isPlaying && !isBuffering } }
     val currentSong by remember(stablePlayerState) { derivedStateOf { stablePlayerState.currentSong } }
 
     val hasTranslatedLyrics = remember(lyrics) {
@@ -436,14 +440,16 @@ fun LyricsSheet(
     var showSyncControls by remember { mutableStateOf(false) }
     var previewSeekPositionMs by remember(currentSong?.id) { mutableStateOf<Long?>(null) }
 
-    var showSyncedLyrics by remember(lyrics) {
-        mutableStateOf(
-            when {
-                !lyrics?.synced.isNullOrEmpty() -> true
-                !lyrics?.plain.isNullOrEmpty() -> false
-                else -> null
-            }
-        )
+    var showSyncedLyrics by remember(lyrics, initialShowSyncedLyrics) {
+        val hasSynced = !lyrics?.synced.isNullOrEmpty()
+        val hasPlain = !lyrics?.plain.isNullOrEmpty()
+        mutableStateOf(when {
+            initialShowSyncedLyrics == true && hasSynced -> true
+            initialShowSyncedLyrics == false && hasPlain -> false
+            hasSynced -> true
+            hasPlain -> false
+            else -> null
+        })
     }
 
     val hasSyncedLyrics = remember(lyrics) {
@@ -713,15 +719,17 @@ fun LyricsSheet(
                         .togetherWith(fadeOut(animationSpec = tween(300)))
                     },
                     modifier = Modifier
-                        .align(Alignment.TopStart)
+                        .align(Alignment.TopCenter)
                         .zIndex(2f)
-                        .wrapContentWidth(),
+                        .fillMaxWidth(),
                     label = "headerAnimation"
                 ) { song ->
                     LyricsTrackInfo(
                         song = song,
                         modifier = Modifier
-                            .align(Alignment.TopStart)
+                            .align(Alignment.TopCenter)
+                            .widthIn(max = 340.dp)
+                            .wrapContentWidth()
                             .padding(
                                 top = 4.dp, bottom = 24.dp, start = 18.dp, end = 18.dp
                             )
@@ -729,8 +737,13 @@ fun LyricsSheet(
                                 color = backgroundColor,
                                 shape = CircleShape
                             )
-                            .wrapContentWidth()
-                            .animateContentSize(), // Animate width changes
+                            .animateContentSize() // Animate width changes
+                            .clip(CircleShape)
+                            .clickable(
+                                onClickLabel = stringResource(R.string.lyrics_return_to_player),
+                                role = androidx.compose.ui.semantics.Role.Button,
+                                onClick = onBackClick,
+                            ),
                         backgroundColor = backgroundColor, // Distinct solid background
                         contentColor = onBackgroundColor,
                         isPlaying = isPlaying
@@ -929,7 +942,7 @@ fun LyricsSheet(
                 ) {
                     // Play/Pause Button (Smaller)
                     val playPauseCornerRadius by animateDpAsState(
-                        targetValue = if (isPlaying) 18.dp else 50.dp,
+                        targetValue = if (showPause) 18.dp else 50.dp,
                         animationSpec = spring(stiffness = Spring.StiffnessLow),
                         label = "playPauseShape"
                     )
@@ -945,15 +958,21 @@ fun LyricsSheet(
                             },
                         contentAlignment = Alignment.Center
                     ) {
-                        AnimatedContent(
-                            targetState = isPlaying,
+                        if (isBuffering) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(32.dp),
+                                color = onPlayPauseColor,
+                                strokeWidth = 3.dp,
+                            )
+                        } else AnimatedContent(
+                            targetState = showPause,
                             label = "playPauseIconAnimation"
                         ) { playing ->
                             if (playing) {
                                 Icon(
                                     modifier = Modifier.size(32.dp),
                                     imageVector = Icons.Rounded.Pause,
-                                    contentDescription = "Pause",
+                                    contentDescription = stringResource(R.string.melo_pause),
                                     tint = onPlayPauseColor
                                 )
                             } else {
@@ -990,7 +1009,10 @@ fun LyricsSheet(
                     modifier = Modifier.padding(horizontal = 0.dp),
                     showSyncedLyrics = showSyncedLyrics,
                     hasSyncedLyrics = hasSyncedLyrics,
-                    onShowSyncedLyricsChange = { showSyncedLyrics = it },
+                    onShowSyncedLyricsChange = {
+                        showSyncedLyrics = it
+                        onLyricsModeChanged(it)
+                    },
                     onNavigateBack = {
                         onBackClick()
                     },

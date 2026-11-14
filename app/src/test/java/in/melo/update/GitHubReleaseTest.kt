@@ -57,9 +57,12 @@ class GitHubReleaseTest {
 
     @Test fun unconfiguredBuildCannotReadUpstreamReleases() {
         assertNull(GitHubRelease.parse(release(asset("Melo-v1.3.0.apk")).toString(), ""))
+    }
+
+    @Test fun repositoryUrlComparisonIsCaseInsensitive() {
         val upstream = release(asset("Melo-v1.3.0.apk").put("browser_download_url",
             "https://github.com/aarush-io/melo/releases/download/v1.3.0/Melo-v1.3.0.apk"))
-        assertNull(parse(upstream.toString())!!.apk)
+        assertEquals("Melo-v1.3.0.apk", parse(upstream.toString())!!.apk?.name)
     }
 
     private fun parse(json: String) = GitHubRelease.parse(json, "aarush-io/Melo")

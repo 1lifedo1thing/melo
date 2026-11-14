@@ -11,6 +11,11 @@ plugins {
     id("org.jetbrains.kotlin.plugin.serialization")
 }
 
+// Firebase setup is optional for local builds until the app owner adds app/google-services.json.
+if (file("google-services.json").isFile) {
+    apply(plugin = "com.google.gms.google-services")
+}
+
 val updateRepository = providers.gradleProperty("meloUpdateRepository").getOrElse("aarush-io/melo")
 require(updateRepository.isEmpty() || updateRepository.matches(Regex("[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+"))) {
     "meloUpdateRepository must be owner/repository"
@@ -31,8 +36,8 @@ android {
         applicationId = providers.gradleProperty("meloTestApplicationId").getOrElse("in.melo")
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "1.0.1"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("boolean", "NATIVE_RUNTIME", nativeRuntime.toString())
         // A fork must never offer the upstream APK as an update.
@@ -84,6 +89,8 @@ if (nativeRuntime) {
 }
 
 dependencies {
+    implementation(platform("com.google.firebase:firebase-bom:34.19.0"))
+    implementation("com.google.firebase:firebase-analytics")
     implementation("androidx.activity:activity-compose:1.11.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.4")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.9.4")

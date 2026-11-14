@@ -20,6 +20,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import `in`.melo.presentation.MeloMain
 import `in`.melo.data.model.Song
+import `in`.melo.data.LocalLibrary
 import `in`.melo.data.preferences.AppSettings
 import `in`.melo.presentation.components.subcomps.LocalTrackQuality
 import `in`.melo.ui.theme.LocalShowScrollbar
@@ -50,8 +51,8 @@ class MainActivity : ComponentActivity() {
                 val preferences = getSharedPreferences("first_launch", MODE_PRIVATE)
                 if (!preferences.getBoolean("media_requested", false)) {
                     preferences.edit().putBoolean("media_requested", true).apply()
-                    if (ContextCompat.checkSelfPermission(this@MainActivity, `in`.melo.data.LocalLibrary.PERMISSION) != PackageManager.PERMISSION_GRANTED) {
-                        media.launch(`in`.melo.data.LocalLibrary.PERMISSION)
+                    if (ContextCompat.checkSelfPermission(this@MainActivity, LocalLibrary.PERMISSION) != PackageManager.PERMISSION_GRANTED) {
+                        media.launch(LocalLibrary.PERMISSION)
                     }
                 }
             }

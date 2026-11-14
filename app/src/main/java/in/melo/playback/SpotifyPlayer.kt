@@ -305,7 +305,10 @@ private fun currentAudioFormat(player: Player): String {
 }
 internal fun togglePlayback(player: Player) {
     if (player.playerError != null) { player.prepare(); player.play() }
-    else if (player.playWhenReady) player.pause() else {
+    // A buffering player may already have playWhenReady=true without producing audio yet.
+    // Treat the control as Play until playback is actually advancing, so tapping it cannot
+    // cancel the pending start.
+    else if (player.isPlaying && player.playbackState != Player.STATE_BUFFERING) player.pause() else {
         if (player.playbackState == Player.STATE_IDLE) player.prepare()
         if (player.playbackState == Player.STATE_ENDED) player.seekTo(0)
         player.play()

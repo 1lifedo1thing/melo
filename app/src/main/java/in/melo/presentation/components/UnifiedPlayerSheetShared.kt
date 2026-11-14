@@ -28,6 +28,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
@@ -40,11 +41,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.size.Size
+import `in`.melo.R
 import `in`.melo.data.model.Song
 import `in`.melo.ui.theme.GoogleSansRounded
 
@@ -64,6 +67,7 @@ fun getNavigationBarHeight(): Dp {
 internal fun MiniPlayerContentInternal(
     song: Song,
     isPlaying: Boolean,
+    isBuffering: Boolean = false,
     isCastConnecting: Boolean,
     isPreparingPlayback: Boolean,
     onPlayPause: () -> Unit,
@@ -74,6 +78,7 @@ internal fun MiniPlayerContentInternal(
 ) {
     val hapticFeedback = LocalHapticFeedback.current
     val controlsEnabled = !isCastConnecting && !isPreparingPlayback
+    val showBuffering = isBuffering || isPreparingPlayback
 
     val previousInteraction = remember { MutableInteractionSource() }
     val playPauseInteraction = remember { MutableInteractionSource() }
@@ -107,8 +112,6 @@ internal fun MiniPlayerContentInternal(
                     strokeWidth = 2.dp,
                     color = LocalMaterialTheme.current.onPrimaryContainer
                 )
-            } else if (isPreparingPlayback) {
-                CircularWavyProgressIndicator(modifier = Modifier.size(24.dp))
             }
         }
         Spacer(modifier = Modifier.width(12.dp))
@@ -189,12 +192,19 @@ internal fun MiniPlayerContentInternal(
                 },
             contentAlignment = Alignment.Center
         ) {
-            Icon(
-                imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
-                contentDescription = if (isPlaying) "Pausar" else "Reproducir",
-                tint = LocalMaterialTheme.current.onPrimary,
-                modifier = Modifier.size(22.dp)
-            )
+            if (showBuffering) {
+                LoadingIndicator(
+                    modifier = Modifier.size(22.dp),
+                    color = LocalMaterialTheme.current.onPrimary,
+                )
+            } else {
+                Icon(
+                    imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                    contentDescription = stringResource(if (isPlaying) R.string.melo_pause else R.string.common_play),
+                    tint = LocalMaterialTheme.current.onPrimary,
+                    modifier = Modifier.size(22.dp)
+                )
+            }
         }
 
         Spacer(modifier = Modifier.width(8.dp))

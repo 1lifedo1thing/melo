@@ -5,6 +5,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.database.DatabaseProvider
 import androidx.media3.database.StandaloneDatabaseProvider
 import androidx.media3.datasource.DataSpec
+import androidx.media3.datasource.DataSource
 import androidx.media3.datasource.cache.Cache
 import androidx.media3.datasource.cache.CacheEvictor
 import androidx.media3.datasource.cache.CacheKeyFactory
@@ -105,6 +106,19 @@ object AudioCache {
 
     private const val AUDIO_KEY = "audio:"
     private const val BYTES_PER_MB = 1024L * 1024
+}
+
+/** Chooses write-through or read-only recent-cache playback for each new source. */
+@UnstableApi
+internal class RecentAudioDataSourceFactory(
+    context: Context,
+    private val writable: DataSource.Factory,
+    private val readOnly: DataSource.Factory,
+) : DataSource.Factory {
+    private val settings = SettingsStore.get(context.applicationContext)
+
+    override fun createDataSource(): DataSource =
+        if (settings.settings.value.cachePlayedTracks) writable.createDataSource() else readOnly.createDataSource()
 }
 
 /**

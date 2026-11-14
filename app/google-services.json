@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "225688532383",
+    "project_id": "melo-music-player",
+    "storage_bucket": "melo-music-player.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:225688532383:android:ae57c7beaa3ed3558c39aa",
+        "android_client_info": {
+          "package_name": "in.melo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBi7DLXCFqG3UFzftvejXiHrl5v91pWUU8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

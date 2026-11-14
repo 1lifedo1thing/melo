@@ -77,6 +77,7 @@ import kotlinx.coroutines.CancellationException
 import `in`.melo.data.Music
 import `in`.melo.data.SpotifyAccount
 import `in`.melo.presentation.components.SpotifyPlaylistEditor
+import `in`.melo.utils.parseSongCount
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -123,6 +124,8 @@ fun PlaylistDetailScreen(model: MeloModel, navController: NavHostController, pla
     val playlistKind = `in`.melo.data.playlistKindOf(current)
     val library by model.library.collectAsStateWithLifecycle()
     val inSpotifyLibrary = discovery.spotifyEnabled && library.content?.playlists?.any { it.id == playlistId } == true
+    val libraryPlaylist = library.content?.playlists?.firstOrNull { it.id == playlistId }
+    val displayedTrackCount = libraryPlaylist?.subtitle?.let(::parseSongCount) ?: content?.total ?: ordered.size
     val scope = rememberCoroutineScope()
     val online by model.online.collectAsStateWithLifecycle()
     var isOwned by remember(playlistId) { mutableStateOf(false) }
@@ -208,15 +211,15 @@ fun PlaylistDetailScreen(model: MeloModel, navController: NavHostController, pla
             .collect { last -> if (content?.nextPage != null && last >= songs.size - 12) model.loadDetail(item, more = true) }
     }
 
-    // Multi-service and YouTube Music pages carry the track count as their subtitle; the header adds it already.
+    // Keep source labels for device and YouTube playlists; Spotify's subtitle may expose its owner ID.
     val sourceName = when {
         isLocalList -> stringResource(R.string.badge_local)
         isYouTubeList -> stringResource(R.string.search_source_youtube)
         else -> null
     }
     CollectionDetailLayout(
-        current.copy(subtitle = current.ownerUsername ?: sourceName ?: current.subtitle),
-        content?.total ?: ordered.size, ui, navController, listState, hiddenLeadingItems = PLAYLIST_FILTER_ITEMS,
+        current.copy(subtitle = sourceName.orEmpty()),
+        displayedTrackCount, ui, navController, listState, hiddenLeadingItems = PLAYLIST_FILTER_ITEMS,
     ) {
         item(key = "playlist_filter") { PlaylistFilterField(filter, enabled = !reordering) { filter = it } }
         item(key = "playlist_actions") {

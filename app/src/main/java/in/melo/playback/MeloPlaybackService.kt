@@ -73,8 +73,11 @@ class MeloPlaybackService : MediaSessionService() {
         }
         // Playlists have no length and stay out of both caches: the data source keeps those itself.
         val cacheFlags = CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR or CacheDataSource.FLAG_IGNORE_CACHE_FOR_UNSET_LENGTH_REQUESTS
-        val recentAudio = CacheDataSource.Factory().setCache(AudioCache.cache(this)).setCacheKeyFactory(AudioCache.keys)
+        val recentAudioWriter = CacheDataSource.Factory().setCache(AudioCache.cache(this)).setCacheKeyFactory(AudioCache.keys)
             .setUpstreamDataSourceFactory(http).setFlags(cacheFlags)
+        val recentAudioReader = CacheDataSource.Factory().setCache(AudioCache.cache(this)).setCacheKeyFactory(AudioCache.keys)
+            .setUpstreamDataSourceFactory(http).setCacheWriteDataSinkFactory(null).setFlags(cacheFlags)
+        val recentAudio = RecentAudioDataSourceFactory(this, recentAudioWriter, recentAudioReader)
         // YouTube Music requests have no known length: they use their own chain, keyed by track.
         val youtube = youTubeCacheChain(this)
         val player = ExoPlayer.Builder(this, renderers)
@@ -90,9 +93,11 @@ class MeloPlaybackService : MediaSessionService() {
                 ProgressiveMediaSource.Factory(youtube.kept).setLoadErrorHandlingPolicy(ResilientLoadPolicy())))
             .setAudioAttributes(AudioAttributes.Builder().setUsage(C.USAGE_MEDIA).setContentType(C.AUDIO_CONTENT_TYPE_MUSIC).build(), true)
             .setHandleAudioBecomingNoisy(true).setWakeMode(C.WAKE_MODE_NETWORK).build()
-        player.preloadConfiguration = ExoPlayer.PreloadConfiguration(NEXT_TRACK_PRELOAD_US)
+        player.preloadConfiguration = if (SettingsStore.get(this).settings.value.preloadUpcomingTracks) {
+            ExoPlayer.PreloadConfiguration(NEXT_TRACK_PRELOAD_US)
+        } else ExoPlayer.PreloadConfiguration.DEFAULT
         player.addAnalyticsListener(PlaybackDiagnostics)
-        preloader = QueuePreloader(this, player, http, recentAudio, effectsScope, audio, youtube.recent).also { it.start() }
+        preloader = QueuePreloader(this, player, http, recentAudioWriter, effectsScope, audio, youtube.recent).also { it.start() }
         recovery = PlaybackRecovery(this, player, effectsScope, audio).also { it.start() }
         behavior = PlaybackBehavior(this, player).also { it.start() }
         EqualizerRuntime.start(this, effectsScope)
@@ -103,9 +108,14 @@ class MeloPlaybackService : MediaSessionService() {
             override fun onMediaItemTransition(mediaItem: androidx.media3.common.MediaItem?, reason: Int) = updateNormalization(player)
             override fun onPlaybackStateChanged(playbackState: Int) = updateNormalization(player)
         })
+        val settings = SettingsStore.get(this)
         effectsScope.launch {
-            SettingsStore.get(this@MeloPlaybackService).settings.map { it.audioNormalization }.distinctUntilChanged()
-                .collect { updateNormalization(player) }
+            settings.settings.map { it.audioNormalization to it.preloadUpcomingTracks }.distinctUntilChanged()
+                .collect { (_, preload) ->
+                    updateNormalization(player)
+                    player.preloadConfiguration = if (preload) ExoPlayer.PreloadConfiguration(NEXT_TRACK_PRELOAD_US)
+                    else ExoPlayer.PreloadConfiguration.DEFAULT
+                }
         }
         val intent = PendingIntent.getActivity(this, 0, Intent(this, MainActivity::class.java),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
@@ -149,10 +159,15 @@ class MeloPlaybackService : MediaSessionService() {
     internal companion object {
         /** Downloads first, then the recent cache, then the network. Nothing is written to downloads while listening. */
         fun youTubeCacheChain(context: android.content.Context): YouTubeChain {
+            val youtube = YouTubeDataSource.Factory(context)
+            val flags = CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR
             val recent = CacheDataSource.Factory().setCache(AudioCache.cache(context)).setCacheKeyFactory(AudioCache.keys)
-                .setUpstreamDataSourceFactory(YouTubeDataSource.Factory(context)).setFlags(CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR)
+                .setUpstreamDataSourceFactory(youtube).setFlags(flags)
+            val recentReader = CacheDataSource.Factory().setCache(AudioCache.cache(context)).setCacheKeyFactory(AudioCache.keys)
+                .setUpstreamDataSourceFactory(youtube).setCacheWriteDataSinkFactory(null).setFlags(flags)
+            val recentPlayback = RecentAudioDataSourceFactory(context, recent, recentReader)
             val kept = CacheDataSource.Factory().setCache(DownloadCenter.cache(context)).setCacheKeyFactory(AudioCache.keys)
-                .setUpstreamDataSourceFactory(recent).setCacheWriteDataSinkFactory(null).setFlags(CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR)
+                .setUpstreamDataSourceFactory(recentPlayback).setCacheWriteDataSinkFactory(null).setFlags(flags)
             return YouTubeChain(recent, kept)
         }
         private const val NEXT_TRACK_PRELOAD_US = 30_000_000L

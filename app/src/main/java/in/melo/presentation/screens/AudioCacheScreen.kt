@@ -136,19 +136,39 @@ internal fun AudioCacheScreen(model: MeloModel, navController: NavHostController
                 )
             }
             item {
+                SwitchSettingItem(
+                    stringResource(R.string.audio_cache_played_title),
+                    stringResource(R.string.audio_cache_played_description),
+                    settings.cachePlayedTracks,
+                    { enabled -> model.ui.updateSettings { it.copy(cachePlayedTracks = enabled) } },
+                    leadingIcon = {},
+                )
+            }
+            item {
+                SwitchSettingItem(
+                    stringResource(R.string.audio_cache_preload_enabled_title),
+                    stringResource(R.string.audio_cache_preload_enabled_description),
+                    settings.preloadUpcomingTracks,
+                    { enabled -> model.ui.updateSettings { it.copy(preloadUpcomingTracks = enabled) } },
+                    leadingIcon = {},
+                )
+            }
+            item {
                 SwitchSettingItem(stringResource(R.string.audio_cache_mobile), stringResource(R.string.audio_cache_mobile_description), settings.preloadOnMobile,
-                    { enabled -> model.ui.updateSettings { it.copy(preloadOnMobile = enabled) } }, leadingIcon = {})
+                    { enabled -> model.ui.updateSettings { it.copy(preloadOnMobile = enabled) } }, leadingIcon = {},
+                    enabled = settings.preloadUpcomingTracks)
             }
             item {
                 var count by remember(settings.preloadTracks) { mutableFloatStateOf(settings.preloadTracks.toFloat()) }
                 SliderSettingsItem(
                     label = stringResource(R.string.audio_cache_preload),
                     value = count,
-                    valueRange = 0f..MAX_PRELOADED_TRACKS.toFloat(),
-                    steps = MAX_PRELOADED_TRACKS - 1,
+                    valueRange = 1f..MAX_PRELOADED_TRACKS.toFloat(),
+                    steps = MAX_PRELOADED_TRACKS - 2,
                     onValueChange = { count = it },
                     onValueChangeFinished = { model.ui.updateSettings { s -> s.copy(preloadTracks = count.roundToInt()) } },
                     valueText = { it.roundToInt().toString() },
+                    enabled = settings.preloadUpcomingTracks,
                 )
             }
             item {

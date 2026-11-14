@@ -34,6 +34,7 @@
     <string name="settings_quality_lists_subtitle">Afficher le format connu à côté de chaque titre</string>
     <string name="settings_lyrics_fallback_title">Repli sur LRCLIB</string>
     <string name="settings_lyrics_fallback_subtitle">Chercher les paroles sur LRCLIB quand Spotify n’en a pas</string>
+    <string name="lyrics_return_to_player">Retour au lecteur</string>
     <string name="settings_cache_images_title">Pochettes en cache</string>
     <string name="settings_cache_lyrics_title">Paroles enregistrées</string>
     <string name="settings_cache_lyrics_subtitle">Paroles choisies ou importées</string>
@@ -107,6 +108,10 @@
     <string name="audio_cache_title">Cache audio récent</string>
     <string name="audio_cache_usage">%1$s utilisés sur %2$s</string>
     <string name="audio_cache_limit">Taille maximale</string>
+    <string name="audio_cache_played_title">Mettre en cache les titres écoutés</string>
+    <string name="audio_cache_played_description">Enregistrer l’audio diffusé dans le cache récent. Les titres déjà en cache et les téléchargements restent disponibles.</string>
+    <string name="audio_cache_preload_enabled_title">Précharger les titres suivants</string>
+    <string name="audio_cache_preload_enabled_description">Préparer les titres de la file avant leur lecture. Cette option est distincte du cache pendant l’écoute.</string>
     <string name="audio_cache_preload">Titres préchargés à l’avance</string>
     <string name="audio_cache_sort_recent">Récents</string>
     <string name="audio_cache_sort_size">Taille</string>
@@ -346,4 +351,9 @@
     <string name="queue_section_next_from">À suivre dans : %1$s</string>
     <string name="settings_search_sources_title">Choisir la source de recherche</string>
     <string name="settings_search_sources_subtitle">Affiche Tout, Spotify, YouTube et Appareil au-dessus des résultats. Masqué, chaque recherche porte sur toutes les sources.</string>
+    <string name="settings_privacy_title">Confidentialité</string>
+    <string name="settings_privacy_subtitle">Analyses d’utilisation et collecte de données</string>
+    <string name="settings_analytics_title">Partager les données d’utilisation</string>
+    <string name="settings_analytics_subtitle">Nous aide à comprendre l’utilisation générale de l’application. Modifiez ce réglage à tout moment.</string>
+    <string name="privacy_policy_link">Politique de confidentialité</string>
 </resources>

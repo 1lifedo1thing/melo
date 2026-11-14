@@ -34,6 +34,7 @@
     <string name="settings_quality_lists_subtitle">Show the known format next to each track</string>
     <string name="settings_lyrics_fallback_title">LRCLIB fallback</string>
     <string name="settings_lyrics_fallback_subtitle">Look for lyrics on LRCLIB when Spotify has none</string>
+    <string name="lyrics_return_to_player">Return to player</string>
     <string name="settings_cache_images_title">Cached artwork</string>
     <string name="settings_cache_lyrics_title">Saved lyrics</string>
     <string name="settings_cache_lyrics_subtitle">Lyrics you picked or imported</string>
@@ -107,6 +108,10 @@
     <string name="audio_cache_title">Recent audio cache</string>
     <string name="audio_cache_usage">%1$s used of %2$s</string>
     <string name="audio_cache_limit">Maximum size</string>
+    <string name="audio_cache_played_title">Cache tracks as they play</string>
+    <string name="audio_cache_played_description">Save streamed audio in the recent cache. Existing cached tracks and downloads stay available.</string>
+    <string name="audio_cache_preload_enabled_title">Preload upcoming tracks</string>
+    <string name="audio_cache_preload_enabled_description">Prepare tracks from the queue before they play. This is separate from caching tracks as you listen.</string>
     <string name="audio_cache_preload">Tracks preloaded ahead</string>
     <string name="audio_cache_sort_recent">Recent</string>
     <string name="audio_cache_sort_size">Size</string>
@@ -346,4 +351,9 @@
     <string name="queue_section_next_from">Next from: %1$s</string>
     <string name="settings_search_sources_title">Choose the search source</string>
     <string name="settings_search_sources_subtitle">Shows All, Spotify, YouTube and Device above the results. Hidden, every search reads all sources.</string>
+    <string name="settings_privacy_title">Privacy</string>
+    <string name="settings_privacy_subtitle">Usage analytics and data collection</string>
+    <string name="settings_analytics_title">Share usage analytics</string>
+    <string name="settings_analytics_subtitle">Helps us understand general app usage. You can change this anytime.</string>
+    <string name="privacy_policy_link">Privacy policy</string>
 </resources>

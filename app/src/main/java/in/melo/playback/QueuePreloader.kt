@@ -154,6 +154,7 @@ internal class QueuePreloader(
             do {
                 val observed = revision
                 val s = settings.settings.value
+                if (!s.preloadUpcomingTracks) return@launch
                 val current = player.currentMediaItemIndex
                 val items = if (current in 0 until player.mediaItemCount) {
                     preloadRange(current, player.mediaItemCount, s.preloadTracks).map { player.getMediaItemAt(it) }
