@@ -129,7 +129,7 @@ import sh.calvin.reorderable.ReorderableColumn
 private const val COLLAGE_ITEMS = 6
 private const val COLLAGE_MINIMUM = 3
 
-/** Distributes the selected Home feed's first picks across shelves, as Dial's category dial does. */
+/** Distributes the selected Home feed's first picks across its shelves. */
 private fun categoryDialEntries(shelves: List<YouTubeHomeShelf>): List<HomeSpeedDialEntry> {
     val longest = shelves.maxOfOrNull { it.items.size } ?: return emptyList()
     val picks = ArrayList<Music>()
@@ -140,7 +140,7 @@ private fun categoryDialEntries(shelves: List<YouTubeHomeShelf>): List<HomeSpeed
 }
 
 /**
- * The home canvas: a Dial-style speed dial above Melo's recommendations and library shelves.
+ * The home canvas: Speed Dial above Melo's recommendations and library shelves.
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class, ExperimentalFoundationApi::class)
 @Composable

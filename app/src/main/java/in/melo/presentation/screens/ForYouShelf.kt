@@ -68,7 +68,7 @@ import `in`.melo.presentation.components.artworkRim
 import `in`.melo.presentation.components.homePress
 import `in`.melo.ui.theme.MeloLayout
 
-/* Dial's full-art recommendation cards and scannable recents feed, using Melo data and actions. */
+/* Full-art recommendation cards and a scannable Recents feed using Melo data and actions. */
 
 private const val TOP_PICK_RATIO = 0.75f
 private val TOP_PICK_SHAPE = RoundedCornerShape(12.dp)

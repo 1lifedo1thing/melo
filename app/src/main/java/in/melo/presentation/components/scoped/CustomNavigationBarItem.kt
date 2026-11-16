@@ -30,7 +30,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 
-/** Dial-style selected capsule with stable touch targets and native tab semantics. */
+/** Selected capsule with stable touch targets and native tab semantics. */
 @Composable
 fun RowScope.CustomNavigationBarItem(
     selected: Boolean,

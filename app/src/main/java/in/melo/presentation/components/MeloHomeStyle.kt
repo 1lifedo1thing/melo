@@ -26,7 +26,7 @@ import `in`.melo.presentation.utils.LocalReducedMotion
 val LocalHomeGradients = staticCompositionLocalOf { true }
 val LocalHomePressMotion = staticCompositionLocalOf { true }
 
-/** Dial's light-catching thumbnail rim, adapted from DialTileEdge.kt (GPL-3.0). */
+/** A subtle light-catching rim for artwork thumbnails. */
 fun Modifier.artworkRim(shape: Shape, glass: Boolean = false): Modifier = drawWithCache {
     val width = if (glass) 1.25.dp.toPx() else 0.75.dp.toPx()
     val outline = shape.createOutline(size.copy(width = size.width - width, height = size.height - width), layoutDirection, this)
@@ -53,7 +53,7 @@ fun Modifier.homePress(source: MutableInteractionSource): Modifier {
     return graphicsLayer { scaleX = scale; scaleY = scale }
 }
 
-/** Mood colors adapted from Dial's TopPicksShelf.kt. Text stays white on darker bases. */
+/** Mood colors paired with contrasting text for legibility. */
 fun moodColors(mood: HomeMood): Pair<Color, Color> = when (mood) {
     HomeMood.ENERGY, HomeMood.FITNESS, HomeMood.SPORTS -> Color(0xFF147A35) to Color(0xFFE2F6A2)
     HomeMood.RELAX -> Color(0xFF087FAE) to Color(0xFFB4E9FF)

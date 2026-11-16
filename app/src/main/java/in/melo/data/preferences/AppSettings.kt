@@ -52,7 +52,7 @@ data class AppSettings(
     val homeShelves: String = "",
     /** Source after pins on the Home Speed Dial: YouTube Music, Spotify, or combined listening history. */
     val homeDialSource: String = DIAL_SOURCE_YOUTUBE,
-    /** Visible tile rows per Speed Dial page, matching Dial's three- or four-row grid. */
+    /** Visible tile rows per Speed Dial page. */
     val homeDialRows: Int = 4,
     /** Whether the home Speed Dial is shown. */
     val homeSpeedDialEnabled: Boolean = true,

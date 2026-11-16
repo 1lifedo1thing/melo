@@ -1201,7 +1201,7 @@ class MeloModel(private val app: Application) : AndroidViewModel(app) {
         refreshYouTubeHomeCategories(force = true)
     }
 
-    /** Reads the main personalized Home page and category chips, then appends Dial's discovery shelves. */
+    /** Reads the personalized Home page and category chips, then appends discovery shelves. */
     fun refreshYouTubeHomeCategories(force: Boolean = false) {
         if (!online.value) return
         val identity = prepareHomeCategoryIdentity()

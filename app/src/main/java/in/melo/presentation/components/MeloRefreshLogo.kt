@@ -14,7 +14,7 @@ import androidx.compose.ui.unit.dp
 import `in`.melo.presentation.utils.LocalReducedMotion
 import kotlin.math.*
 
-/** Dial's Spin -> Build -> Rest timing, adapted to Melo's dotted play mark. */
+/** Animates Melo's dotted play mark through spin, build, and rest states. */
 @Composable
 fun MeloRefreshLogo(
     refreshing: Boolean,

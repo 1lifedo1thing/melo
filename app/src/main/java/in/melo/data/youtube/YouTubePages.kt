@@ -64,7 +64,7 @@ object YouTubePages {
         }.distinctBy(YouTubeHomeChip::params)
     }
 
-    /** The first page of YouTube Music's personalized Home feed, with Dial's music-only shelves. */
+    /** The first page of YouTube Music's personalized Home feed, with music-only shelves. */
     internal fun homePage(response: JSONObject): YouTubeHomePage {
         val sections = response.optJSONObject("contents")
             ?.optJSONObject("singleColumnBrowseResultsRenderer")
@@ -244,7 +244,7 @@ object YouTubePages {
             ?: value.optJSONArray("runs")?.texts()?.joinToString("").orEmpty()
     }.orEmpty()
 
-    /** History rows retain the linked channel and episode marker needed by Dial's taste ranking. */
+    /** History rows retain the linked channel and episode marker used for taste ranking. */
     internal fun recommendationHistoryRows(response: JSONObject): List<HomeHistoryTrack> {
         val rows = ArrayList<HomeHistoryTrack>()
         walkJson(response) { node ->

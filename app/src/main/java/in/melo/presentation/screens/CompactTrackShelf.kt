@@ -29,7 +29,7 @@ import `in`.melo.presentation.components.SmartImageListTargetSize
 import `in`.melo.presentation.components.artworkRim
 import `in`.melo.ui.theme.MeloLayout
 
-/** Dial's four-row track shelf: each column pages sideways, leaving the next cover in view. */
+/** Four-row track shelf: each column pages sideways, leaving the next cover in view. */
 @Composable
 internal fun CompactTrackShelf(
     tracks: List<Music>,

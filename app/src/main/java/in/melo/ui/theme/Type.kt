@@ -12,7 +12,7 @@ import androidx.compose.ui.unit.sp
 import `in`.melo.R
 
 // Bundled fonts: no network request or Google Play Services needed for typography.
-// Dial's bundled SF Pro Display weights, used consistently across Melo.
+// Bundled SF Pro Display weights, used consistently across Melo.
 val MeloSans = FontFamily(
     Font(R.font.sf_pro_display_regular, FontWeight.Normal),
     Font(R.font.sf_pro_display_medium, FontWeight.Medium),

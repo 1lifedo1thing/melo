@@ -58,7 +58,7 @@ data class YouTubeHomeState(
     val selected: YouTubeHomeChip? = null,
     val shelves: List<YouTubeHomeShelf> = emptyList(),
     val continuation: String? = null,
-    /** The unfiltered Home page plus Dial's new-release and Explore supplements. */
+    /** The unfiltered Home page plus new-release and Explore supplements. */
     val personalizedShelves: List<YouTubeHomeShelf> = emptyList(),
     val personalizedContinuation: String? = null,
     val personalizedLoading: Boolean = false,
@@ -93,7 +93,7 @@ data class YouTubeExploreState(
     val categoryError: String? = null,
 )
 
-/** Melo's recent local chart, in Dial's artist/song/genre order. */
+/** Melo's recent local chart, ordered by artist, song, and genre. */
 data class HomeLocalTaste(
     val artists: List<String> = emptyList(),
     val songs: List<Music> = emptyList(),
@@ -114,7 +114,7 @@ data class HomeRecommendationPick(
     val excludeVideoIds: List<String> = emptyList(),
 )
 
-/** YouTube Music's eleven fixed categories, with Dial's full set of mood/activity shelves. */
+/** YouTube Music's eleven fixed categories, with mood and activity shelves. */
 enum class HomeMood(val categoryParams: String, val shelfWords: List<String> = emptyList()) {
     ENERGY(ENERGIZE),
     RELAX(CHILL_CATEGORY, listOf("unwind", "peaceful", "relaxing", "laidback")),
@@ -161,7 +161,7 @@ data class HomeRecommendationState(
     val loading: Boolean = false,
 )
 
-/** Dial-style hour cache. Recent tracks are kept alongside picks for Melo's existing Recents feed. */
+/** Hour cache. Recent tracks are kept alongside picks for Melo's Recents feed. */
 data class HomeRecommendationCache(
     val listener: String,
     val hour: String,

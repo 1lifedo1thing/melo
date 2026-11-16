@@ -19,7 +19,7 @@ import java.time.LocalDateTime
 import java.util.Locale
 import kotlin.random.Random
 
-/** Dial's Top Picks selection and queue rules, backed by Melo's linked YouTube Music account. */
+/** Selects and orders Top Picks using the listener's linked YouTube Music account. */
 object HomeRecommendationEngine {
     private const val ARTIST_POOL = 10
     private const val ARTISTS_ON_ROW = 3
@@ -94,7 +94,7 @@ object HomeRecommendationEngine {
         }
     }
 
-    /** Dial's current-time mood mix: 70% time-matched, 30% any core mood. */
+    /** Current-time mood mix: 70% time-matched, 30% any core mood. */
     fun moodFor(hour: Int): HomeMood {
         val suited = when (hour) {
             in 5..8 -> listOf(HomeMood.ENERGY, HomeMood.FEEL_GOOD, HomeMood.FOCUS)
@@ -125,7 +125,7 @@ object HomeRecommendationEngine {
         }.awaitAll().filterNotNull().distinctBy(Music::id)
     }
 
-    /** History counts once with recency weight; Melo's own month chart adds Dial's lower positional weight. */
+    /** History counts once with recency weight; Melo's month chart adds a lower positional weight. */
     private fun rankArtists(history: List<HomeHistoryTrack>, local: List<Music>): List<RankedArtist> {
         val scores = LinkedHashMap<String, RankedArtist>()
         fun credit(artist: Music?, weight: Double) {

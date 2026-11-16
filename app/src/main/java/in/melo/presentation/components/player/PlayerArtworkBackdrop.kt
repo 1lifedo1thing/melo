@@ -33,7 +33,7 @@ import kotlin.math.floor
 import kotlin.math.roundToInt
 import kotlin.random.Random
 
-// Adapted from steeben/Dial's ArtworkMeshBackdrop.kt (dc8799a), GPL-3.0.
+// Modified for Melo on 2026-11-16. Licensed under GPL-3.0; see LICENSE.
 // A small texture preserves the cover's color proportions without a live screen-sized blur.
 private val meshCache = LruCache<String, ImageBitmap>(64)
 

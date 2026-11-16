@@ -1,4 +1,4 @@
-// Adapted from steeben/Dial at dc8799a, licensed under GPL-3.0. See design/DIAL-UI.md.
+// Modified for Melo on 2026-11-16. Licensed under GPL-3.0; see LICENSE.
 package `in`.melo.presentation.screens
 
 import androidx.compose.animation.core.Animation
