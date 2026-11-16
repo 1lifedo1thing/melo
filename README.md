@@ -25,14 +25,18 @@ The app ID is **in.melo**. Melo is independent of Spotify, YouTube, and Google.
 ## Take a look
 
 <p align="center">
-  <img src="docs/assets/img/readme/melo-product-showcase.png" alt="Melo Home discovery feed and Now Playing screen" width="100%" />
+  <img src="docs/assets/img/readme/melo-product-showcase.png" alt="Melo Speed Dial, Home feed, Podcasts, and Now Playing screens" width="100%" />
 </p>
 
 <details>
   <summary>View the full-size screenshots</summary>
 
   <p align="center">
+    <img src="docs/assets/img/readme/screens/speed-dial.png" alt="Melo Speed Dial with mood controls and favorite music" width="49%" />
     <img src="docs/assets/img/readme/screens/home-feed.png" alt="Melo Home with mood controls and music discovery shelves" width="49%" />
+  </p>
+  <p align="center">
+    <img src="docs/assets/img/readme/screens/podcasts.png" alt="Melo Podcasts with show search, recommendations, and listening history" width="49%" />
     <img src="docs/assets/img/readme/screens/now-playing.png" alt="Melo Now Playing with album artwork and playback controls" width="49%" />
   </p>
 </details>

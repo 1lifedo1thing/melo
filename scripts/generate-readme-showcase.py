@@ -7,7 +7,7 @@ ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / "docs" / "assets" / "img" / "readme"
 OUTPUT = ASSETS / "melo-product-showcase.png"
 
-WIDTH, HEIGHT = 2600, 2050
+WIDTH, HEIGHT = 2600, 1940
 BACKGROUND = (8, 9, 10)
 IVORY = (245, 243, 237)
 MUTED = (174, 172, 166)
@@ -76,7 +76,9 @@ def paste_phone(canvas: Image.Image, source: Path, x: int, y: int,
 
 def main() -> None:
     sources = {
+        "speed_dial": ASSETS / "screens" / "speed-dial.png",
         "home": ASSETS / "screens" / "home-feed.png",
+        "podcasts": ASSETS / "screens" / "podcasts.png",
         "player": ASSETS / "screens" / "now-playing.png",
     }
     for path in sources.values():
@@ -91,52 +93,37 @@ def main() -> None:
 
     draw = ImageDraw.Draw(canvas)
     draw_wordmark(draw, 124, 91)
-    tracked_text(draw, (2170, 93), "ANDROID MUSIC · 1.1.0", font(FONT_MEDIUM, 21), MUTED, 3)
+    tracked_text(draw, (2050, 93), "ANDROID MUSIC · 1.1.0", font(FONT_MEDIUM, 21), MUTED, 3)
     draw.line((124, 171, WIDTH - 124, 171), fill=(47, 47, 45), width=2)
 
-    tracked_text(draw, (124, 214), "A MUSIC SPACE FOR ANDROID", font(FONT_MEDIUM, 19), GOLD, 4)
-    headline = font(FONT_HEAVY, 92)
-    draw.text((124, 260), "Your music.", font=headline, fill=IVORY)
-    draw.text((124, 355), "Your space.", font=headline, fill=IVORY)
-    draw.text((124, 471), "Spotify · YouTube Music · your local files", font=font(FONT_REGULAR, 29), fill=MUTED)
+    tracked_text(draw, (124, 215), "A LISTENING SPACE FOR ALL YOUR MUSIC", font(FONT_MEDIUM, 19), GOLD, 4)
+    draw.text((124, 255), "Your music. Your space.", font=font(FONT_HEAVY, 74), fill=IVORY)
+    draw.text((124, 350), "Spotify · YouTube Music · your local library",
+              font=font(FONT_REGULAR, 27), fill=MUTED)
 
-    screen_width = 540
-    with Image.open(sources["home"]) as home_capture:
-        screen_height = round(screen_width * home_capture.height / home_capture.width)
-    screen_y = 545
-    left_x, right_x = 124, WIDTH - 124 - screen_width
-    paste_phone(canvas, sources["home"], left_x, screen_y, screen_width, screen_height)
-    paste_phone(canvas, sources["player"], right_x, screen_y, screen_width, screen_height)
+    screen_width = 500
+    screen_heights = {}
+    for name, source in sources.items():
+        with Image.open(source) as capture:
+            screen_heights[name] = round(screen_width * capture.height / capture.width)
+    screen_y = 458
+    gap = 48
+    row_width = screen_width * len(sources) + gap * (len(sources) - 1)
+    start_x = (WIDTH - row_width) // 2
+    captions = (
+        ("SPEED DIAL", "Your favorites, one tap away"),
+        ("HOME FEED", "Mood-led picks and music discovery"),
+        ("PODCASTS", "Find shows and episode history"),
+        ("NOW PLAYING", "Full-color art, focused controls"),
+    )
+    for index, (name, (title, subtitle)) in enumerate(zip(sources, captions), start=1):
+        x = start_x + (index - 1) * (screen_width + gap)
+        paste_phone(canvas, sources[name], x, screen_y, screen_width, screen_heights[name])
+        caption_y = screen_y + screen_heights[name] + 30
+        tracked_text(draw, (x, caption_y), f"0{index}  /  {title}", font(FONT_MEDIUM, 17), GOLD, 2)
+        draw.text((x, caption_y + 34), subtitle, font=font(FONT_REGULAR, 20), fill=IVORY)
 
-    center_left, center_right = 820, 1830
-    center_width = center_right - center_left
-    tracked_text(draw, (center_left, 793), "DISCOVER", font(FONT_MEDIUM, 19), GOLD, 4)
-    draw.text((center_left, 839), "A home that moves\nwith your mood.", font=font(FONT_HEAVY, 58),
-              fill=IVORY, spacing=6)
-    draw.multiline_text((center_left, 1008),
-                        "Pick a feeling, find something new,\nor jump back into a favorite.",
-                        font=font(FONT_REGULAR, 27), fill=MUTED, spacing=10)
-    draw.line((center_left, 1170, center_left + 84, 1170), fill=GOLD, width=4)
-    tracked_text(draw, (center_left, 1213), "LISTEN YOUR WAY", font(FONT_MEDIUM, 18), MUTED, 3)
-
-    tags = ("MOODS", "FRESH PICKS", "YOUR LIBRARY")
-    tag_font = font(FONT_MEDIUM, 17)
-    cursor = center_left
-    tag_y = 1270
-    for label in tags:
-        text_width = int(sum(draw.textlength(char, font=tag_font) + 2 for char in label) + 38)
-        draw.rounded_rectangle((cursor, tag_y, cursor + text_width, tag_y + 49), radius=24,
-                               fill=(18, 18, 18), outline=(59, 57, 52), width=2)
-        tracked_text(draw, (cursor + 19, tag_y + 15), label, tag_font, IVORY, 2)
-        cursor += text_width + 13
-
-    caption_y = screen_y + screen_height + 40
-    tracked_text(draw, (left_x, caption_y), "01  /  HOME", font(FONT_MEDIUM, 20), GOLD, 3)
-    draw.text((left_x, caption_y + 38), "Mood-led picks and fresh discovery", font=font(FONT_REGULAR, 25), fill=IVORY)
-    tracked_text(draw, (right_x, caption_y), "02  /  NOW PLAYING", font(FONT_MEDIUM, 20), GOLD, 3)
-    draw.text((right_x, caption_y + 38), "Artwork up front. Controls close by.", font=font(FONT_REGULAR, 25), fill=IVORY)
-
-    footer_y = HEIGHT - 67
+    footer_y = HEIGHT - 57
     draw.line((124, footer_y - 28, WIDTH - 124, footer_y - 28), fill=(47, 47, 45), width=2)
     tracked_text(draw, (124, footer_y), "MELO  /  OPEN SOURCE  /  ANDROID 8+", font(FONT_MEDIUM, 17), MUTED, 3)
     tracked_text(draw, (2174, footer_y), "V1.1.0", font(FONT_MEDIUM, 17), MUTED, 3)
