@@ -12,31 +12,35 @@
   <rect width="1440" height="500" rx="24" fill="url(#warmth)" />
 
   <g fill="#f5f3ed">
-    <circle cx="92" cy="65" r="3"/><circle cx="102" cy="65" r="3"/><circle cx="112" cy="65" r="3"/><circle cx="122" cy="65" r="3"/>
-    <circle cx="82" cy="75" r="3"/><circle cx="92" cy="75" r="3"/><circle cx="122" cy="75" r="3"/><circle cx="132" cy="75" r="3"/>
-    <circle cx="82" cy="85" r="3"/><circle cx="102" cy="85" r="3"/><circle cx="112" cy="85" r="3"/><circle cx="132" cy="85" r="3"/>
-    <circle cx="82" cy="95" r="3"/><circle cx="102" cy="95" r="3"/><circle cx="112" cy="95" r="3"/><circle cx="132" cy="95" r="3"/>
-    <circle cx="82" cy="105" r="3"/><circle cx="122" cy="105" r="3"/><circle cx="132" cy="105" r="3"/>
-    <circle cx="82" cy="115" r="3"/><circle cx="122" cy="115" r="3"/><circle cx="132" cy="115" r="3"/>
-    <circle cx="82" cy="125" r="3"/><circle cx="122" cy="125" r="3"/><circle cx="132" cy="125" r="3"/>
+    <!-- M -->
+    <circle cx="82" cy="65" r="3"/><circle cx="122" cy="65" r="3"/>
+    <circle cx="82" cy="75" r="3"/><circle cx="92" cy="75" r="3"/><circle cx="112" cy="75" r="3"/><circle cx="122" cy="75" r="3"/>
+    <circle cx="82" cy="85" r="3"/><circle cx="102" cy="85" r="3"/><circle cx="122" cy="85" r="3"/>
+    <circle cx="82" cy="95" r="3"/><circle cx="102" cy="95" r="3"/><circle cx="122" cy="95" r="3"/>
+    <circle cx="82" cy="105" r="3"/><circle cx="122" cy="105" r="3"/>
+    <circle cx="82" cy="115" r="3"/><circle cx="122" cy="115" r="3"/>
+    <circle cx="82" cy="125" r="3"/><circle cx="122" cy="125" r="3"/>
 
+    <!-- E -->
     <circle cx="152" cy="65" r="3"/><circle cx="162" cy="65" r="3"/><circle cx="172" cy="65" r="3"/><circle cx="182" cy="65" r="3"/><circle cx="192" cy="65" r="3"/>
-    <circle cx="152" cy="75" r="3"/><circle cx="192" cy="75" r="3"/>
-    <circle cx="152" cy="85" r="3"/><circle cx="192" cy="85" r="3"/>
+    <circle cx="152" cy="75" r="3"/><circle cx="152" cy="85" r="3"/>
     <circle cx="152" cy="95" r="3"/><circle cx="162" cy="95" r="3"/><circle cx="172" cy="95" r="3"/><circle cx="182" cy="95" r="3"/>
-    <circle cx="152" cy="105" r="3"/><circle cx="192" cy="105" r="3"/>
-    <circle cx="152" cy="115" r="3"/><circle cx="192" cy="115" r="3"/>
+    <circle cx="152" cy="105" r="3"/><circle cx="152" cy="115" r="3"/>
     <circle cx="152" cy="125" r="3"/><circle cx="162" cy="125" r="3"/><circle cx="172" cy="125" r="3"/><circle cx="182" cy="125" r="3"/><circle cx="192" cy="125" r="3"/>
 
-    <circle cx="212" cy="65" r="3"/><circle cx="212" cy="75" r="3"/><circle cx="212" cy="85" r="3"/><circle cx="212" cy="95" r="3"/><circle cx="212" cy="105" r="3"/><circle cx="212" cy="115" r="3"/>
+    <!-- L -->
+    <circle cx="222" cy="65" r="3"/><circle cx="222" cy="75" r="3"/><circle cx="222" cy="85" r="3"/>
+    <circle cx="222" cy="95" r="3"/><circle cx="222" cy="105" r="3"/><circle cx="222" cy="115" r="3"/>
     <circle cx="222" cy="125" r="3"/><circle cx="232" cy="125" r="3"/><circle cx="242" cy="125" r="3"/><circle cx="252" cy="125" r="3"/><circle cx="262" cy="125" r="3"/>
 
-    <circle cx="292" cy="75" r="3"/><circle cx="302" cy="65" r="3"/><circle cx="312" cy="65" r="3"/><circle cx="322" cy="65" r="3"/>
-    <circle cx="282" cy="85" r="3"/><circle cx="332" cy="85" r="3"/>
-    <circle cx="282" cy="95" r="3"/><circle cx="332" cy="95" r="3"/>
-    <circle cx="282" cy="105" r="3"/><circle cx="332" cy="105" r="3"/>
-    <circle cx="282" cy="115" r="3"/><circle cx="332" cy="115" r="3"/>
-    <circle cx="292" cy="125" r="3"/><circle cx="302" cy="135" r="3"/><circle cx="312" cy="135" r="3"/><circle cx="322" cy="135" r="3"/>
+    <!-- O -->
+    <circle cx="302" cy="65" r="3"/><circle cx="312" cy="65" r="3"/><circle cx="322" cy="65" r="3"/>
+    <circle cx="292" cy="75" r="3"/><circle cx="332" cy="75" r="3"/>
+    <circle cx="292" cy="85" r="3"/><circle cx="332" cy="85" r="3"/>
+    <circle cx="292" cy="95" r="3"/><circle cx="332" cy="95" r="3"/>
+    <circle cx="292" cy="105" r="3"/><circle cx="332" cy="105" r="3"/>
+    <circle cx="292" cy="115" r="3"/><circle cx="332" cy="115" r="3"/>
+    <circle cx="302" cy="125" r="3"/><circle cx="312" cy="125" r="3"/><circle cx="322" cy="125" r="3"/>
   </g>
 
   <text x="390" y="93" fill="#b2aea4" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="600" letter-spacing="3.5">A LISTENING SPACE FOR ALL YOUR MUSIC</text>
