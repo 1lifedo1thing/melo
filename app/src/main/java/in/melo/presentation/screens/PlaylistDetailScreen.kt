@@ -56,6 +56,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.navigation.NavHostController
 import `in`.melo.R
 import `in`.melo.MeloModel
@@ -89,18 +91,30 @@ fun PlaylistDetailScreen(model: MeloModel, navController: NavHostController, pla
         LaunchedEffect(Unit) { navController.popBackStack() }
         return
     }
+    val discovery by model.discovery.collectAsStateWithLifecycle()
+    val online by model.online.collectAsStateWithLifecycle()
+    val isSpotifyPlaylist = playlistId.startsWith("spotify:playlist:")
     val details by model.details.collectAsStateWithLifecycle()
     val pins by model.pins.collectAsStateWithLifecycle()
     val saved by model.favorites.collectAsStateWithLifecycle()
     val stable by ui.stablePlayerState.collectAsStateWithLifecycle()
-    LaunchedEffect(playlistId) { model.loadDetail(item) }
+    LaunchedEffect(playlistId, discovery.spotifyEnabled, online) {
+        model.loadDetail(item, refresh = isSpotifyPlaylist && discovery.spotifyEnabled && online)
+    }
+    var returnedFromBackground by remember(playlistId) { mutableStateOf(false) }
+    LifecycleEventEffect(Lifecycle.Event.ON_PAUSE) { returnedFromBackground = true }
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        if (returnedFromBackground && isSpotifyPlaylist && discovery.spotifyEnabled && online) {
+            model.loadDetail(item, refresh = true)
+        }
+        returnedFromBackground = false
+    }
     val detail = details[playlistId]
     val content = detail?.content
     val current = content?.item ?: item
     var sort by remember(playlistId) { mutableStateOf(ui.playlistSort(playlistId)) }
     var sortMenu by remember { mutableStateOf(false) }
     val localFiles by model.localTracks.collectAsStateWithLifecycle()
-    val discovery by model.discovery.collectAsStateWithLifecycle()
     val exportCsv = `in`.melo.presentation.components.rememberPlaylistCsvExport(model)
     // Positions in the stored playlist, so removing a track still targets the right one once sorted.
     val ordered = remember(content?.tracks, saved, sort, localFiles) {
@@ -125,9 +139,8 @@ fun PlaylistDetailScreen(model: MeloModel, navController: NavHostController, pla
     val library by model.library.collectAsStateWithLifecycle()
     val inSpotifyLibrary = discovery.spotifyEnabled && library.content?.playlists?.any { it.id == playlistId } == true
     val libraryPlaylist = library.content?.playlists?.firstOrNull { it.id == playlistId }
-    val displayedTrackCount = libraryPlaylist?.subtitle?.let(::parseSongCount) ?: content?.total ?: ordered.size
+    val displayedTrackCount = content?.total ?: libraryPlaylist?.subtitle?.let(::parseSongCount) ?: ordered.size
     val scope = rememberCoroutineScope()
-    val online by model.online.collectAsStateWithLifecycle()
     var isOwned by remember(playlistId) { mutableStateOf(false) }
     var suggestions by remember(playlistId) { mutableStateOf<List<Music>>(emptyList()) }
     var suggestionsLoading by remember { mutableStateOf(false) }

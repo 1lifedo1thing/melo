@@ -11,7 +11,7 @@
     <string name="melo_next">Next track</string>
     <string name="melo_pause">Pause</string>
     <string name="melo_player_description">Melo player: %1$s</string>
-    <string name="melo_home_compact_title">Your music</string>
+    <string name="melo_home_compact_title">Listen now</string>
     <string name="melo_cover_of">Cover of %1$s</string>
     <string name="melo_connecting">Connecting to device…</string>
     <string name="melo_preparing">Preparing playback…</string>

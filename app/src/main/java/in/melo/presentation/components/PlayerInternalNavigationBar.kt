@@ -4,6 +4,9 @@ import `in`.melo.presentation.navigation.navigateToTopLevelSafely
 
 import android.os.SystemClock
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
@@ -120,7 +123,11 @@ private fun PlayerInternalNavigationItemsRow(
             .fillMaxWidth()
     }
     Row(
-        modifier = rowModifier.selectableGroup(),
+        modifier = rowModifier
+            .padding(horizontal = 8.dp, vertical = 4.dp)
+            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.97f), CircleShape)
+            .border(0.75.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f), CircleShape)
+            .selectableGroup(),
         horizontalArrangement = Arrangement.SpaceAround,
         verticalAlignment = Alignment.CenterVertically
     ) {

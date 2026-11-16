@@ -60,6 +60,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
+import `in`.melo.presentation.components.meloPanel
+import `in`.melo.ui.theme.MeloLayout
 import `in`.melo.R
 import `in`.melo.MeloModel
 import `in`.melo.data.Music
@@ -145,7 +147,7 @@ fun SearchScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 24.dp, top = statusBarTopInset + 12.dp, end = 24.dp),
+                    .padding(start = 16.dp, top = statusBarTopInset + 12.dp, end = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -211,20 +213,20 @@ fun SearchScreen(
                         },
                         expanded = false,
                         onExpandedChange = {},
-                        modifier = Modifier.clip(RoundedCornerShape(28.dp)),
+                        modifier = Modifier.meloPanel(MeloLayout.SearchShape),
                         colors = SearchBarDefaults.colors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
+                            containerColor = Color.Transparent,
                             dividerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
                             inputFieldColors = inputColors
                         ),
                         content = {}
                     )
                 }
-                FilledIconButton(
-                    modifier = Modifier.padding(bottom = 2.dp),
-                    colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                IconButton(
+                    modifier = Modifier.padding(bottom = 2.dp).meloPanel(CircleShape),
+                    colors = IconButtonDefaults.iconButtonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = MaterialTheme.colorScheme.onSurface
                     ),
                     onClick = { navController.navigateSafely(Screen.Settings.route) }
                 ) {

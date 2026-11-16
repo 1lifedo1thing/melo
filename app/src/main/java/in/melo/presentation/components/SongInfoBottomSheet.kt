@@ -236,7 +236,7 @@ private fun OptionsSheetHeader(artwork: String?, title: String, subtitle: String
             model = artwork,
             contentDescription = stringResource(R.string.common_album_art),
             shape = artShape,
-            modifier = Modifier.size(72.dp),
+            modifier = Modifier.size(72.dp).artworkRim(artShape),
             contentScale = ContentScale.Crop
         )
         Column(Modifier.weight(1f)) {
@@ -456,9 +456,9 @@ private fun SongInfoSegmentedListItem(
         }
 
     Surface(
-        modifier = modifier,
+        modifier = modifier.meloPanel(shape),
         shape = shape,
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        color = Color.Transparent,
     ) {
         ListItem(
             colors = ListItemDefaults.colors(containerColor = Color.Transparent),

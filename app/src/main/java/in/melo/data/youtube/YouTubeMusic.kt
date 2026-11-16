@@ -3,9 +3,13 @@
 package `in`.melo.data.youtube
 
 import android.content.Context
+import android.content.res.Resources
 import androidx.core.content.edit
 import `in`.melo.data.Music
 import `in`.melo.data.MusicKind
+import `in`.melo.data.YouTubeWatchTarget
+import `in`.melo.data.preferences.AppSettings
+import `in`.melo.data.preferences.SettingsStore
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -15,6 +19,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.io.IOException
 import java.net.URLDecoder
+import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 const val YTM_TRACK_PREFIX = "ytm:track:"
@@ -59,6 +64,21 @@ object YouTubeMusic {
     private val decipher by lazy { YouTubeDecipher(checkNotNull(app)) }
 
     fun init(context: Context) { if (app == null) app = context.applicationContext }
+
+    /** YouTube's browse/search catalogue country; kept separate from stream resolution. */
+    internal fun contentRegion(): String {
+        val phone = app?.getSystemService(Context.TELEPHONY_SERVICE) as? android.telephony.TelephonyManager
+        return deviceCatalogueCountry(listOf(
+            runCatching { phone?.networkCountryIso }.getOrNull(),
+            runCatching { phone?.simCountryIso }.getOrNull(),
+            runCatching { android.icu.util.TimeZone.getRegion(java.util.TimeZone.getDefault().id) }.getOrNull(),
+            runCatching { Resources.getSystem().configuration.locales.get(0).country }.getOrNull(),
+            Locale.getDefault().country,
+        ))
+    }
+
+    internal fun catalogueLanguage(): String = app?.resources?.configuration?.locales?.get(0)?.language
+        ?.takeIf(String::isNotBlank) ?: "en"
 
     private val preferences get() = app?.getSharedPreferences("youtube_music", Context.MODE_PRIVATE)
     @Volatile private var visitor: String? = null
@@ -121,6 +141,42 @@ object YouTubeMusic {
         return YouTubePlaylist(id, title, image, tracks.take(limit))
     }
 
+    /** A YouTube Music mix or station queue, resolved lazily when its Home card is tapped. */
+    internal fun watchQueue(playlistId: String, videoId: String? = null, limit: Int = MAX_PLAYLIST_TRACKS): List<Music> {
+        return watchQueue(YouTubeWatchTarget(playlistId.removePrefix("VL"), videoId), limit)
+    }
+
+    /** The artist header queues require YouTube's seed video and params in the `next` request. */
+    internal fun watchQueue(
+        target: YouTubeWatchTarget,
+        limit: Int = MAX_PLAYLIST_TRACKS,
+        preferAudio: Boolean = false,
+    ): List<Music> {
+        val bareId = target.playlistId.removePrefix("VL")
+        val ids = listOf(target.playlistId, bareId, "VL$bareId").distinct()
+        for (queueId in ids) {
+            val body = JSONObject().put("playlistId", queueId).apply {
+                target.videoId?.let { put("videoId", it) }
+                target.params?.let { put("params", it) }
+            }
+            val first = musicRequest("next", body)
+            val tracks = ArrayList(YouTubePages.watchQueueRows(first, preferAudio))
+            val seen = HashSet<String>()
+            var token = findContinuation(first, preferShelf = false)
+            var pages = 0
+            while (token != null && tracks.size < limit && seen.add(token) && pages++ < MAX_QUEUE_PAGES) {
+                val page = musicRequest("next", JSONObject().put("continuation", token))
+                val rows = YouTubePages.watchQueueRows(page, preferAudio)
+                if (rows.isEmpty()) break
+                tracks += rows
+                token = findContinuation(page, preferShelf = false)
+            }
+            val unique = tracks.distinctBy(Music::id).take(limit)
+            if (unique.isNotEmpty()) return unique
+        }
+        throw YouTubeFailure("YouTube Music did not return tracks for this mix.")
+    }
+
     /** A catalogue request for the album, artist and track pages. */
     internal fun browseRequest(endpoint: String, body: JSONObject): JSONObject = musicRequest(endpoint, body)
 
@@ -160,7 +216,8 @@ object YouTubeMusic {
     }
 
     private fun musicRequestOnce(endpoint: String, body: JSONObject): JSONObject {
-        val client = JSONObject().put("clientName", "WEB_REMIX").put("clientVersion", MUSIC_CLIENT_VERSION).put("hl", "en").put("gl", "US")
+        val client = JSONObject().put("clientName", "WEB_REMIX").put("clientVersion", MUSIC_CLIENT_VERSION)
+            .put("hl", catalogueLanguage()).put("gl", contentRegion())
         visitorData?.let { client.put("visitorData", it) }
         body.put("context", JSONObject().put("client", client))
         val request = Request.Builder()
@@ -318,6 +375,7 @@ object YouTubeMusic {
     private const val STREAM_MARGIN_MS = 10 * 60 * 1000L
     private const val DEFAULT_LIFETIME_MS = 5 * 60 * 60 * 1000L
     private const val MAX_PLAYLIST_TRACKS = 5000
+    private const val MAX_QUEUE_PAGES = 20
     private val JSON = "application/json".toMediaType()
 }
 
@@ -502,3 +560,8 @@ fun youTubePlaylistId(input: String): String? {
     }
     return text.removePrefix("VL").takeIf { Regex("^(PL|OLAK5uy_|RD|LM|UU|FL)[A-Za-z0-9_-]{8,}$").matches(it) }
 }
+
+/** Chooses the first usable device region; saved manual country overrides are never consulted. */
+internal fun deviceCatalogueCountry(candidates: List<String?>): String = candidates.firstNotNullOfOrNull { value ->
+    value?.trim()?.uppercase(Locale.ROOT)?.takeIf { code -> code.length == 2 && code.all { it in 'A'..'Z' } }
+} ?: AppSettings.YOUTUBE_COUNTRY_IN

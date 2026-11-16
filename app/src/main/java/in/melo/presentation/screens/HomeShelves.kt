@@ -128,9 +128,7 @@ internal fun ShelfItems(
                 }
             }
         }
-        ShelfStyle.LIST -> Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            items.forEach { item -> ShelfListRow(item, ui, { onClick(item) }, { onLongClick(item) }) }
-        }
+        ShelfStyle.LIST -> CompactTrackShelf(items, onClick, onLongClick)
         else -> Column(Modifier.padding(horizontal = MeloLayout.PageGutter), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             items.chunked(2).forEach { row ->
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

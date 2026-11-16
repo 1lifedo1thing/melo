@@ -1,23 +1,47 @@
 package `in`.melo.presentation.components
 
-import androidx.compose.material.icons.rounded.History
-
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.scaleIn
 import androidx.compose.animation.core.tween
+import androidx.compose.material.icons.rounded.History
+import androidx.compose.material.icons.rounded.MoreVert
+import androidx.compose.material.icons.rounded.AccountCircle
+import androidx.compose.material.icons.rounded.SwapVert
+
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
-import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.IconButton
@@ -26,19 +50,33 @@ import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults.topAppBarColors
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.window.DialogWindowProvider
+import androidx.compose.ui.zIndex
+import androidx.compose.ui.draw.clip
+import coil.compose.AsyncImage
 import `in`.melo.R
 import `in`.melo.ui.theme.GoogleSansRounded
 import `in`.melo.ui.theme.MeloStatusBarStyle
@@ -101,24 +139,201 @@ fun GenreGradientTopBar(
 @Composable
 fun HomeGradientTopBar(
     onSettingsClick: () -> Unit,
+    homeDialSettingsContent: (@Composable () -> Unit)? = null,
+    onReorderPinsClick: (() -> Unit)? = null,
     onHistoryClick: () -> Unit,
+    profileImageUrl: String? = null,
+    onProfileClick: (() -> Unit)? = null,
     isScrolled: Boolean = false,
+    refreshing: Boolean = false,
+    pullFraction: () -> Float = { 0f },
+    animateLogo: Boolean = true,
 ) {
     val colors = MaterialTheme.colorScheme
+    var menuExpanded by remember { mutableStateOf(false) }
+    var dialSettingsExpanded by remember { mutableStateOf(false) }
+    val statusBarInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     MeloStatusBarStyle(color = colors.background)
-    TopAppBar(
-        title = { MeloWordmark(Modifier.padding(start = 8.dp)) },
-        actions = {
+    Box(Modifier.fillMaxWidth()) {
+        TopAppBar(
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    MeloRefreshLogo(refreshing, pullFraction, animateLogo)
+                    MeloWordmark()
+                }
+            },
+            // The actions are drawn in the Box overlay below so their bounds don't participate in
+            // the title's layout and opening a panel can never change the app-bar measurement.
+            actions = { Spacer(Modifier.width(0.dp)) },
+            colors = topAppBarColors(
+                containerColor = colors.background,
+                scrolledContainerColor = colors.background,
+            ),
+        )
+        Row(
+            Modifier.align(Alignment.CenterEnd).offset(y = statusBarInset / 2).zIndex(1f)
+                .padding(end = 16.dp)
+                .background(colors.surface.copy(alpha = 0.94f), CircleShape)
+                .border(0.75.dp, colors.outlineVariant.copy(alpha = 0.65f), CircleShape),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             IconButton(onClick = onHistoryClick, modifier = Modifier.size(48.dp)) {
                 Icon(Icons.Rounded.History, stringResource(R.string.history_title))
             }
-            IconButton(onClick = onSettingsClick, modifier = Modifier.padding(end = 12.dp).size(48.dp)) {
-                Icon(painterResource(R.drawable.rounded_settings_24), stringResource(R.string.common_settings))
+            Box {
+                IconButton(
+                    onClick = {
+                        if (homeDialSettingsContent != null) dialSettingsExpanded = true
+                        else menuExpanded = true
+                    },
+                    modifier = Modifier.size(48.dp),
+                ) {
+                    Icon(Icons.Rounded.MoreVert, stringResource(R.string.player_cd_more_options))
+                }
+                if (homeDialSettingsContent == null) {
+                    MeloMenu(expanded = menuExpanded, onDismiss = { menuExpanded = false }) {
+                        MeloMenuItem(
+                            label = stringResource(R.string.common_settings),
+                            icon = { Icon(painterResource(R.drawable.rounded_settings_24), contentDescription = null) },
+                            onClick = {
+                                menuExpanded = false
+                                onSettingsClick()
+                            },
+                        )
+                    }
+                }
             }
-        },
-        colors = topAppBarColors(
-            containerColor = colors.background,
-            scrolledContainerColor = colors.background,
-        ),
-    )
+            if (onProfileClick != null) {
+                IconButton(onClick = onProfileClick, modifier = Modifier.size(48.dp)) {
+                    if (!profileImageUrl.isNullOrBlank()) {
+                        AsyncImage(
+                            model = profileImageUrl,
+                            contentDescription = stringResource(R.string.settings_accounts_title),
+                            modifier = Modifier.size(34.dp).clip(CircleShape),
+                            contentScale = ContentScale.Crop,
+                        )
+                    } else {
+                        Icon(
+                            Icons.Rounded.AccountCircle,
+                            contentDescription = stringResource(R.string.settings_accounts_title),
+                            modifier = Modifier.size(26.dp),
+                        )
+                    }
+                }
+            }
+        }
+    }
+    if (dialSettingsExpanded && homeDialSettingsContent != null) {
+        HomeDialSettingsOverlay(
+            content = homeDialSettingsContent,
+            onDismiss = { dialSettingsExpanded = false },
+            onSettingsClick = {
+                dialSettingsExpanded = false
+                onSettingsClick()
+            },
+            onReorderPinsClick = onReorderPinsClick?.let { callback ->
+                {
+                    dialSettingsExpanded = false
+                    callback()
+                }
+            },
+        )
+    }
+}
+
+@Composable
+private fun HomeDialSettingsOverlay(
+    content: @Composable () -> Unit,
+    onDismiss: () -> Unit,
+    onSettingsClick: () -> Unit,
+    onReorderPinsClick: (() -> Unit)?,
+) {
+    val colors = MaterialTheme.colorScheme
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
+    ) {
+        val dialogWindow = (LocalView.current.parent as? DialogWindowProvider)?.window
+        SideEffect { dialogWindow?.setDimAmount(0f) }
+        BoxWithConstraints(Modifier.fillMaxSize()) {
+            val statusInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+            val panelTop = statusInset + 10.dp
+            val panelMaxHeight = (maxHeight - panelTop - 16.dp).coerceAtLeast(220.dp)
+            val panelWidth = (maxWidth - 24.dp).coerceAtMost(320.dp)
+            val shape = RoundedCornerShape(28.dp)
+            val noRipple = remember { MutableInteractionSource() }
+            Box(
+                Modifier.matchParentSize()
+                    .background(colors.scrim.copy(alpha = 0.34f))
+                    .clickable(interactionSource = noRipple, indication = null, onClick = onDismiss),
+            )
+            AnimatedVisibility(
+                visible = true,
+                enter = fadeIn(tween(160)) + scaleIn(
+                    animationSpec = tween(180),
+                    initialScale = 0.96f,
+                    transformOrigin = TransformOrigin(1f, 0f),
+                ),
+                modifier = Modifier.align(Alignment.TopEnd).zIndex(2f),
+            ) {
+                Surface(
+                    modifier = Modifier.padding(top = panelTop, end = 12.dp)
+                        .width(panelWidth)
+                        .heightIn(max = panelMaxHeight)
+                        .shadow(20.dp, shape)
+                        .border(
+                            BorderStroke(0.75.dp, Brush.verticalGradient(listOf(
+                                colors.onSurface.copy(alpha = 0.22f),
+                                colors.onSurface.copy(alpha = 0.06f),
+                                colors.onSurface.copy(alpha = 0.12f),
+                            ))),
+                            shape,
+                        ),
+                    shape = shape,
+                    color = colors.surface,
+                    tonalElevation = 0.dp,
+                    shadowElevation = 0.dp,
+                ) {
+                    Column(
+                        Modifier.fillMaxWidth()
+                            .background(Brush.verticalGradient(listOf(
+                                colors.onSurface.copy(alpha = if (LocalSurfaceGradients.current) 0.025f else 0f),
+                                Color.Transparent,
+                            )))
+                            .verticalScroll(rememberScrollState())
+                            .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {},
+                    ) {
+                        content()
+                        HorizontalDivider(
+                            Modifier.padding(horizontal = 16.dp, vertical = 2.dp),
+                            color = colors.onSurface.copy(alpha = 0.10f),
+                        )
+                        if (onReorderPinsClick != null) OverlayPanelAction(
+                            label = stringResource(R.string.home_dial_reorder_pins),
+                            icon = { Icon(Icons.Rounded.SwapVert, contentDescription = null) },
+                            onClick = onReorderPinsClick,
+                        )
+                        OverlayPanelAction(
+                            label = stringResource(R.string.common_settings),
+                            icon = { Icon(painterResource(R.drawable.rounded_settings_24), contentDescription = null) },
+                            onClick = onSettingsClick,
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun OverlayPanelAction(label: String, icon: @Composable () -> Unit, onClick: () -> Unit) {
+    TextButton(onClick = onClick, modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)) {
+        Box(Modifier.size(30.dp), contentAlignment = Alignment.Center) { icon() }
+        Text(
+            text = label,
+            modifier = Modifier.weight(1f).padding(start = 10.dp),
+            textAlign = TextAlign.Start,
+            maxLines = 1,
+        )
+    }
 }

@@ -12,14 +12,13 @@ import androidx.compose.ui.unit.sp
 import `in`.melo.R
 
 // Bundled fonts: no network request or Google Play Services needed for typography.
-@OptIn(ExperimentalTextApi::class)
+// Dial's bundled SF Pro Display weights, used consistently across Melo.
 val MeloSans = FontFamily(
-    *listOf(FontWeight.Light, FontWeight.Normal, FontWeight.Medium,
-        FontWeight.SemiBold, FontWeight.Bold, FontWeight.ExtraBold).map { weight ->
-        Font(R.font.gflex_variable, weight = weight, variationSettings = FontVariation.Settings(
-            FontVariation.weight(weight.weight), FontVariation.Setting("ROND", 0f)
-        ))
-    }.toTypedArray()
+    Font(R.font.sf_pro_display_regular, FontWeight.Normal),
+    Font(R.font.sf_pro_display_medium, FontWeight.Medium),
+    Font(R.font.sf_pro_display_semibold, FontWeight.SemiBold),
+    Font(R.font.sf_pro_display_bold, FontWeight.Bold),
+    Font(R.font.sf_pro_display_heavy, FontWeight.ExtraBold),
 )
 
 @OptIn(ExperimentalTextApi::class)
@@ -41,14 +40,14 @@ private fun sans(size: Int, height: Int, weight: FontWeight = FontWeight.Normal,
 )
 
 val Typography = Typography(
-    displayLarge = sans(56, 60, FontWeight.Light, -2f),
-    displayMedium = sans(44, 50, FontWeight.Light, -1.5f),
-    displaySmall = sans(36, 42, FontWeight.Normal, -1f),
-    headlineLarge = sans(32, 38, FontWeight.Normal, -0.8f),
-    headlineMedium = sans(28, 34, FontWeight.Normal, -0.5f),
-    headlineSmall = sans(24, 30, FontWeight.Medium, -0.4f),
-    titleLarge = sans(22, 28, FontWeight.Medium, -0.4f),
-    titleMedium = sans(17, 24, FontWeight.Medium, -0.2f),
+    displayLarge = sans(40, 46, FontWeight.ExtraBold, -1f),
+    displayMedium = sans(34, 40, FontWeight.Bold, -0.8f),
+    displaySmall = sans(34, 40, FontWeight.ExtraBold, -1f),
+    headlineLarge = sans(32, 38, FontWeight.ExtraBold, -0.8f),
+    headlineMedium = sans(28, 34, FontWeight.Bold, -0.6f),
+    headlineSmall = sans(24, 30, FontWeight.Bold, -0.5f),
+    titleLarge = sans(22, 28, FontWeight.Bold, -0.4f),
+    titleMedium = sans(17, 24, FontWeight.SemiBold, -0.2f),
     titleSmall = sans(14, 20, FontWeight.Medium),
     bodyLarge = sans(16, 24),
     bodyMedium = sans(14, 21),

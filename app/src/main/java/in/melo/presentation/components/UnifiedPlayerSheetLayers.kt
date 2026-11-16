@@ -39,6 +39,7 @@ import `in`.melo.presentation.components.scoped.rememberFullPlayerRuntimePolicy
 import `in`.melo.presentation.viewmodel.PlayerSheetState
 import `in`.melo.presentation.viewmodel.PlayerViewModel
 import `in`.melo.presentation.viewmodel.StablePlayerState
+import `in`.melo.ui.theme.DarkColorScheme
 
 @OptIn(UnstableApi::class)
 @Composable
@@ -135,8 +136,9 @@ internal fun BoxScope.UnifiedPlayerMiniAndFullLayers(
         }
 
         if (shouldRenderFullPlayer) {
+            val settings by playerViewModel.settings.collectAsStateWithLifecycle()
             CompositionLocalProvider(
-                LocalMaterialTheme provides albumColorScheme
+                LocalMaterialTheme provides if (settings.playerArtworkGradient) DarkColorScheme else albumColorScheme
             ) {
                 val fullPlayerScale by remember(bottomSheetOpenFraction) {
                     // Keep the depth effect, but avoid aggressive full-screen rescaling on every frame.
@@ -286,12 +288,13 @@ internal fun UnifiedPlayerPrewarmLayer(
     onQueueRelease: (Float, Float) -> Unit
 ) {
     if (prewarmFullPlayer && currentSong != null) {
+        val settings by playerViewModel.settings.collectAsStateWithLifecycle()
         // Scoped queue collection: the prewarmed FullPlayer owns its own
         // subscription, keeping the queue out of the outer sheet's state.
         val currentPlaybackQueue by playerViewModel.queueFlow
             .collectAsStateWithLifecycle()
         CompositionLocalProvider(
-            LocalMaterialTheme provides albumColorScheme
+            LocalMaterialTheme provides if (settings.playerArtworkGradient) DarkColorScheme else albumColorScheme
         ) {
             Box(
                 modifier = Modifier

@@ -26,6 +26,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
@@ -60,6 +61,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
+import `in`.melo.presentation.components.meloPanel
 import `in`.melo.R
 import `in`.melo.MeloModel
 import `in`.melo.data.HomeLibrary
@@ -202,26 +204,26 @@ fun LibraryScreen(model: MeloModel, navController: NavHostController, paddingVal
                             fontFamily = GoogleSansRounded,
                             fontWeight = FontWeight.ExtraBold,
                             color = MaterialTheme.colorScheme.primary,
-                            fontSize = 34.sp,
-                            letterSpacing = 1.sp
+                            fontSize = 32.sp,
+                            letterSpacing = (-0.8).sp
                         )
                     },
                     actions = {
-                        FilledIconButton(
-                            modifier = Modifier.padding(end = 4.dp),
-                            colors = IconButtonDefaults.filledIconButtonColors(
-                                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        IconButton(
+                            modifier = Modifier.padding(end = 4.dp).meloPanel(androidx.compose.foundation.shape.CircleShape),
+                            colors = IconButtonDefaults.iconButtonColors(
+                                containerColor = Color.Transparent,
+                                contentColor = MaterialTheme.colorScheme.onSurface
                             ),
                             onClick = { navController.navigateSafely(Screen.History.route) }
                         ) {
                             Icon(androidx.compose.material.icons.Icons.Rounded.History, stringResource(R.string.history_title))
                         }
-                        FilledIconButton(
-                            modifier = Modifier.padding(end = 14.dp),
-                            colors = IconButtonDefaults.filledIconButtonColors(
-                                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        IconButton(
+                            modifier = Modifier.padding(end = 14.dp).meloPanel(androidx.compose.foundation.shape.CircleShape),
+                            colors = IconButtonDefaults.iconButtonColors(
+                                containerColor = Color.Transparent,
+                                contentColor = MaterialTheme.colorScheme.onSurface
                             ),
                             onClick = { navController.navigateSafely(Screen.Settings.route) }
                         ) {
@@ -251,7 +253,7 @@ fun LibraryScreen(model: MeloModel, navController: NavHostController, paddingVal
                             onClick = { scope.launch { pagerState.animateScrollToPage(index) } }
                         ) {
                             Text(
-                                text = stringResource(tab.titleRes).uppercase(),
+                                text = stringResource(tab.titleRes),
                                 style = MaterialTheme.typography.labelLarge,
                                 fontWeight = if (pagerState.currentPage == index) FontWeight.Bold else FontWeight.Medium
                             )
@@ -265,13 +267,8 @@ fun LibraryScreen(model: MeloModel, navController: NavHostController, paddingVal
             Column(Modifier.background(headerContainerColor).fillMaxSize()) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.surface,
-                    shape = AbsoluteSmoothCornerShape(
-                        cornerRadiusTL = 34.dp, smoothnessAsPercentBL = 60,
-                        cornerRadiusBL = 0.dp, smoothnessAsPercentBR = 60,
-                        cornerRadiusBR = 0.dp, smoothnessAsPercentTR = 60,
-                        cornerRadiusTR = 34.dp, smoothnessAsPercentTL = 60
-                    )
+                    color = MaterialTheme.colorScheme.background,
+                    shape = androidx.compose.ui.graphics.RectangleShape
                 ) {
                     Column(Modifier.fillMaxSize()) {
                         Row(

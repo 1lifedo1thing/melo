@@ -703,7 +703,7 @@ fun QueueBottomSheet(
         }
 
     Surface(
-        modifier = modifier
+        modifier = modifier.meloPanel(shape, colors.surface)
             .graphicsLayer {
                 val p = predictiveBackProgress.value
                 val offsetVal = queueSheetOffset.value
@@ -742,7 +742,7 @@ fun QueueBottomSheet(
             },
         shape = shape,
         tonalElevation = tonalElevation,
-        color = colors.surfaceContainer,
+        color = Color.Transparent,
     ) {
         Box(
             modifier = Modifier.fillMaxSize()

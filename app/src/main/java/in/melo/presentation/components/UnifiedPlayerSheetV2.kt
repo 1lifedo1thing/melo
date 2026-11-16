@@ -583,10 +583,7 @@ fun UnifiedPlayerSheetV2(
                                 shape = sheetInteractionState.playerShadowShape,
                                 clip = false
                             )
-                            .background(
-                                color = playerAreaBackground,
-                                shape = sheetInteractionState.playerShadowShape
-                            )
+                            .background(playerAreaBackground, sheetInteractionState.playerShadowShape)
                             .clip(sheetInteractionState.playerShadowShape)
                             // innerLayout:
                             // Measures the actual player content with full screen height targetContentHeightPx

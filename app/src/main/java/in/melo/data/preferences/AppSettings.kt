@@ -16,6 +16,7 @@ data class AppSettings(
     val disableBlur: Boolean = true,
     val showScrollbar: Boolean = true,
     val playerTheme: String = ThemePreference.GLOBAL,
+    val playerArtworkGradient: Boolean = true,
     val palette: String = AlbumArtPaletteStyle.default.storageKey,
     val carouselStyle: String = CarouselStyle.NO_PEEK,
     val showPlayerFileInfo: Boolean = true,
@@ -49,6 +50,31 @@ data class AppSettings(
     val compactLists: Boolean = false,
     /** Home shelves: order, visibility, layout and size, as [HomeLayout] encodes them. Empty: defaults. */
     val homeShelves: String = "",
+    /** Source after pins on the Home Speed Dial: YouTube Music, Spotify, or combined listening history. */
+    val homeDialSource: String = DIAL_SOURCE_YOUTUBE,
+    /** Visible tile rows per Speed Dial page, matching Dial's three- or four-row grid. */
+    val homeDialRows: Int = 4,
+    /** Whether the home Speed Dial is shown. */
+    val homeSpeedDialEnabled: Boolean = true,
+    /** Whether the Mixes page sits beside Speed Dial. */
+    val homeMixesDialEnabled: Boolean = true,
+    /** Whether a separate Artist Dial page is shown below Speed Dial. */
+    val homeArtistDialEnabled: Boolean = false,
+    /** Whether the randomized radio tile appears on Speed Dial. */
+    val homeLuckyTileEnabled: Boolean = true,
+    val homeDialLabels: Boolean = true,
+    val homeGradients: Boolean = true,
+    val surfaceGradients: Boolean = true,
+    val homePressMotion: Boolean = true,
+    val homeLoadingAnimations: Boolean = true,
+    /** Whether pinned dial tiles show their pin badge. */
+    val homeDialPinIcon: Boolean = true,
+    /** Artwork rim style: plain, edge, or glass. */
+    val homeDialTileStyle: String = DIAL_TILE_STYLE_GLASS,
+    val homeDialNewReleaseTags: Boolean = true,
+    /** User order for Speed Dial and Artist Dial cards, stored as a JSON string array. */
+    val homeDialOrder: String = "",
+    val homeArtistDialOrder: String = "",
     /** Album and playlist page buttons: order and which ones are in the bar, as [DetailActions] encodes them. */
     val albumActions: String = "",
     val playlistActions: String = "",
@@ -67,6 +93,8 @@ data class AppSettings(
     val miniPlayerSwipe: String = MINI_SWIPE_TRACKS,
     /** The Spotify / YouTube / Device choice above search results. Hidden: every search reads all sources. */
     val showSearchSources: Boolean = false,
+    /** Country used for YouTube Music recommendations and podcast discovery. */
+    val youtubeContentCountry: String = YOUTUBE_COUNTRY_DEVICE,
     /** Firebase usage analytics is enabled by default and can be disabled in Privacy settings. */
     val analyticsEnabled: Boolean = true,
 ) {
@@ -76,6 +104,7 @@ data class AppSettings(
     fun toJson(): JSONObject = JSONObject()
         .put("themeMode", themeMode).put("language", language).put("useSmoothCorners", useSmoothCorners)
         .put("disableBlur", disableBlur).put("showScrollbar", showScrollbar).put("playerTheme", playerTheme)
+        .put("playerArtworkGradient", playerArtworkGradient)
         .put("palette", palette).put("carouselStyle", carouselStyle).put("showPlayerFileInfo", showPlayerFileInfo)
         .put("showQualityInLists", showQualityInLists).put("collagePattern", collagePattern)
         .put("collageAutoRotate", collageAutoRotate).put("navBarStyle", navBarStyle).put("navBarCompact", navBarCompact)
@@ -90,12 +119,22 @@ data class AppSettings(
         .put("offlineMode", offlineMode)
         .put("tapBackgroundClosesPlayer", tapBackgroundClosesPlayer).put("hapticsEnabled", hapticsEnabled)
         .put("showSourceBadges", showSourceBadges).put("compactLists", compactLists).put("homeShelves", homeShelves)
+        .put("homeDialSource", homeDialSource).put("homeDialRows", homeDialRows)
+        .put("homeSpeedDialEnabled", homeSpeedDialEnabled).put("homeMixesDialEnabled", homeMixesDialEnabled)
+        .put("homeArtistDialEnabled", homeArtistDialEnabled).put("homeLuckyTileEnabled", homeLuckyTileEnabled)
+        .put("homeDialLabels", homeDialLabels).put("homeDialPinIcon", homeDialPinIcon)
+        .put("homeGradients", homeGradients).put("homePressMotion", homePressMotion)
+        .put("surfaceGradients", surfaceGradients)
+        .put("homeLoadingAnimations", homeLoadingAnimations)
+        .put("homeDialTileStyle", homeDialTileStyle).put("homeDialNewReleaseTags", homeDialNewReleaseTags)
+        .put("homeDialOrder", homeDialOrder).put("homeArtistDialOrder", homeArtistDialOrder)
         .put("albumActions", albumActions).put("playlistActions", playlistActions)
         .put("swipeRight", swipeRight).put("swipeLeft", swipeLeft)
         .put("streamingQualityWifi", streamingQualityWifi).put("streamingQualityMobile", streamingQualityMobile)
         .put("downloadQuality", downloadQuality).put("audioNormalization", audioNormalization)
         .put("showPlayerMenuButton", showPlayerMenuButton).put("miniPlayerSwipe", miniPlayerSwipe)
-        .put("showSearchSources", showSearchSources).put("analyticsEnabled", analyticsEnabled)
+        .put("showSearchSources", showSearchSources).put("youtubeContentCountry", YOUTUBE_COUNTRY_DEVICE)
+        .put("analyticsEnabled", analyticsEnabled)
 
     companion object {
         const val THEME_SYSTEM = "system"
@@ -103,11 +142,21 @@ data class AppSettings(
         const val THEME_DARK = "dark"
         const val LANGUAGE_SYSTEM = "system"
         const val TAB_HOME = "home"
+        const val TAB_EXPLORE = "explore"
         const val TAB_SEARCH = "search"
         const val TAB_LIBRARY = "library"
+        const val TAB_PODCASTS = "podcasts"
         const val MINI_SWIPE_TRACKS = "tracks"
         const val MINI_SWIPE_DISMISS = "dismiss"
         const val MINI_SWIPE_OFF = "off"
+        const val YOUTUBE_COUNTRY_IN = "IN"
+        const val YOUTUBE_COUNTRY_DEVICE = "device"
+        const val DIAL_SOURCE_HISTORY = "history"
+        const val DIAL_SOURCE_YOUTUBE = "youtube"
+        const val DIAL_SOURCE_SPOTIFY = "spotify"
+        const val DIAL_TILE_STYLE_PLAIN = "plain"
+        const val DIAL_TILE_STYLE_EDGE = "edge"
+        const val DIAL_TILE_STYLE_GLASS = "glass"
 
         /** Unknown or missing fields keep their default, so old backups stay valid. */
         fun fromJson(json: JSONObject): AppSettings {
@@ -121,6 +170,7 @@ data class AppSettings(
                 disableBlur = json.optBoolean("disableBlur", d.disableBlur),
                 showScrollbar = json.optBoolean("showScrollbar", d.showScrollbar),
                 playerTheme = json.optString("playerTheme", d.playerTheme),
+                playerArtworkGradient = json.optBoolean("playerArtworkGradient", d.playerArtworkGradient),
                 palette = json.optString("palette", d.palette),
                 carouselStyle = json.optString("carouselStyle", d.carouselStyle),
                 showPlayerFileInfo = json.optBoolean("showPlayerFileInfo", d.showPlayerFileInfo),
@@ -151,6 +201,26 @@ data class AppSettings(
                 showSourceBadges = json.optBoolean("showSourceBadges", d.showSourceBadges),
                 compactLists = json.optBoolean("compactLists", d.compactLists),
                 homeShelves = json.optString("homeShelves", d.homeShelves),
+                homeDialSource = json.optString("homeDialSource", d.homeDialSource)
+                    .takeIf { it in setOf(DIAL_SOURCE_HISTORY, DIAL_SOURCE_YOUTUBE, DIAL_SOURCE_SPOTIFY) }
+                    ?: d.homeDialSource,
+                homeDialRows = json.optInt("homeDialRows", d.homeDialRows).coerceIn(3, 4),
+                homeSpeedDialEnabled = json.optBoolean("homeSpeedDialEnabled", d.homeSpeedDialEnabled),
+                homeMixesDialEnabled = json.optBoolean("homeMixesDialEnabled", d.homeMixesDialEnabled),
+                homeArtistDialEnabled = json.optBoolean("homeArtistDialEnabled", d.homeArtistDialEnabled),
+                homeLuckyTileEnabled = json.optBoolean("homeLuckyTileEnabled", d.homeLuckyTileEnabled),
+                homeDialLabels = json.optBoolean("homeDialLabels", d.homeDialLabels),
+                homeGradients = json.optBoolean("homeGradients", d.homeGradients),
+                surfaceGradients = json.optBoolean("surfaceGradients", d.surfaceGradients),
+                homePressMotion = json.optBoolean("homePressMotion", d.homePressMotion),
+                homeLoadingAnimations = json.optBoolean("homeLoadingAnimations", d.homeLoadingAnimations),
+                homeDialPinIcon = json.optBoolean("homeDialPinIcon", d.homeDialPinIcon),
+                homeDialTileStyle = json.optString("homeDialTileStyle", d.homeDialTileStyle)
+                    .takeIf { it in setOf(DIAL_TILE_STYLE_PLAIN, DIAL_TILE_STYLE_EDGE, DIAL_TILE_STYLE_GLASS) }
+                    ?: d.homeDialTileStyle,
+                homeDialNewReleaseTags = json.optBoolean("homeDialNewReleaseTags", d.homeDialNewReleaseTags),
+                homeDialOrder = json.optString("homeDialOrder", d.homeDialOrder),
+                homeArtistDialOrder = json.optString("homeArtistDialOrder", d.homeArtistDialOrder),
                 albumActions = json.optString("albumActions", d.albumActions),
                 playlistActions = json.optString("playlistActions", d.playlistActions),
                 swipeRight = json.optString("swipeRight", d.swipeRight),
@@ -163,6 +233,7 @@ data class AppSettings(
                 miniPlayerSwipe = json.optString("miniPlayerSwipe", d.miniPlayerSwipe)
                     .takeIf { it in setOf(MINI_SWIPE_TRACKS, MINI_SWIPE_DISMISS, MINI_SWIPE_OFF) } ?: d.miniPlayerSwipe,
                 showSearchSources = json.optBoolean("showSearchSources", d.showSearchSources),
+                youtubeContentCountry = YOUTUBE_COUNTRY_DEVICE,
                 analyticsEnabled = json.optBoolean("analyticsEnabled", d.analyticsEnabled),
             )
         }

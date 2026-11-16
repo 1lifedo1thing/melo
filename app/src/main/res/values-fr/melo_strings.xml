@@ -11,7 +11,7 @@
     <string name="melo_next">Piste suivante</string>
     <string name="melo_pause">Pause</string>
     <string name="melo_player_description">Lecteur Melo : %1$s</string>
-    <string name="melo_home_compact_title">Votre musique</string>
+    <string name="melo_home_compact_title">Écouter maintenant</string>
     <string name="melo_cover_of">Pochette de %1$s</string>
     <string name="melo_connecting">Connexion à l’appareil…</string>
     <string name="melo_preparing">Préparation de la lecture…</string>

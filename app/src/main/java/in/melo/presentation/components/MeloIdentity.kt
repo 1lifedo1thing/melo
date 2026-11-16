@@ -1,24 +1,11 @@
 package `in`.melo.presentation.components
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowForward
-import androidx.compose.material.icons.rounded.Search
-import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -67,22 +54,12 @@ fun MeloWordmark(modifier: Modifier = Modifier) {
         color = MaterialTheme.colorScheme.onSurface, maxLines = 1)
 }
 
-@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
-fun ListeningHomeHeader(onSearch: () -> Unit, onLibrary: () -> Unit) {
-    Column(Modifier.fillMaxWidth().padding(horizontal = `in`.melo.ui.theme.MeloLayout.PageGutter)) {
-        Text(stringResource(R.string.melo_home_compact_title), style = MaterialTheme.typography.headlineSmall)
-        Spacer(Modifier.height(8.dp))
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Button(onClick = onSearch, shape = CircleShape) {
-                Icon(Icons.Rounded.Search, null, Modifier.size(18.dp))
-                Text(stringResource(R.string.melo_discover), Modifier.padding(start = 8.dp))
-            }
-            OutlinedButton(onClick = onLibrary, shape = CircleShape,
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)) {
-                Text(stringResource(R.string.nav_bar_library))
-                Icon(Icons.AutoMirrored.Rounded.ArrowForward, null, Modifier.padding(start = 8.dp).size(18.dp))
-            }
-        }
-    }
+fun ListeningHomeHeader(title: String? = null) {
+    Text(
+        text = title ?: stringResource(R.string.melo_home_compact_title),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = `in`.melo.ui.theme.MeloLayout.PageGutter),
+        style = androidx.compose.material3.MaterialTheme.typography.headlineSmall,
+        fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+    )
 }

@@ -18,6 +18,7 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -33,6 +34,9 @@ import `in`.melo.R
 import `in`.melo.data.preferences.DetailAction
 import `in`.melo.data.preferences.DetailPage
 import `in`.melo.presentation.viewmodel.PlayerViewModel
+import `in`.melo.presentation.components.MeloMenu
+import `in`.melo.presentation.components.MeloMenuItem
+import `in`.melo.presentation.components.meloPanel
 
 /** One button a page can offer: in the bar when the layout shows it, in the ⋮ menu otherwise. */
 internal data class ActionSpec(
@@ -62,6 +66,8 @@ internal fun DetailActionBar(page: DetailPage, actions: List<ActionSpec>, ui: Pl
         bar.forEach { spec ->
             FilledTonalIconButton(
                 onClick = spec.onClick, enabled = spec.enabled,
+                modifier = Modifier.size(48.dp).meloPanel(RoundedCornerShape(16.dp)),
+                shape = RoundedCornerShape(16.dp),
                 colors = when {
                     spec.selected -> IconButtonDefaults.filledTonalIconButtonColors(
                         containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary)
@@ -75,14 +81,13 @@ internal fun DetailActionBar(page: DetailPage, actions: List<ActionSpec>, ui: Pl
             FilledTonalIconButton(onClick = { expanded = true }) {
                 Icon(Icons.Rounded.MoreVert, stringResource(R.string.detail_more_actions))
             }
-            DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }, shape = RoundedCornerShape(20.dp)) {
+            MeloMenu(expanded = expanded, onDismiss = { expanded = false }) {
                 menu.forEach { spec ->
-                    DropdownMenuItem(
-                        text = { Text(spec.label) },
-                        leadingIcon = { Icon(spec.icon, null) },
+                    MeloMenuItem(
+                        label = spec.label,
+                        icon = { Icon(spec.icon, null) },
                         enabled = spec.enabled,
-                        colors = if (spec.destructive) MenuDefaults.itemColors(
-                            textColor = MaterialTheme.colorScheme.error, leadingIconColor = MaterialTheme.colorScheme.error) else MenuDefaults.itemColors(),
+                        destructive = spec.destructive,
                         onClick = { expanded = false; spec.onClick() },
                     )
                 }

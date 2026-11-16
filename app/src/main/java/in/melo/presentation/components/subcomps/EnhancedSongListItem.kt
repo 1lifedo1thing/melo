@@ -115,7 +115,7 @@ fun EnhancedSongListItem(
     val longPress: () -> Unit = onLongPress ?: { onMoreOptionsClick(song) }
     val compact = `in`.melo.presentation.components.LocalCompactLists.current
     val albumArtSize = if (compact && albumArtSize == 50.dp) 38.dp else albumArtSize
-    val rowPadding = if (compact) 6.dp else 12.dp
+    val rowPadding = if (compact) 6.dp else 8.dp
     val albumArtTargetSizePx = with(LocalDensity.current) { albumArtSize.roundToPx() }
     val isHighlighted = isCurrentSong && !isLoading
     val transition = updateTransition(
@@ -152,8 +152,8 @@ fun EnhancedSongListItem(
         if (state.isSelected) 1f else 0f
     }
 
-    val animatedCornerRadius = lerpDp(if (compact) 16.dp else 22.dp, 50.dp, highlightProgress)
-    val animatedAlbumCornerRadius = lerpDp(10.dp, 50.dp, highlightProgress)
+    val animatedCornerRadius = if (compact) 10.dp else 12.dp
+    val animatedAlbumCornerRadius = 8.dp
     val selectionScale = lerpFloat(1f, 0.98f, selectionScaleProgress)
     val selectionBorderWidth = lerpDp(0.dp, 2.5.dp, selectionVisualProgress)
 
@@ -170,7 +170,7 @@ fun EnhancedSongListItem(
     }
 
     val colors = MaterialTheme.colorScheme
-    val baseContainerColor = containerColorOverride ?: colors.surfaceContainerLow
+    val baseContainerColor = containerColorOverride ?: Color.Transparent
     val playbackContainerColor = lerpColor(baseContainerColor, colors.primaryContainer, highlightProgress)
     val containerColor = lerpColor(playbackContainerColor, colors.secondaryContainer, selectionVisualProgress)
 

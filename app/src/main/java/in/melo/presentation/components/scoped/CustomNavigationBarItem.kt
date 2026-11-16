@@ -1,6 +1,8 @@
 package `in`.melo.presentation.components.scoped
 
 import androidx.compose.foundation.background
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,10 +13,12 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -26,7 +30,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 
-/** Stable touch targets, native tab semantics, and a quiet dot for the active tab. */
+/** Dial-style selected capsule with stable touch targets and native tab semantics. */
 @Composable
 fun RowScope.CustomNavigationBarItem(
     selected: Boolean,
@@ -47,8 +51,13 @@ fun RowScope.CustomNavigationBarItem(
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
 ) {
     val showLabel = !compactMode && label != null && (alwaysShowLabel || selected)
+    val selection by animateColorAsState(
+        if (selected) indicatorColor else Color.Transparent,
+        animationSpec = tween(220), label = "navigationSelection",
+    )
     Column(
         modifier.fillMaxHeight().heightIn(min = 48.dp)
+            .background(selection, RoundedCornerShape(50))
             .selectable(selected = selected, enabled = enabled, role = Role.Tab,
                 interactionSource = interactionSource, indication = null, onClick = onClick)
             .semantics(mergeDescendants = true) {
@@ -65,7 +74,5 @@ fun RowScope.CustomNavigationBarItem(
         if (showLabel) ProvideTextStyle(MaterialTheme.typography.labelMedium.copy(
             color = if (selected) selectedTextColor else unselectedTextColor,
         )) { label?.invoke() }
-        Box(Modifier.size(4.dp).background(
-            if (selected) selectedIconColor else Color.Transparent, CircleShape))
     }
 }

@@ -237,15 +237,15 @@ fun ArtistDetailScreen(
     }
     // --- Fin de la lógica del Header ---
 
-    // Wrap in dynamic theme derived from the artist's image
+    // Keep the page canvas consistent while the artist artwork supplies its color.
     MaterialTheme(
-        colorScheme = artistColorScheme,
+        colorScheme = baseColorScheme,
         typography = MaterialTheme.typography,
         shapes = MaterialTheme.shapes
     ) {
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.surface
+        color = MaterialTheme.colorScheme.background
     ) {
         Box(modifier = Modifier.nestedScroll(nestedScrollConnection)) {
             val artist = current.toArtist()

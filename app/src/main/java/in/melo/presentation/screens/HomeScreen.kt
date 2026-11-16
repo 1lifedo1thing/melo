@@ -1,13 +1,17 @@
 package `in`.melo.presentation.screens
 
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.animation.rememberSplineBasedDecay
+import androidx.compose.runtime.CompositionLocalProvider
+import `in`.melo.presentation.components.LocalHomeGradients
+import `in`.melo.presentation.components.LocalHomePressMotion
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -41,18 +45,21 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
+import `in`.melo.presentation.components.MeloBottomSheet as ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -63,6 +70,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.TextStyle
@@ -75,11 +83,24 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.snapshotFlow
+import kotlinx.coroutines.withContext
 import `in`.melo.R
 import `in`.melo.utils.formatSongCount
 import `in`.melo.MeloModel
 import `in`.melo.data.Music
 import `in`.melo.data.MusicKind
+import `in`.melo.data.HomeMood
+import `in`.melo.data.HomeRecommendationType
+import `in`.melo.data.HomeRecommendationPick
+import `in`.melo.data.YouTubeHomeShelf
+import `in`.melo.data.YouTubeHomeChip
+import `in`.melo.data.source
 import `in`.melo.data.model.toSong
 import `in`.melo.data.preferences.CollagePattern
 import `in`.melo.presentation.components.AlbumArtCollage
@@ -87,6 +108,7 @@ import androidx.compose.ui.res.stringResource
 import kotlinx.collections.immutable.toImmutableList
 import `in`.melo.data.preferences.HomeShelf
 import `in`.melo.data.preferences.ShelfStyle
+import `in`.melo.data.preferences.AppSettings
 import `in`.melo.ui.theme.MeloLayout
 import `in`.melo.presentation.components.ListeningStatusCard
 import `in`.melo.presentation.components.ListeningShelfPlaceholder
@@ -107,11 +129,20 @@ import sh.calvin.reorderable.ReorderableColumn
 private const val COLLAGE_ITEMS = 6
 private const val COLLAGE_MINIMUM = 3
 
+/** Distributes the selected Home feed's first picks across shelves, as Dial's category dial does. */
+private fun categoryDialEntries(shelves: List<YouTubeHomeShelf>): List<HomeSpeedDialEntry> {
+    val longest = shelves.maxOfOrNull { it.items.size } ?: return emptyList()
+    val picks = ArrayList<Music>()
+    for (round in 0 until longest) {
+        shelves.forEach { shelf -> shelf.items.getOrNull(round)?.let(picks::add) }
+    }
+    return picks.map(::HomeSpeedDialEntry)
+}
+
 /**
- * The home canvas, with generated mixes and statistics replaced by what this app is
- * for: the items pinned on this device first, then the Spotify library.
+ * The home canvas: a Dial-style speed dial above Melo's recommendations and library shelves.
  */
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(model: MeloModel, navController: NavHostController, paddingValues: PaddingValues) {
     val ui = model.ui
@@ -121,6 +152,7 @@ fun HomeScreen(model: MeloModel, navController: NavHostController, paddingValues
     val settings by ui.settings.collectAsStateWithLifecycle()
     val localPlaylists by model.localPlaylists.collectAsStateWithLifecycle()
     val youTubePlaylists by model.youTubePlaylists.collectAsStateWithLifecycle()
+    val youTubeAccount by model.youTubeAccount.collectAsStateWithLifecycle()
     val localBadge = stringResource(R.string.badge_local)
     val playlistsTitle = stringResource(R.string.home_playlists)
     val albumsTitle = stringResource(R.string.home_albums)
@@ -136,16 +168,209 @@ fun HomeScreen(model: MeloModel, navController: NavHostController, paddingValues
         HomeShelf.LOCAL_FILES to stringResource(R.string.home_local_files),
     )
     val library by model.library.collectAsStateWithLifecycle()
+    val discovery by model.discovery.collectAsStateWithLifecycle()
+    val online by model.online.collectAsStateWithLifecycle()
+    val homeRecommendations by model.homeRecommendations.collectAsStateWithLifecycle()
+    val homeDetails by model.details.collectAsStateWithLifecycle()
+    val youTubeHome by model.youTubeHome.collectAsStateWithLifecycle()
+    val recordedHistory by model.listeningHistory.entries.collectAsStateWithLifecycle()
+    var spotifyHistory by remember(model) { mutableStateOf<List<Music>>(emptyList()) }
+    LaunchedEffect(model) {
+        withContext(Dispatchers.IO) { model.listeningHistory.load() }
+    }
+    LaunchedEffect(model, discovery.spotifyEnabled, online) {
+        spotifyHistory = if (discovery.spotifyEnabled && online) {
+            try {
+                model.fullListeningHistory().map { it.track }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                emptyList()
+            }
+        } else {
+            emptyList()
+        }
+    }
     val hasSong by ui.stablePlayerStateHasSong()
     val navBarCompactMode by ui.navBarCompactMode.collectAsStateWithLifecycle()
     val content = library.content
+    val homeRecent = remember(recent, spotifyHistory, recordedHistory, homeRecommendations.youtubeRecent) {
+        (recent + spotifyHistory + recordedHistory.map { it.track } + homeRecommendations.youtubeRecent)
+            .filter { it.kind == MusicKind.Track }
+            .distinctBy(Music::id)
+            .take(12)
+    }
+    LaunchedEffect(model, online, youTubeAccount) {
+        model.refreshHomeRecommendations()
+        model.refreshYouTubeHomeCategories(force = true)
+        while (true) {
+            delay(60_000)
+            model.refreshHomeRecommendations()
+        }
+    }
+    val filteredHome = youTubeHome.selected != null
+    val recentConfig = settings.homeLayout.firstOrNull { it.shelf == HomeShelf.RECENT }
+    val recentFeed = if (recentConfig?.visible == true) homeRecent.take(recentConfig.count) else emptyList()
+    val recentTitle = shelfTitles[HomeShelf.RECENT].orEmpty()
+    val personalizedHome = youTubeHome.personalizedShelves
+    val activeDialSource = if (settings.homeDialSource == AppSettings.DIAL_SOURCE_SPOTIFY && !discovery.spotifyEnabled) {
+        AppSettings.DIAL_SOURCE_YOUTUBE
+    } else settings.homeDialSource
+    val newReleaseIds = remember(personalizedHome) {
+        personalizedHome.filter { it.title.contains("release", ignoreCase = true) || it.title.contains("new music", ignoreCase = true) }
+            .flatMap(YouTubeHomeShelf::items).mapTo(HashSet(), Music::id)
+    }
+    val speedDialEntries = remember(
+        filteredHome, youTubeHome.shelves, personalizedHome, newReleaseIds, pins, homeRecent, homeRecommendations.picks,
+        homeRecommendations.youtubeMixes, localPlaylists, youTubePlaylists, localFiles, downloads, content,
+        ui.likedSongs, activeDialSource, settings.homeDialOrder, settings.homeArtistDialEnabled,
+        discovery.spotifyEnabled, spotifyHistory,
+    ) {
+        if (filteredHome) {
+            categoryDialEntries(youTubeHome.shelves).distinctBy { it.item.id }.take(SPEED_DIAL_MAX_ITEMS)
+        } else {
+            val sourceItems = when {
+                activeDialSource == AppSettings.DIAL_SOURCE_HISTORY -> homeRecent
+                activeDialSource == AppSettings.DIAL_SOURCE_SPOTIFY -> buildList {
+                    addAll(spotifyHistory.filter { it.source == `in`.melo.data.MusicSource.Spotify })
+                    addAll(content?.savedTracks.orEmpty())
+                    addAll(content?.playlists.orEmpty())
+                    addAll(content?.albums.orEmpty())
+                    addAll(content?.artists.orEmpty())
+                }
+                else -> buildList {
+                    personalizedHome.forEach { addAll(it.items) }
+                    addAll(homeRecent.filter { it.source == `in`.melo.data.MusicSource.YouTubeMusic })
+                    addAll(homeRecommendations.picks.map(HomeRecommendationPick::item))
+                }
+            }
+            buildList {
+                pins.forEach { add(HomeSpeedDialEntry(it)) }
+                sourceItems.forEach { item ->
+                    val pick = homeRecommendations.picks.firstOrNull { it.item.id == item.id }
+                        ?.takeIf { activeDialSource == AppSettings.DIAL_SOURCE_YOUTUBE }
+                    if (pick != null) add(HomeSpeedDialEntry(
+                        item = pick.item,
+                        title = pick.title,
+                        artworkUrl = pick.artworkUrls.firstOrNull() ?: pick.item.imageUrl,
+                        recommendation = pick,
+                        isNewRelease = pick.type == HomeRecommendationType.LATEST_RELEASE,
+                    )) else add(HomeSpeedDialEntry(item, isNewRelease = item.id in newReleaseIds))
+                }
+                homeRecommendations.picks.forEach { pick ->
+                    if (activeDialSource == AppSettings.DIAL_SOURCE_YOUTUBE) {
+                        add(HomeSpeedDialEntry(
+                            item = pick.item,
+                            title = pick.title,
+                            artworkUrl = pick.artworkUrls.firstOrNull() ?: pick.item.imageUrl,
+                            recommendation = pick,
+                            isNewRelease = pick.type == HomeRecommendationType.LATEST_RELEASE,
+                        ))
+                    }
+                }
+                if (activeDialSource == AppSettings.DIAL_SOURCE_SPOTIFY && (content?.savedTrackCount ?: 0) > 0) {
+                    add(HomeSpeedDialEntry(ui.likedSongs))
+                }
+                if (activeDialSource == AppSettings.DIAL_SOURCE_YOUTUBE) {
+                    youTubePlaylists.forEach { add(HomeSpeedDialEntry(it)) }
+                }
+            }.distinctBy { it.item.id }
+                .let { entries ->
+                    val pinnedEntries = entries.filter { entry -> pins.any { it.id == entry.item.id } }
+                    pinnedEntries + orderDialEntries(entries.filterNot { entry -> pins.any { it.id == entry.item.id } }, settings.homeDialOrder)
+                }
+                .let { entries -> if (settings.homeArtistDialEnabled) entries.filterNot { it.item.kind == MusicKind.Artist } else entries }
+                .take(SPEED_DIAL_MAX_ITEMS)
+        }
+    }
+    val mixEntries = remember(homeRecommendations.youtubeMixes, homeRecommendations.picks, personalizedHome) {
+        buildList {
+            homeRecommendations.youtubeMixes.forEach { add(HomeSpeedDialEntry(it)) }
+            homeRecommendations.picks
+                .filter { it.type in setOf(HomeRecommendationType.PERSONAL_STATION, HomeRecommendationType.NEW_RELEASE_MIX, HomeRecommendationType.DISCOVERY_STATION) }
+                .forEach { pick -> add(HomeSpeedDialEntry(pick.item, pick.title, pick.artworkUrls.firstOrNull(), pick)) }
+            personalizedHome.filter { shelf -> shelf.title.contains("mix", ignoreCase = true) }
+                .flatMap(YouTubeHomeShelf::items).forEach { add(HomeSpeedDialEntry(it)) }
+        }.filter { it.item.kind == MusicKind.Playlist }
+            .distinctBy { it.item.id }
+            .take(SPEED_DIAL_MAX_ITEMS)
+    }
+    val artistDialEntries = remember(pins, homeRecommendations.youtubeArtists, content?.artists, personalizedHome, settings.homeArtistDialOrder, homeDetails) {
+        val artists = buildList {
+            pins.filter { it.kind == MusicKind.Artist }.forEach { add(HomeSpeedDialEntry(it)) }
+            homeRecommendations.youtubeArtists.forEach { add(HomeSpeedDialEntry(it)) }
+            content?.artists.orEmpty().forEach { add(HomeSpeedDialEntry(it)) }
+            personalizedHome.flatMap(YouTubeHomeShelf::items).filter { it.kind == MusicKind.Artist }
+                .forEach { add(HomeSpeedDialEntry(it)) }
+        }.distinctBy { it.item.id }
+        val pinnedArtistIds = pins.filter { it.kind == MusicKind.Artist }.mapTo(HashSet(), Music::id)
+        (artists.filter { it.item.id in pinnedArtistIds } +
+            orderDialEntries(artists.filterNot { it.item.id in pinnedArtistIds }, settings.homeArtistDialOrder))
+            .map { entry ->
+                val photo = homeDetails[entry.item.id]?.content?.item?.imageUrl
+                if (entry.artworkUrl.isNullOrBlank() && photo != null) entry.copy(artworkUrl = photo) else entry
+            }
+            .take(SPEED_DIAL_MAX_ITEMS)
+    }
+    val showArtistDial = !filteredHome && settings.homeSpeedDialEnabled && settings.homeArtistDialEnabled && artistDialEntries.isNotEmpty()
+    var refreshRequested by remember { mutableStateOf(false) }
+    val servicesBusy = library.loading || homeRecommendations.loading || youTubeHome.personalizedLoading ||
+        youTubeHome.loadingCategories || youTubeHome.loading
+    LaunchedEffect(refreshRequested, servicesBusy) {
+        if (refreshRequested && !servicesBusy) {
+            delay(180)
+            refreshRequested = false
+        }
+    }
+    val homeRequestBusy = refreshRequested || (filteredHome && youTubeHome.loading) ||
+        (!filteredHome && personalizedHome.isEmpty() && youTubeHome.personalizedLoading)
+    var completingLoad by remember { mutableStateOf(false) }
+    LaunchedEffect(homeRequestBusy) {
+        if (homeRequestBusy) completingLoad = true
+        else {
+            delay(180)
+            completingLoad = false
+        }
+    }
+    val showHomeSkeleton = homeRequestBusy || completingLoad
+    val pullState = rememberPullToRefreshState()
+    val hasArtistPage = showArtistDial && !showHomeSkeleton
+    val homeSpeedDialVisible = settings.homeSpeedDialEnabled && (speedDialEntries.isNotEmpty() || youTubeHome.chips.isNotEmpty() || showHomeSkeleton)
+    val feedCategoriesIndex = (if (homeSpeedDialVisible) 1 else 0) + (if (hasArtistPage) 1 else 0)
+    val speedDialItemIds = remember(speedDialEntries) { speedDialEntries.mapTo(HashSet()) { it.item.id } }
+    val overflowPins = remember(pins, speedDialItemIds, filteredHome) {
+        if (filteredHome) emptyList() else pins.filterNot { it.id in speedDialItemIds }
+    }
     val listState = rememberLazyListState()
+    val homeScope = rememberCoroutineScope()
+    val selectHomeCategory: (YouTubeHomeChip) -> Unit = { chip ->
+        model.selectYouTubeHomeCategory(chip)
+        homeScope.launch { listState.animateScrollToItem(0) }
+    }
     val density = LocalDensity.current
     val scrollThresholdPx = remember(density) { with(density) { 180.dp.toPx() } }
     val isScrolled by remember {
         derivedStateOf { listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > scrollThresholdPx }
     }
+    var requestedHomePage by remember(model) { mutableStateOf<String?>(null) }
+    LaunchedEffect(youTubeHome.selected?.params) { requestedHomePage = null }
+    LaunchedEffect(listState, youTubeHome.selected?.params, youTubeHome.continuation, youTubeHome.personalizedContinuation) {
+        snapshotFlow {
+            val info = listState.layoutInfo
+            val lastVisible = info.visibleItemsInfo.lastOrNull()?.index ?: -1
+            val token = if (youTubeHome.selected != null) youTubeHome.continuation else youTubeHome.personalizedContinuation
+            token.takeIf {
+                info.totalItemsCount > 0 && lastVisible >= info.totalItemsCount - 4
+            }
+        }.collect { token ->
+            if (token != null && token != requestedHomePage) {
+                requestedHomePage = token
+                if (youTubeHome.selected != null) model.loadMoreYouTubeHomeCategory() else model.loadMoreYouTubeHomeFeed()
+            }
+        }
+    }
     var reordering by rememberSaveable { mutableStateOf(false) }
+    var reorderingArtists by rememberSaveable { mutableStateOf(false) }
     val open: (Music) -> Unit = { navController.openMusic(ui, it) }
     var optionsFor by remember { mutableStateOf<Music?>(null) }
     val showOptions: (Music) -> Unit = {
@@ -154,36 +379,258 @@ fun HomeScreen(model: MeloModel, navController: NavHostController, paddingValues
     }
     val openLibrary: () -> Unit = { navController.navigateToTopLevelSafely(Screen.Library.route) }
 
-    Box(Modifier.fillMaxSize()) {
+    val decay = rememberSplineBasedDecay<Float>()
+    val evenFling = remember(decay) { EvenFling(decay) }
+    val dialFling = remember(listState, decay) {
+        DialPageFling(listState, decay, restOffsetPx = { 0 }, nextOffsetPx = { 0 })
+    }
+    FrameBeatWhileScrolling(listState)
+    CompositionLocalProvider(
+        LocalHomeGradients provides settings.homeGradients,
+        LocalHomePressMotion provides settings.homePressMotion,
+    ) {
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        val viewportHeight = maxHeight
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             topBar = {
                 HomeGradientTopBar(
                     onSettingsClick = { navController.navigateSafely(Screen.Settings.route) },
+                    homeDialSettingsContent = {
+                        HomeDialSettingsMenuContent(
+                            settings = settings,
+                            spotifyConnected = discovery.spotifyEnabled,
+                            onSettingsChange = { change -> ui.updateSettings { current -> change(current) } },
+                        )
+                    },
+                    onReorderPinsClick = if (pins.size > 1) ({ reordering = true }) else null,
                     onHistoryClick = { navController.navigateSafely(Screen.History.route) },
+                    profileImageUrl = youTubeAccount?.photoUrl,
+                    onProfileClick = { navController.navigateSafely(Screen.SettingsCategory.createRoute("account")) },
                     isScrolled = isScrolled,
+                    refreshing = showHomeSkeleton,
+                    pullFraction = { pullState.distanceFraction },
+                    animateLogo = settings.homeLoadingAnimations,
                 )
             }
         ) { innerPadding ->
+            val screenHeight = viewportHeight
+            val dialPageHeight = (
+                screenHeight - innerPadding.calculateTopPadding()
+                ).coerceAtLeast(360.dp)
+            val dialFooter = paddingValues.calculateBottomPadding() +
+                (if (hasSong) MiniPlayerHeight + 8.dp else 0.dp) + 12.dp
+            val hasCategoryRow = youTubeHome.chips.isNotEmpty()
+            val speedGridRoom = (dialPageHeight - dialFooter - if (hasCategoryRow) 148.dp else 90.dp).coerceAtLeast(180.dp)
+            val titledGridRoom = (dialPageHeight - dialFooter - 134.dp).coerceAtLeast(180.dp)
+            Box(Modifier.fillMaxSize()) {
             PullToRefreshBox(
-                isRefreshing = library.loading && content != null,
-                onRefresh = model::refreshLibrary,
+                isRefreshing = refreshRequested,
+                state = pullState,
+                indicator = {},
+                onRefresh = {
+                    refreshRequested = true
+                    model.refreshHome()
+                },
                 modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
             ) {
                 LazyColumn(
                     state = listState,
-                    modifier = Modifier.fillMaxSize(),
+                    flingBehavior = if (homeSpeedDialVisible && !`in`.melo.presentation.utils.LocalReducedMotion.current) dialFling else evenFling,
+                    modifier = Modifier.fillMaxSize().padding(top = innerPadding.calculateTopPadding()),
                     contentPadding = PaddingValues(
-                        top = innerPadding.calculateTopPadding(),
+                        top = 0.dp,
                         bottom = paddingValues.calculateBottomPadding() + 38.dp + if (hasSong) MiniPlayerHeight else 0.dp
                     ),
                     verticalArrangement = Arrangement.spacedBy(MeloLayout.SectionGap)
                 ) {
-                    item(key = "melo_identity") {
-                        ListeningHomeHeader(
-                            onSearch = { navController.navigateToTopLevelSafely(Screen.Search.route) },
-                            onLibrary = openLibrary,
+                    if (homeSpeedDialVisible) {
+                        item(key = "speed_dial", contentType = "speed_dial") {
+                            key(youTubeHome.selected?.params) {
+                                HomeDialPager(
+                                    mixesAvailable = !filteredHome && settings.homeMixesDialEnabled,
+                                    speedDial = {
+                                        HomeSpeedDial(
+                                            entries = speedDialEntries,
+                                            pinnedIds = if (filteredHome) emptySet() else pins.mapTo(HashSet(), Music::id),
+                                            categoryChips = youTubeHome.chips,
+                                            selectedCategory = youTubeHome.selected,
+                                            onCategoryClick = selectHomeCategory,
+                                            onItemClick = { entry ->
+                                                val pick = entry.recommendation
+                                                when {
+                                                    filteredHome && entry.item.kind == MusicKind.Track -> model.loadRadio(entry.item, open)
+                                                    pick != null && pick.type == HomeRecommendationType.LATEST_RELEASE -> open(pick.item)
+                                                    pick != null -> model.playHomeRecommendation(pick)
+                                                    entry.item.kind == MusicKind.Track -> ui.playItem(entry.item)
+                                                    else -> open(entry.item)
+                                                }
+                                            },
+                                            onItemLongPress = { entry -> showOptions(entry.item) },
+                                            hasLuckyTile = !filteredHome && settings.homeLuckyTileEnabled && (
+                                                homeRecommendations.picks.any { it.type != HomeRecommendationType.LATEST_RELEASE } ||
+                                                    homeRecent.isNotEmpty() || pins.any { it.kind == MusicKind.Track }
+                                                ),
+                                            onLuckyClick = {
+                                                val picks = homeRecommendations.picks.filter { it.type != HomeRecommendationType.LATEST_RELEASE }
+                                                val pick = picks.randomOrNull()
+                                                if (pick != null) {
+                                                    model.playHomeRecommendation(pick)
+                                                } else {
+                                                    (homeRecent + pins.filter { it.kind == MusicKind.Track })
+                                                        .distinctBy(Music::id)
+                                                        .randomOrNull()
+                                                        ?.let(ui::playItem)
+                                                }
+                                            },
+                                            onHistoryClick = { navController.navigateSafely(Screen.History.route) },
+                                            onReorderPins = null,
+                                            onCustomize = null,
+                                            loading = showHomeSkeleton,
+                                            rows = settings.homeDialRows,
+                                            pageHeight = dialPageHeight,
+                                            footerReserve = dialFooter,
+                                            maxGridHeight = speedGridRoom,
+                                            showLabels = settings.homeDialLabels,
+                                            showPinIcon = settings.homeDialPinIcon,
+                                            tileStyle = settings.homeDialTileStyle,
+                                            showNewReleaseTags = settings.homeDialNewReleaseTags,
+                                            showHistoryTile = !filteredHome,
+                                            onScrollToFeed = {
+                                                val nextPage = if (hasArtistPage) 1 else feedCategoriesIndex
+                                                homeScope.launch { listState.animateScrollToItem(nextPage) }
+                                            },
+                                        )
+                                    },
+                                    mixesDial = {
+                                        HomeSpeedDial(
+                                            entries = mixEntries,
+                                            pinnedIds = emptySet(),
+                                            categoryChips = emptyList(),
+                                            selectedCategory = null,
+                                            onCategoryClick = {},
+                                            onItemClick = { entry -> open(entry.item) },
+                                            onItemLongPress = { entry -> showOptions(entry.item) },
+                                            hasLuckyTile = false,
+                                            onLuckyClick = {},
+                                            onHistoryClick = {},
+                                            onReorderPins = null,
+                                            title = stringResource(R.string.home_dial_mixes_title),
+                                            loading = showHomeSkeleton,
+                                            rows = settings.homeDialRows,
+                                            pageHeight = dialPageHeight,
+                                            footerReserve = dialFooter,
+                                            maxGridHeight = titledGridRoom,
+                                            showLabels = settings.homeDialLabels,
+                                            showPinIcon = false,
+                                            tileStyle = settings.homeDialTileStyle,
+                                            showNewReleaseTags = settings.homeDialNewReleaseTags,
+                                            showHistoryTile = false,
+                                            onScrollToFeed = {
+                                                val nextPage = if (hasArtistPage) 1 else feedCategoriesIndex
+                                                homeScope.launch { listState.animateScrollToItem(nextPage) }
+                                            },
+                                        )
+                                    },
+                                )
+                            }
+                        }
+                    }
+                    if (hasArtistPage) {
+                        item(key = "artist_dial", contentType = "artist_dial") {
+                            HomeSpeedDial(
+                                entries = artistDialEntries,
+                                pinnedIds = pins.filter { it.kind == MusicKind.Artist }.mapTo(HashSet(), Music::id),
+                                categoryChips = emptyList(),
+                                selectedCategory = null,
+                                onCategoryClick = {},
+                                onItemClick = { entry -> open(entry.item) },
+                                onItemLongPress = { entry -> showOptions(entry.item) },
+                                hasLuckyTile = false,
+                                onLuckyClick = {},
+                                onHistoryClick = {},
+                                onReorderPins = if (artistDialEntries.size > 1) ({ reorderingArtists = true }) else null,
+                                title = stringResource(R.string.home_dial_artists_title),
+                                rows = settings.homeDialRows,
+                                pageHeight = dialPageHeight,
+                                footerReserve = dialFooter,
+                                maxGridHeight = titledGridRoom,
+                                showLabels = settings.homeDialLabels,
+                                showPinIcon = settings.homeDialPinIcon,
+                                tileStyle = settings.homeDialTileStyle,
+                                showNewReleaseTags = false,
+                                showHistoryTile = false,
+                                onMissingArtwork = { artist -> model.loadDetail(artist) },
+                                onScrollToFeed = {
+                                    homeScope.launch { listState.animateScrollToItem(feedCategoriesIndex) }
+                                },
+                            )
+                        }
+                    }
+
+                    if (youTubeHome.chips.isNotEmpty()) {
+                        stickyHeader(key = "home_feed_categories") {
+                            Box(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background)) {
+                                HomeCategoryChips(youTubeHome.chips, youTubeHome.selected, selectHomeCategory)
+                            }
+                        }
+                    }
+                    if (showHomeSkeleton) {
+                        item(key = "home_feed_skeleton") { HomeFeedSkeleton() }
+                    } else if (!filteredHome) {
+
+                    if (homeRecommendations.picks.isNotEmpty() || recentFeed.isNotEmpty() || HomeMood.coreMoods.isNotEmpty()) {
+                        item(key = "for_you_discovery", contentType = "for_you_discovery") {
+                            ForYouShelf(
+                                picks = homeRecommendations.picks,
+                                moods = HomeMood.coreMoods,
+                                recent = recentFeed,
+                                onPickClick = { pick ->
+                                    if (pick.type == HomeRecommendationType.LATEST_RELEASE) open(pick.item)
+                                    else model.playHomeRecommendation(pick)
+                                },
+                                onLongPress = showOptions,
+                                onMoodClick = model::playHomeMood,
+                                onShowAllMoods = { navController.navigateToTopLevelSafely(Screen.Explore.route) },
+                                onRecentClick = { selected ->
+                                    ui.playSongs(homeRecent.map { it.toSong() }, selected.toSong(), recentTitle)
+                                },
+                                onRecentLongPress = showOptions,
+                                onOpenHistory = { navController.navigateSafely(Screen.History.route) },
+                            )
+                        }
+                    }
+                    if (youTubeHome.personalizedLoading && personalizedHome.isEmpty()) {
+                        item(key = "youtube_personalized_loading") { ListeningShelfPlaceholder() }
+                    }
+                    if (youTubeHome.personalizedError != null && personalizedHome.isEmpty()) {
+                        item(key = "youtube_personalized_error") {
+                            ListeningStatusCard(
+                                title = stringResource(R.string.home_personalized_feed_title),
+                                message = youTubeHome.personalizedError.orEmpty(),
+                                action = stringResource(R.string.melo_retry),
+                                onAction = { model.refreshYouTubeHomeCategories(force = true) },
+                                modifier = Modifier.padding(horizontal = MeloLayout.PageGutter),
+                            )
+                        }
+                    }
+                    personalizedHome.forEachIndexed { index, shelf ->
+                        val style = if (shelf.items.all { it.kind == MusicKind.Track }) ShelfStyle.LIST else ShelfStyle.CAROUSEL
+                        homeShelf(
+                            key = "youtube_personalized_home_$index",
+                            title = shelf.title,
+                            items = shelf.items.take(24),
+                            style = style,
+                            ui = ui,
+                            onClick = { selected ->
+                                if (selected.kind == MusicKind.Track) model.loadRadio(selected, open) else open(selected)
+                            },
+                            onLongPress = showOptions,
+                            openAll = null,
                         )
+                    }
+                    if (youTubeHome.personalizedLoadingMore) {
+                        item(key = "youtube_personalized_loading_more") { ListeningShelfPlaceholder() }
                     }
                     if (content == null && library.loading) {
                         item(key = "library_loading") {
@@ -216,7 +663,7 @@ fun HomeScreen(model: MeloModel, navController: NavHostController, paddingValues
                         }
                     }
                     // Shelves in the order, layout and size chosen in Settings → Home.
-                    settings.homeLayout.filter { it.visible }.forEach { config ->
+                    settings.homeLayout.filter { it.visible && it.shelf != HomeShelf.RECENT }.forEach { config ->
                         val multi = localPlaylists.map { it.asMusic().copy(subtitle = localBadge + " · " + it.asMusic().subtitle) }
                         val openTab: (`in`.melo.data.model.LibraryTabId) -> () -> Unit = { tab -> { ui.requestedLibraryTab.value = tab.storageKey; openLibrary() } }
                         val title = when (config.shelf) {
@@ -227,7 +674,7 @@ fun HomeScreen(model: MeloModel, navController: NavHostController, paddingValues
                             else -> shelfTitles[config.shelf].orEmpty()
                         }
                         val (items, openAll) = when (config.shelf) {
-                            HomeShelf.PINS -> pins to null
+                            HomeShelf.PINS -> overflowPins to null
                             HomeShelf.RECENT -> recent to null
                             HomeShelf.DOWNLOADS -> downloads.values.filter { it.isComplete }.map { it.collection.item } to openTab(`in`.melo.data.model.LibraryTabId.DOWNLOADS)
                             HomeShelf.LIKED -> emptyList<Music>() to null
@@ -254,9 +701,9 @@ fun HomeScreen(model: MeloModel, navController: NavHostController, paddingValues
                                     },
                                 )
                             }
-                            config.shelf == HomeShelf.PINS && config.style == ShelfStyle.COLLAGE -> if (pins.isNotEmpty()) {
+                            config.shelf == HomeShelf.PINS && config.style == ShelfStyle.COLLAGE -> if (overflowPins.isNotEmpty()) {
                                 item(key = "pins_collage", contentType = "pins_collage") {
-                                    PinsCollage(pins.take(config.count), settings.collagePattern, settings.collageAutoRotate, ui, { open(it) }, { showOptions(it) }, { reordering = true })
+                                    PinsCollage(overflowPins.take(config.count), settings.collagePattern, settings.collageAutoRotate, ui, { open(it) }, { showOptions(it) }, { reordering = true })
                                 }
                             }
                             else -> homeShelf(config.shelf.key, title.takeIf { config.showTitle }, items.take(config.count), config.style, ui,
@@ -268,7 +715,53 @@ fun HomeScreen(model: MeloModel, navController: NavHostController, paddingValues
                                 onLongPress = showOptions, openAll = openAll)
                         }
                     }
+                    } else {
+                        if (youTubeHome.loading && youTubeHome.shelves.isEmpty()) {
+                            item(key = "home_category_loading") { ListeningShelfPlaceholder() }
+                        }
+                        youTubeHome.error?.let { message ->
+                            item(key = "home_category_error") {
+                                ListeningStatusCard(
+                                    title = youTubeHome.selected?.title.orEmpty(),
+                                    message = message,
+                                    action = stringResource(R.string.melo_retry),
+                                    onAction = { model.refreshYouTubeHomeCategories(force = true) },
+                                    modifier = Modifier.padding(horizontal = MeloLayout.PageGutter),
+                                )
+                            }
+                        }
+                        if (!youTubeHome.loading && youTubeHome.error == null && youTubeHome.shelves.isEmpty()) {
+                            item(key = "home_category_empty") {
+                                ListeningStatusCard(
+                                    title = youTubeHome.selected?.title.orEmpty(),
+                                    message = stringResource(R.string.home_category_empty),
+                                    action = stringResource(R.string.melo_retry),
+                                    onAction = { model.refreshYouTubeHomeCategories(force = true) },
+                                    modifier = Modifier.padding(horizontal = MeloLayout.PageGutter),
+                                )
+                            }
+                        }
+                        youTubeHome.shelves.forEachIndexed { index, shelf ->
+                            val style = if (shelf.items.all { it.kind == MusicKind.Track }) ShelfStyle.LIST else ShelfStyle.CAROUSEL
+                            homeShelf(
+                                key = "youtube_home_${youTubeHome.selected?.params}_${index}",
+                                title = shelf.title,
+                                items = shelf.items.take(20),
+                                style = style,
+                                ui = ui,
+                                onClick = { selected ->
+                                    if (selected.kind == MusicKind.Track) model.loadRadio(selected, open) else open(selected)
+                                },
+                                onLongPress = showOptions,
+                                openAll = null,
+                            )
+                        }
+                        if (youTubeHome.loadingMore) {
+                            item(key = "home_category_loading_more") { ListeningShelfPlaceholder() }
+                        }
+                    }
                 }
+            }
             }
         }
         Box(
@@ -289,7 +782,18 @@ fun HomeScreen(model: MeloModel, navController: NavHostController, paddingValues
         )
     }
 
+    }
+
     if (reordering) PinsReorderSheet(pins, ui, model, onDismiss = { reordering = false })
+    if (reorderingArtists) HomeDialSettingsSheet(
+        title = stringResource(R.string.home_dial_artists_title),
+        items = artistDialEntries.map(HomeSpeedDialEntry::item),
+        order = settings.homeArtistDialOrder,
+        onOrderChange = { order -> ui.updateSettings { it.copy(homeArtistDialOrder = order) } },
+        onDismiss = { reorderingArtists = false },
+        pinnedIds = pins.filter { it.kind == MusicKind.Artist }.mapTo(HashSet(), Music::id),
+        onTogglePin = model::togglePin,
+    )
     MusicOptionsHost(ui, navController, optionsFor) { optionsFor = null }
 }
 
@@ -329,8 +833,8 @@ private fun SectionHeader(title: String, onOpen: (() -> Unit)?) {
         Text(
             modifier = Modifier,
             text = title,
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.SemiBold
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold
         )
         if (onOpen != null) FilledIconButton(
             modifier = Modifier.size(48.dp),

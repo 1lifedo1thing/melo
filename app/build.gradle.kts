@@ -36,8 +36,8 @@ android {
         applicationId = providers.gradleProperty("meloTestApplicationId").getOrElse("in.melo")
         minSdk = 26
         targetSdk = 36
-        versionCode = 2
-        versionName = "1.0.1"
+        versionCode = 3
+        versionName = "1.1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("boolean", "NATIVE_RUNTIME", nativeRuntime.toString())
         // A fork must never offer the upstream APK as an update.

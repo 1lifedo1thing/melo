@@ -15,6 +15,18 @@ import `in`.melo.data.playlistMosaic
 import `in`.melo.data.decodePins
 import `in`.melo.data.encodePins
 import `in`.melo.data.HomeLibrary
+import `in`.melo.data.HomeLocalTaste
+import `in`.melo.data.HomeMood
+import `in`.melo.data.HomeRecommendationPick
+import `in`.melo.data.HomeRecommendationState
+import `in`.melo.data.HomeRecommendationType
+import `in`.melo.data.HomeRecommendationCache
+import `in`.melo.data.HomeRecommendationCacheCodec
+import `in`.melo.data.HomeRecommendationEngine
+import `in`.melo.data.YouTubeHomeChip
+import `in`.melo.data.YouTubeHomeState
+import `in`.melo.data.YouTubeExploreCategory
+import `in`.melo.data.YouTubeExploreState
 import `in`.melo.data.LOCAL_PLAYLIST_PREFIX
 import `in`.melo.data.LocalLibrary
 import `in`.melo.data.LocalPlaylistStore
@@ -48,6 +60,13 @@ import `in`.melo.data.youtube.YouTubeAccountPlaylist
 import `in`.melo.data.youtube.YouTubeAuthRequired
 import `in`.melo.data.youtube.YouTubeFailure
 import `in`.melo.data.youtube.YouTubeLibrary
+import `in`.melo.data.youtube.YouTubeMusic
+import `in`.melo.data.youtube.YouTubePages
+import `in`.melo.data.youtube.YouTubePodcastFeed
+import `in`.melo.data.youtube.YouTubePodcastFeedState
+import `in`.melo.data.youtube.YouTubePodcasts
+import `in`.melo.data.youtube.YTM_ARTIST_PREFIX
+import `in`.melo.data.youtube.YTM_ALBUM_PREFIX
 import `in`.melo.data.youtube.youTubeVideoId
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CancellationException
@@ -58,12 +77,17 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.IOException
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
 import java.util.Locale
 import java.util.UUID
 import `in`.melo.utils.parseSongCount
+import `in`.melo.utils.formatSongCount
 
 /** What a search reads. [All], the default, mixes Spotify (with an account), YouTube Music and device files. */
 enum class SearchSource { All, Spotify, YouTubeMusic, Local }
@@ -98,6 +122,86 @@ data class LibraryUi(val content: HomeLibrary? = null, val loading: Boolean = fa
     val tracks: List<Music> get() = content?.savedTracks.orEmpty()
 }
 data class DetailUi(val content: CatalogDetail? = null, val loading: Boolean = false, val error: String? = null)
+
+private fun decodeYouTubeHomeChips(raw: String?): List<YouTubeHomeChip> {
+    if (raw.isNullOrBlank()) return emptyList()
+    return runCatching {
+        val chips = org.json.JSONArray(raw)
+        (0 until chips.length()).mapNotNull { index ->
+            val chip = chips.optJSONObject(index) ?: return@mapNotNull null
+            val title = chip.optString("title")
+            val params = chip.optString("params")
+            if (title.isBlank() || params.isBlank()) null else YouTubeHomeChip(title, params)
+        }
+    }.getOrDefault(emptyList())
+}
+
+private fun encodeYouTubeHomeChips(chips: List<YouTubeHomeChip>): String = org.json.JSONArray().apply {
+    chips.forEach { put(org.json.JSONObject().put("title", it.title).put("params", it.params)) }
+}.toString()
+
+private data class YouTubeHomeFeedCache(
+    val listener: String,
+    val shelves: List<`in`.melo.data.YouTubeHomeShelf>,
+    val continuation: String?,
+)
+
+private fun encodeYouTubeHomeFeed(cache: YouTubeHomeFeedCache): String = org.json.JSONObject()
+    .put("version", 1)
+    .put("listener", cache.listener)
+    .put("continuation", cache.continuation)
+    .put("shelves", org.json.JSONArray().apply {
+    cache.shelves.take(40).forEach { shelf ->
+            put(org.json.JSONObject()
+                .put("title", shelf.title)
+                .put("items", org.json.JSONArray().apply {
+                    shelf.items.take(24).forEach { item ->
+                        put(org.json.JSONObject()
+                            .put("id", item.id)
+                            .put("title", item.title)
+                            .put("subtitle", item.subtitle)
+                            .put("kind", item.kind.name)
+                            .put("image", item.imageUrl)
+                            .put("duration", item.durationMs)
+                            .put("album", item.album)
+                            .put("note", item.note))
+                    }
+                }))
+        }
+    }).toString()
+
+private fun decodeYouTubeHomeFeed(raw: String?): YouTubeHomeFeedCache? = runCatching {
+    val json = org.json.JSONObject(raw ?: return null)
+    if (json.optInt("version") != 1) return null
+    val shelvesJson = json.optJSONArray("shelves") ?: return null
+    val shelves = (0 until shelvesJson.length()).mapNotNull { index ->
+        val shelf = shelvesJson.optJSONObject(index) ?: return@mapNotNull null
+        val rows = shelf.optJSONArray("items") ?: return@mapNotNull null
+        val items = (0 until rows.length()).mapNotNull { itemIndex ->
+            val item = rows.optJSONObject(itemIndex) ?: return@mapNotNull null
+            val kind = MusicKind.entries.firstOrNull { it.name == item.optString("kind") } ?: return@mapNotNull null
+            Music(
+                id = item.optString("id"), title = item.optString("title"), subtitle = item.optString("subtitle"),
+                kind = kind, imageUrl = item.optString("image").takeIf(String::isNotBlank),
+                durationMs = item.optInt("duration"), album = item.optString("album"), note = item.optString("note"),
+            ).takeIf { it.id.isNotBlank() && it.title.isNotBlank() }
+        }
+        `in`.melo.data.YouTubeHomeShelf(shelf.optString("title"), items).takeIf { it.title.isNotBlank() && items.isNotEmpty() }
+    }
+    YouTubeHomeFeedCache(
+        listener = json.optString("listener"),
+        shelves = shelves,
+        continuation = json.optString("continuation").takeIf(String::isNotBlank),
+    )
+}.getOrNull()
+
+private data class HomeRecommendationRequest(
+    val key: String,
+    val listener: String,
+    val hour: String,
+    val online: Boolean,
+    val youtubeAvailable: Boolean,
+)
 
 class MeloModel(private val app: Application) : AndroidViewModel(app) {
     val player = SpotifyPlayer(app, viewModelScope)
@@ -199,6 +303,40 @@ class MeloModel(private val app: Application) : AndroidViewModel(app) {
     val details = mutableDetails.asStateFlow()
     private val mutableRecent = MutableStateFlow<List<Music>>(emptyList())
     val recent = mutableRecent.asStateFlow()
+    private val initialHomeRecommendationCache = HomeRecommendationCacheCodec.decode(
+        preferences.getString(KEY_HOME_RECOMMENDATIONS, null),
+    )
+    private val mutableHomeRecommendations = MutableStateFlow(
+        initialHomeRecommendationCache?.takeIf { it.listener == recommendationListenerKey() }?.state ?: HomeRecommendationState(),
+    )
+    val homeRecommendations = mutableHomeRecommendations.asStateFlow()
+    private var homeRecommendationKey: String? = initialHomeRecommendationCache?.takeIf {
+        it.listener == recommendationListenerKey() && it.hour == recommendationHourKey()
+    }?.let { "${it.listener}|${it.hour}" }
+    private var activeHomeRecommendationListener: String? = initialHomeRecommendationCache?.listener
+        ?.takeIf { it == recommendationListenerKey() }
+    private var homeRecommendationJob: Job? = null
+    private var pendingHomeRecommendationRequest: HomeRecommendationRequest? = null
+    private val initialYouTubeHomeFeed = decodeYouTubeHomeFeed(preferences.getString(KEY_HOME_FEED, null))
+        ?.takeIf { it.listener == recommendationListenerKey() }
+    private val mutableYouTubeHome = MutableStateFlow(
+        YouTubeHomeState(
+            chips = decodeYouTubeHomeChips(preferences.getString(KEY_HOME_CATEGORY_CHIPS, null)),
+            personalizedShelves = initialYouTubeHomeFeed?.shelves.orEmpty(),
+            personalizedContinuation = initialYouTubeHomeFeed?.continuation,
+        ),
+    )
+    val youTubeHome = mutableYouTubeHome.asStateFlow()
+    private var homeCategoriesJob: Job? = null
+    private var homeCategoryJob: Job? = null
+    private var homeCategoryMoreJob: Job? = null
+    private var homeFeedMoreJob: Job? = null
+    private var homeCategoryIdentity: String? = null
+    private val mutableYouTubeExplore = MutableStateFlow(YouTubeExploreState())
+    val youTubeExplore = mutableYouTubeExplore.asStateFlow()
+    private var exploreJob: Job? = null
+    private var exploreCategoryJob: Job? = null
+    private val exploreArtRequests = HashSet<String>()
     private val mutableMessage = MutableStateFlow<String?>(null)
     val message = mutableMessage.asStateFlow()
 
@@ -217,12 +355,22 @@ class MeloModel(private val app: Application) : AndroidViewModel(app) {
     private val youTubeRows = HashMap<String, YouTubeAccountPlaylist>()
     private var youTubeJob: Job? = null
 
+    private var podcastFeedIdentity = podcastListenerKey()
+    private var podcastFeedRegion = YouTubeMusic.contentRegion()
+    private val initialPodcastCache = YouTubePodcasts.cached(app, podcastFeedIdentity, podcastFeedRegion)
+    private var podcastFeedLoadedAt = initialPodcastCache?.savedAtMs ?: 0L
+    private val mutablePodcastFeed = MutableStateFlow(YouTubePodcastFeedState(feed = initialPodcastCache?.feed))
+    val podcastFeed = mutablePodcastFeed.asStateFlow()
+    private var podcastFeedJob: Job? = null
+    private var podcastMoreJob: Job? = null
+
     /** Checks the cookies of Google's sign-in page, keeps them, then reads the library. */
     suspend fun connectGoogle(cookie: String, visitorData: String?, dataSyncId: String?): YouTubeAccountInfo {
         val info = withContext(Dispatchers.IO) { YouTubeAccount.connect(cookie, visitorData, dataSyncId) }
         // The cookies are now kept encrypted: the WebView's own copy is removed.
         runCatching { android.webkit.CookieManager.getInstance().apply { removeAllCookies(null); flush() } }
         refreshYouTubeLibrary()
+        loadPodcastFeed(force = true)
         return info
     }
 
@@ -240,6 +388,7 @@ class MeloModel(private val app: Application) : AndroidViewModel(app) {
         mutableDetails.update { it - ids }
         // Pages read with the account (private playlists included) do not stay on the device.
         viewModelScope.launch(Dispatchers.IO) { ids.forEach(store::removeDetail) }
+        loadPodcastFeed(force = true)
     }
 
     private fun youTubeAccountLost(failure: YouTubeAuthRequired) {
@@ -464,6 +613,96 @@ class MeloModel(private val app: Application) : AndroidViewModel(app) {
         mutableDetails.value[playlist.id]?.content?.let { installYouTubeDetail(it.copy(item = it.item.copy(title = renamed.title))) }
     }
 
+    /** Keep the Podcasts tab warm and show its last matching feed before a network refresh finishes. */
+    fun loadPodcastFeed(force: Boolean = false) {
+        val identity = podcastListenerKey()
+        val region = YouTubeMusic.contentRegion()
+        if (identity != podcastFeedIdentity || region != podcastFeedRegion) {
+            podcastFeedJob?.cancel()
+            podcastMoreJob?.cancel()
+            podcastFeedIdentity = identity
+            podcastFeedRegion = region
+            val cached = YouTubePodcasts.cached(app, identity, region)
+            podcastFeedLoadedAt = cached?.savedAtMs ?: 0L
+            mutablePodcastFeed.value = YouTubePodcastFeedState(feed = cached?.feed)
+        }
+
+        if (podcastFeedJob?.isActive == true) return
+        val current = mutablePodcastFeed.value
+        if (!force && current.feed != null && System.currentTimeMillis() - podcastFeedLoadedAt < PODCAST_FEED_TTL_MS) return
+        if (!online.value) {
+            if (current.feed == null) mutablePodcastFeed.update { it.copy(error = app.getString(`in`.melo.R.string.podcasts_offline_message)) }
+            return
+        }
+
+        mutablePodcastFeed.update {
+            it.copy(loading = it.feed == null, refreshing = it.feed != null, error = null)
+        }
+        val requestIdentity = podcastFeedIdentity
+        val requestRegion = podcastFeedRegion
+        podcastFeedJob = viewModelScope.launch {
+            try {
+                val loaded = withContext(Dispatchers.IO) { YouTubePodcasts.home() }
+                if (requestIdentity != podcastFeedIdentity || requestRegion != podcastFeedRegion) return@launch
+                val now = System.currentTimeMillis()
+                podcastFeedLoadedAt = now
+                YouTubePodcasts.saveCache(app, requestIdentity, requestRegion, loaded, now)
+                mutablePodcastFeed.value = YouTubePodcastFeedState(feed = loaded)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (failure: Exception) {
+                if (requestIdentity == podcastFeedIdentity && requestRegion == podcastFeedRegion) {
+                    mutablePodcastFeed.update { it.copy(error = failure.message ?: app.getString(`in`.melo.R.string.podcasts_load_error_message)) }
+                }
+            } finally {
+                if (requestIdentity == podcastFeedIdentity && requestRegion == podcastFeedRegion &&
+                    kotlinx.coroutines.currentCoroutineContext().isActive
+                ) {
+                    mutablePodcastFeed.update { it.copy(loading = false, refreshing = false) }
+                }
+            }
+        }
+    }
+
+    fun refreshPodcastFeed() = loadPodcastFeed(force = true)
+
+    fun loadMorePodcastFeed() {
+        val current = mutablePodcastFeed.value
+        val feed = current.feed ?: return
+        val token = feed.continuation ?: return
+        if (current.loadingMore || podcastMoreJob?.isActive == true) return
+        val identity = podcastFeedIdentity
+        val region = podcastFeedRegion
+        mutablePodcastFeed.update { it.copy(loadingMore = true) }
+        podcastMoreJob = viewModelScope.launch {
+            try {
+                val next = withContext(Dispatchers.IO) { YouTubePodcasts.more(token) }
+                val latest = mutablePodcastFeed.value.feed
+                if (identity != podcastFeedIdentity || region != podcastFeedRegion || latest?.continuation != token) return@launch
+                val merged = YouTubePodcastFeed(
+                    shelves = YouTubePodcasts.mergeShelves(latest.shelves + next.shelves),
+                    continuation = next.continuation,
+                )
+                mutablePodcastFeed.update { it.copy(feed = merged, error = null) }
+                YouTubePodcasts.saveCache(app, identity, region, merged, podcastFeedLoadedAt)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (failure: Exception) {
+                if (identity == podcastFeedIdentity && region == podcastFeedRegion) {
+                    mutablePodcastFeed.update { it.copy(error = failure.message ?: app.getString(`in`.melo.R.string.podcasts_load_error_message)) }
+                }
+            } finally {
+                if (identity == podcastFeedIdentity && region == podcastFeedRegion &&
+                    kotlinx.coroutines.currentCoroutineContext().isActive
+                ) mutablePodcastFeed.update { it.copy(loadingMore = false) }
+            }
+        }
+    }
+
+    private fun podcastListenerKey(): String = YouTubeAccount.info.value?.let { info ->
+        info.handle.ifBlank { info.name }
+    }?.lowercase(Locale.ROOT) ?: if (YouTubeAccount.signedIn) "signed-in" else "anonymous"
+
     init {
         if (mutableGuest.value) installLibrary(emptyLibrary(), false)
         viewModelScope.launch {
@@ -475,6 +714,7 @@ class MeloModel(private val app: Application) : AndroidViewModel(app) {
         }
         refreshLocalTracks()
         refreshYouTubeLibrary()
+        loadPodcastFeed()
         viewModelScope.launch {
             // One history entry each time a queue position starts playing.
             var counted: String? = null
@@ -494,6 +734,7 @@ class MeloModel(private val app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             var wasOnline = online.value
             online.collect { now ->
+                if (now) loadPodcastFeed()
                 if (now && !wasOnline) refreshYouTubeLibrary()
                 if (now && !wasOnline && collections != null) {
                     sendPendingFavorites()
@@ -805,7 +1046,6 @@ class MeloModel(private val app: Application) : AndroidViewModel(app) {
         }
         val source = catalog ?: return
         val shown = mutableDetails.value[item.id]
-        if (!more && !refresh && shown?.content != null && shown.error == null) return
         if (shown?.loading == true && !refresh) return
         detailJobs[item.id]?.cancel()
         detailJobs[item.id] = viewModelScope.launch {
@@ -847,10 +1087,21 @@ class MeloModel(private val app: Application) : AndroidViewModel(app) {
                     CatalogDetail(item.copy(note = "${saved?.savedTrackCount ?: 0} saved tracks"), tracks,
                         nextPage = next.takeIf { it < uris.size }?.toString(), total = saved?.savedTrackCount ?: 0)
                 } else if (more) source.detail(item, page)
-                // Revalidating must not shorten what was already read in several pages.
-                else fullDetail(source, item, atLeast = previous?.content?.tracks?.size ?: 0)
+                // Revalidating must not shorten what was already read in several pages. If the
+                // previously loaded list ended at its last page, follow the refreshed page tokens
+                // to the new end too; an external addition may have created a new final page.
+                else {
+                    val wasFullyLoaded = refresh && previous?.content?.nextPage == null
+                    fullDetail(
+                        source,
+                        item,
+                        atLeast = if (wasFullyLoaded) Int.MAX_VALUE else previous?.content?.tracks?.size ?: 0,
+                        pageLimit = if (wasFullyLoaded) Int.MAX_VALUE else MAX_DETAIL_PAGES,
+                    )
+                }
                 val merged = if (more && previous?.content != null) result.copy(tracks = previous.content.tracks + result.tracks) else result
                 mutableDetails.update { it + (item.id to DetailUi(merged)) }
+                if (item.id.startsWith("spotify:playlist:")) syncSpotifyPlaylistSummary(merged.item, merged.total)
                 rememberCover(merged)
                 if (item.id != LIKED_SONGS) withContext(Dispatchers.IO) { store.saveDetail(item.id, merged) }
             } catch (cancelled: CancellationException) { throw cancelled }
@@ -864,13 +1115,547 @@ class MeloModel(private val app: Application) : AndroidViewModel(app) {
             }
         }
     }
+    /** Keeps playlist counts aligned across the detail page, library cards and the disk cache. */
+    private fun syncSpotifyPlaylistSummary(item: Music, total: Int) {
+        if (!item.id.startsWith("spotify:playlist:")) return
+        val latest = item.copy(subtitle = formatSongCount(total))
+        ui.register(latest)
+        mutableDetails.update { details ->
+            val state = details[latest.id] ?: return@update details
+            val detail = state.content ?: return@update details
+            details + (latest.id to state.copy(content = detail.copy(item = latest, total = total)))
+        }
+        val current = mutableLibrary.value.content ?: return
+        if (current.playlists.none { it.id == latest.id }) return
+        val playlists = current.playlists.map { if (it.id == latest.id) latest else it }
+        mutableLibrary.update { state ->
+            val content = state.content ?: return@update state
+            state.copy(content = content.copy(playlists = content.playlists.map { if (it.id == latest.id) latest else it }))
+        }
+        if (playlists != current.playlists) saveLibrary()
+    }
     private fun installLocalPlaylist(id: String) {
         val playlist = localPlaylistStore.get(id) ?: return
         val music = playlist.asMusic()
         ui.register(music)
         mutableDetails.update { it + (id to DetailUi(CatalogDetail(music, playlist.tracks))) }
     }
+    fun refreshHomeRecommendations(force: Boolean = false) {
+        val isOnline = online.value
+        if (!isOnline) return
+        val listener = recommendationListenerKey()
+        val hour = recommendationHourKey()
+        val key = "$listener|$hour"
+        if (!force && key == homeRecommendationKey) return
+        if (activeHomeRecommendationListener != listener) {
+            mutableHomeRecommendations.value = HomeRecommendationState()
+            activeHomeRecommendationListener = listener
+        }
+        homeRecommendationKey = key
+        pendingHomeRecommendationRequest = HomeRecommendationRequest(
+            key = key,
+            listener = listener,
+            hour = hour,
+            online = isOnline,
+            youtubeAvailable = YouTubeAccount.signedIn,
+        )
+        if (homeRecommendationJob?.isActive == true) return
+        homeRecommendationJob = viewModelScope.launch {
+            try {
+                while (true) {
+                    val request = pendingHomeRecommendationRequest ?: break
+                    pendingHomeRecommendationRequest = null
+                    mutableHomeRecommendations.update { it.copy(loading = true) }
+                    val result = try {
+                        buildHomeRecommendations(request)
+                    } catch (cancelled: CancellationException) {
+                        throw cancelled
+                    } catch (_: Exception) {
+                        null
+                    }
+                    if (request.key == homeRecommendationKey) {
+                        if (result != null) {
+                            mutableHomeRecommendations.value = result
+                            val cache = HomeRecommendationCache(request.listener, request.hour,
+                                result.copy(youtubeRecent = result.youtubeRecent.take(12)))
+                            preferences.edit { putString(KEY_HOME_RECOMMENDATIONS, HomeRecommendationCacheCodec.encode(cache)) }
+                        } else {
+                            homeRecommendationKey = null
+                            mutableHomeRecommendations.update { it.copy(loading = false) }
+                        }
+                    }
+                }
+            } finally {
+                homeRecommendationJob = null
+                if (pendingHomeRecommendationRequest != null && online.value) {
+                    refreshHomeRecommendations(force = true)
+                }
+            }
+        }
+    }
+
+    /** Pull-to-refresh updates the library, recommendation dial, Home feed, and selected category. */
+    fun refreshHome() {
+        refreshLibrary()
+        refreshHomeRecommendations(force = true)
+        refreshYouTubeHomeCategories(force = true)
+    }
+
+    /** Reads the main personalized Home page and category chips, then appends Dial's discovery shelves. */
+    fun refreshYouTubeHomeCategories(force: Boolean = false) {
+        if (!online.value) return
+        val identity = prepareHomeCategoryIdentity()
+        if (!force && (mutableYouTubeHome.value.chips.isNotEmpty() || mutableYouTubeHome.value.personalizedShelves.isNotEmpty() ||
+                homeCategoriesJob?.isActive == true)) return
+        homeCategoriesJob?.cancel()
+        mutableYouTubeHome.update {
+            it.copy(loadingCategories = true, personalizedLoading = true, error = null, personalizedError = null)
+        }
+        homeCategoriesJob = viewModelScope.launch {
+            try {
+                val (response, supplements) = withContext(Dispatchers.IO) {
+                    kotlinx.coroutines.coroutineScope {
+                        val home = async { YouTubeLibrary.homeRequest("browse", org.json.JSONObject().put("browseId", "FEmusic_home")) }
+                        val extraPages = listOf("FEmusic_new_releases", "FEmusic_explore").map { browseId ->
+                            async {
+                                try {
+                                    val page = YouTubeLibrary.homeRequest("browse", org.json.JSONObject().put("browseId", browseId))
+                                    YouTubePages.homePage(page).shelves
+                                } catch (cancelled: CancellationException) {
+                                    throw cancelled
+                                } catch (_: Exception) {
+                                    emptyList()
+                                }
+                            }
+                        }
+                        home.await() to extraPages.map { it.await() }.flatten()
+                    }
+                }
+                if (identity != recommendationListenerKey()) return@launch
+                val fetchedChips = YouTubePages.homeChips(response)
+                val basePage = YouTubePages.homePage(response)
+                val chips = fetchedChips.ifEmpty { mutableYouTubeHome.value.chips }
+                if (chips.isNotEmpty()) preferences.edit { putString(KEY_HOME_CATEGORY_CHIPS, encodeYouTubeHomeChips(chips)) }
+                val before = mutableYouTubeHome.value
+                val selected = before.selected?.let { old -> chips.firstOrNull { it.params == old.params } ?: old }
+                val fullFeed = mergeHomeShelves(basePage.shelves + supplements)
+                preferences.edit {
+                    putString(KEY_HOME_FEED, encodeYouTubeHomeFeed(YouTubeHomeFeedCache(identity, fullFeed, basePage.continuation)))
+                }
+                mutableYouTubeHome.update {
+                    it.copy(
+                        chips = chips,
+                        selected = selected,
+                        personalizedShelves = fullFeed,
+                        personalizedContinuation = basePage.continuation,
+                        personalizedLoading = false,
+                        personalizedLoadingMore = false,
+                        personalizedError = null,
+                        loadingCategories = false,
+                        error = null,
+                    )
+                }
+                if (selected != null) loadYouTubeHomeCategory(selected, identity, keepExisting = true)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (failure: Exception) {
+                if (identity == recommendationListenerKey()) {
+                    mutableYouTubeHome.update {
+                        it.copy(
+                            loadingCategories = false,
+                            personalizedLoading = false,
+                            error = readable(failure),
+                            personalizedError = readable(failure),
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    /** Selects a Home category; tapping the active chip restores the ordinary Home page. */
+    fun selectYouTubeHomeCategory(chip: YouTubeHomeChip) {
+        val current = mutableYouTubeHome.value
+        if (current.selected?.params == chip.params) {
+            homeCategoryJob?.cancel()
+            homeCategoryMoreJob?.cancel()
+            mutableYouTubeHome.update {
+                it.copy(selected = null, shelves = emptyList(), continuation = null, loading = false,
+                    loadingMore = false, error = null)
+            }
+            return
+        }
+        val identity = prepareHomeCategoryIdentity()
+        val selected = current.chips.firstOrNull { it.params == chip.params } ?: chip
+        mutableYouTubeHome.update {
+            it.copy(selected = selected, shelves = emptyList(), continuation = null, loading = true,
+                loadingMore = false, error = null)
+        }
+        loadYouTubeHomeCategory(selected, identity, keepExisting = false)
+    }
+
+    /** Reloads the selected category after a pull, retaining its current rows until the new page arrives. */
+    private fun loadYouTubeHomeCategory(chip: YouTubeHomeChip, identity: String, keepExisting: Boolean) {
+        homeCategoryJob?.cancel()
+        homeCategoryMoreJob?.cancel()
+        mutableYouTubeHome.update {
+            it.copy(selected = chip, loading = true, loadingMore = false, error = null,
+                shelves = if (keepExisting) it.shelves else emptyList(),
+                continuation = if (keepExisting) it.continuation else null)
+        }
+        homeCategoryJob = viewModelScope.launch {
+            try {
+                val page = withContext(Dispatchers.IO) {
+                    val response = YouTubeLibrary.homeRequest("browse", org.json.JSONObject()
+                        .put("browseId", "FEmusic_home").put("params", chip.params))
+                    YouTubePages.homePage(response)
+                }
+                if (identity != recommendationListenerKey() || mutableYouTubeHome.value.selected?.params != chip.params) return@launch
+                mutableYouTubeHome.update {
+                    it.copy(shelves = mergeHomeShelves(page.shelves), continuation = page.continuation,
+                        loading = false, error = null)
+                }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (failure: Exception) {
+                if (identity == recommendationListenerKey() && mutableYouTubeHome.value.selected?.params == chip.params) {
+                    mutableYouTubeHome.update { it.copy(loading = false, error = readable(failure)) }
+                }
+            }
+        }
+    }
+
+    /** Loads the selected category's next Home page as the list approaches its end. */
+    fun loadMoreYouTubeHomeCategory() {
+        val state = mutableYouTubeHome.value
+        val chip = state.selected ?: return
+        val token = state.continuation ?: return
+        if (!online.value || state.loading || state.loadingMore || homeCategoryMoreJob?.isActive == true) return
+        val identity = prepareHomeCategoryIdentity()
+        mutableYouTubeHome.update { it.copy(loadingMore = true) }
+        homeCategoryMoreJob = viewModelScope.launch {
+            try {
+                val page = withContext(Dispatchers.IO) {
+                    val response = YouTubeLibrary.homeRequest("browse", org.json.JSONObject().put("continuation", token))
+                    YouTubePages.homeContinuationPage(response)
+                }
+                if (identity != recommendationListenerKey() || mutableYouTubeHome.value.selected?.params != chip.params) return@launch
+                val before = mutableYouTubeHome.value.shelves
+                val merged = mergeHomeShelves(before + page.shelves)
+                val oldItems = before.sumOf { it.items.size }
+                val newItems = merged.sumOf { it.items.size }
+                mutableYouTubeHome.update {
+                    it.copy(shelves = merged, continuation = page.continuation.takeIf { newItems > oldItems },
+                        loadingMore = false, error = null)
+                }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (failure: Exception) {
+                if (identity == recommendationListenerKey() && mutableYouTubeHome.value.selected?.params == chip.params) {
+                    mutableYouTubeHome.update { it.copy(loadingMore = false, error = readable(failure)) }
+                }
+            }
+        }
+    }
+
+    /** Continue the default YouTube Music Home feed as its last shelves approach the viewport. */
+    fun loadMoreYouTubeHomeFeed() {
+        val state = mutableYouTubeHome.value
+        val token = state.personalizedContinuation ?: return
+        if (!online.value || state.personalizedLoading || state.personalizedLoadingMore || homeFeedMoreJob?.isActive == true) return
+        val identity = prepareHomeCategoryIdentity()
+        mutableYouTubeHome.update { it.copy(personalizedLoadingMore = true) }
+        homeFeedMoreJob = viewModelScope.launch {
+            try {
+                val page = withContext(Dispatchers.IO) {
+                    val response = YouTubeLibrary.homeRequest("browse", org.json.JSONObject().put("continuation", token))
+                    YouTubePages.homeContinuationPage(response)
+                }
+                if (identity != recommendationListenerKey()) return@launch
+                val before = mutableYouTubeHome.value.personalizedShelves
+                val merged = mergeHomeShelves(before + page.shelves)
+                val oldItems = before.sumOf { it.items.size }
+                val newItems = merged.sumOf { it.items.size }
+                val next = page.continuation.takeIf { newItems > oldItems }
+                preferences.edit {
+                    putString(KEY_HOME_FEED, encodeYouTubeHomeFeed(YouTubeHomeFeedCache(identity, merged, next)))
+                }
+                mutableYouTubeHome.update {
+                    it.copy(
+                        personalizedShelves = merged,
+                        personalizedContinuation = next,
+                        personalizedLoadingMore = false,
+                        personalizedError = null,
+                    )
+                }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (failure: Exception) {
+                if (identity == recommendationListenerKey()) {
+                    mutableYouTubeHome.update { it.copy(personalizedLoadingMore = false, personalizedError = readable(failure)) }
+                }
+            }
+        }
+    }
+
+    private fun prepareHomeCategoryIdentity(): String {
+        val identity = recommendationListenerKey()
+        if (homeCategoryIdentity != identity) {
+            homeCategoryIdentity = identity
+            homeCategoryJob?.cancel()
+            homeCategoryMoreJob?.cancel()
+            homeFeedMoreJob?.cancel()
+            mutableYouTubeHome.update {
+                it.copy(selected = null, shelves = emptyList(), continuation = null, loading = false,
+                    loadingMore = false, error = null, personalizedShelves = emptyList(),
+                    personalizedContinuation = null, personalizedLoading = false, personalizedLoadingMore = false,
+                    personalizedError = null)
+            }
+        }
+        return identity
+    }
+
+    private fun mergeHomeShelves(shelves: List<`in`.melo.data.YouTubeHomeShelf>): List<`in`.melo.data.YouTubeHomeShelf> {
+        val positions = LinkedHashMap<String, Int>()
+        val merged = ArrayList<`in`.melo.data.YouTubeHomeShelf>()
+        shelves.forEach { shelf ->
+            val key = shelf.title.trim().lowercase(Locale.ROOT)
+            val index = positions[key]
+            if (index == null) {
+                positions[key] = merged.size
+                merged += shelf.copy(items = shelf.items.distinctBy(Music::id))
+            } else {
+                val existing = merged[index]
+                val items = (existing.items + shelf.items).distinctBy(Music::id)
+                merged[index] = existing.copy(items = items)
+            }
+        }
+        return merged.filter { it.items.isNotEmpty() }
+    }
+
+    /** Loads the server-defined mood and genre grids only after Explore is opened. */
+    fun refreshYouTubeExplore(force: Boolean = false) {
+        if (!online.value) return
+        if (!force && (mutableYouTubeExplore.value.sections.isNotEmpty() || exploreJob?.isActive == true)) return
+        exploreJob?.cancel()
+        mutableYouTubeExplore.update { it.copy(loading = true, error = null) }
+        exploreJob = viewModelScope.launch {
+            try {
+                val sections = withContext(Dispatchers.IO) {
+                    val response = YouTubeLibrary.homeRequest("browse", org.json.JSONObject().put("browseId", "FEmusic_moods_and_genres"))
+                    YouTubePages.exploreCategories(response)
+                }
+                val previousArt = mutableYouTubeExplore.value.sections.flatMap { it.categories }
+                    .mapNotNull { category -> category.imageUrl?.let { category.key to it } }.toMap()
+                val enriched = sections.map { section ->
+                    section.copy(categories = section.categories.map { category ->
+                        category.copy(imageUrl = category.imageUrl ?: previousArt[category.key])
+                    })
+                }
+                mutableYouTubeExplore.update { it.copy(sections = enriched, loading = false, error = null) }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (failure: Exception) {
+                mutableYouTubeExplore.update { it.copy(loading = false, error = readable(failure)) }
+            }
+        }
+    }
+
+    /** Starts a category's playlist shelves and keeps the category card's artwork for later visits. */
+    fun selectYouTubeExploreCategory(category: YouTubeExploreCategory) {
+        exploreCategoryJob?.cancel()
+        mutableYouTubeExplore.update {
+            it.copy(selected = category, shelves = emptyList(), loadingCategory = true, categoryError = null)
+        }
+        exploreCategoryJob = viewModelScope.launch {
+            try {
+                val shelves = withContext(Dispatchers.IO) {
+                    val body = org.json.JSONObject().put("browseId", category.browseId)
+                    category.params?.let { body.put("params", it) }
+                    val response = YouTubeLibrary.homeRequest("browse", body)
+                    YouTubePages.browseShelves(response)
+                }
+                val art = shelves.asSequence().flatMap { it.items.asSequence() }.mapNotNull(Music::imageUrl).firstOrNull()
+                mutableYouTubeExplore.update { current ->
+                    val selected = current.selected?.takeIf { it.key == category.key } ?: return@update current
+                    val updated = selected.copy(imageUrl = selected.imageUrl ?: art)
+                    current.copy(
+                        selected = updated,
+                        sections = current.sections.map { section ->
+                            section.copy(categories = section.categories.map { if (it.key == updated.key) updated else it })
+                        },
+                        shelves = shelves,
+                        loadingCategory = false,
+                        categoryError = null,
+                    )
+                }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (failure: Exception) {
+                mutableYouTubeExplore.update { it.copy(loadingCategory = false, categoryError = readable(failure)) }
+            }
+        }
+    }
+
+    fun closeYouTubeExploreCategory() {
+        exploreCategoryJob?.cancel()
+        mutableYouTubeExplore.update { it.copy(selected = null, shelves = emptyList(), loadingCategory = false, categoryError = null) }
+    }
+
+    /** Artwork is fetched only for Explore cards the lazy list has composed. */
+    fun loadYouTubeExploreArtwork(category: YouTubeExploreCategory) {
+        if (!online.value || category.imageUrl != null || !exploreArtRequests.add(category.key)) return
+        viewModelScope.launch {
+            try {
+                val art = withContext(Dispatchers.IO) {
+                    val body = org.json.JSONObject().put("browseId", category.browseId)
+                    category.params?.let { body.put("params", it) }
+                    val response = YouTubeLibrary.homeRequest("browse", body)
+                    YouTubePages.browseShelves(response).asSequence()
+                        .flatMap { it.items.asSequence() }.mapNotNull(Music::imageUrl).firstOrNull()
+                }
+                if (art != null) mutableYouTubeExplore.update { current ->
+                    current.copy(sections = current.sections.map { section ->
+                        section.copy(categories = section.categories.map { if (it.key == category.key) it.copy(imageUrl = art) else it })
+                    })
+                }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                // The card keeps its service-provided color and can still open the category.
+            } finally {
+                exploreArtRequests.remove(category.key)
+            }
+        }
+    }
+
+    private suspend fun buildHomeRecommendations(request: HomeRecommendationRequest): HomeRecommendationState {
+        withContext(Dispatchers.IO) { listeningHistory.load() }
+        val localEntries = listeningHistory.entries.value
+        val localTaste = homeLocalTaste(localEntries)
+        var accountHistory = emptyList<`in`.melo.data.HomeHistoryTrack>()
+        var mixes = emptyList<Music>()
+        if (request.online && request.youtubeAvailable) {
+            try {
+                val data = kotlinx.coroutines.coroutineScope {
+                    val history = async(Dispatchers.IO) { YouTubeLibrary.recentHistoryRows(limit = 2_000) }
+                    val mixedForYou = async(Dispatchers.IO) { YouTubeLibrary.mixedForYou() }
+                    history.await() to mixedForYou.await()
+                }
+                accountHistory = data.first
+                mixes = data.second
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (auth: YouTubeAuthRequired) {
+                youTubeAccountLost(auth)
+            } catch (_: Exception) {
+                // Melo's local Replay chart still supplies useful artist seeds if the account feed is unavailable.
+            }
+        }
+        if (accountHistory.isEmpty()) {
+            accountHistory = localEntries.asSequence().mapNotNull { entry ->
+                val videoId = entry.track.youTubeVideoId ?: return@mapNotNull null
+                `in`.melo.data.HomeHistoryTrack(entry.track,
+                    YouTubePages.rememberedRelations(videoId)?.artists.orEmpty())
+            }.distinctBy { it.track.id }.toList()
+        }
+        val picks = HomeRecommendationEngine.build(accountHistory, mixes, localTaste)
+        val artists = accountHistory.asSequence().flatMap { it.artists.asSequence() }
+            .filter { it.kind == MusicKind.Artist }
+            .distinctBy(Music::id).take(36).toList()
+        return HomeRecommendationState(
+            picks = picks,
+            youtubeRecent = accountHistory.map { it.track }.take(12),
+            youtubeArtists = artists,
+            youtubeMixes = mixes.filter { it.kind == MusicKind.Playlist }.distinctBy(Music::id),
+        )
+    }
+
+    private fun homeLocalTaste(entries: List<`in`.melo.data.HistoryEntry>): HomeLocalTaste {
+        val calendar = Calendar.getInstance()
+        calendar.set(Calendar.DAY_OF_MONTH, 1)
+        calendar.set(Calendar.HOUR_OF_DAY, 0)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+        val monthStart = calendar.timeInMillis
+        val month = entries.asSequence().filter { it.playedAt >= monthStart && it.track.kind == MusicKind.Track }.toList()
+        val artists = month.mapNotNull { entry ->
+            entry.track.subtitle.split(" · ", ",", ";").firstOrNull()?.trim()?.takeIf(String::isNotBlank)
+        }.groupingBy { it }.eachCount().entries.sortedByDescending(Map.Entry<String, Int>::value)
+            .take(10).map(Map.Entry<String, Int>::key)
+        val songs = month.groupBy { it.track.id }.values
+            .sortedByDescending { plays -> plays.sumOf { (it.track.durationMs.coerceAtLeast(180_000)).toLong() } }
+            .take(5).map { it.first().track }
+        val genres = month.map { it.track.genre.trim() }.filter(String::isNotBlank)
+            .groupingBy { it }.eachCount().entries.sortedByDescending(Map.Entry<String, Int>::value)
+            .take(3).map(Map.Entry<String, Int>::key)
+        return HomeLocalTaste(artists, songs, genres)
+    }
+
+    private fun recommendationListenerKey(): String = YouTubeAccount.info.value?.let { info ->
+        info.handle.takeIf(String::isNotBlank) ?: info.name
+    }?.lowercase(Locale.ROOT) ?: if (YouTubeAccount.signedIn) "signed-in" else "signed-out"
+
+    private fun recommendationHourKey(): String = SimpleDateFormat("yyyy-MM-dd'T'HH", Locale.ROOT).format(Date())
+
+    fun playHomeMood(mood: HomeMood) {
+        val title = mood.name.lowercase(Locale.ROOT).replace('_', ' ')
+        val item = Music("melo:home-mood:${mood.name}", title, "", MusicKind.Playlist)
+        playHomeRecommendation(HomeRecommendationPick(
+            item = item,
+            type = HomeRecommendationType.MOOD,
+            title = title,
+            mood = mood,
+        ))
+    }
+
+    fun playHomeRecommendation(pick: HomeRecommendationPick) {
+        if (!online.value) {
+            mutableMessage.value = app.getString(`in`.melo.R.string.home_mood_offline)
+            return
+        }
+        viewModelScope.launch {
+            try {
+                withContext(Dispatchers.IO) { listeningHistory.load() }
+                val localHistory = listeningHistory.entries.value.map { it.track }
+                val tracks = HomeRecommendationEngine.queue(pick, localHistory)
+                if (tracks.isEmpty()) throw YouTubeFailure("YouTube Music did not return tracks for this recommendation.")
+                play(tracks)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (auth: YouTubeAuthRequired) {
+                youTubeAccountLost(auth)
+            } catch (failure: Exception) {
+                mutableMessage.value = readable(failure)
+            }
+        }
+    }
+
     fun loadRadio(seed: Music, open: (Music) -> Unit) {
+        if (seed.source == `in`.melo.data.MusicSource.YouTubeMusic ||
+            (seed.source == `in`.melo.data.MusicSource.Spotify && catalog == null)) {
+            if (!online.value || seed.source == `in`.melo.data.MusicSource.Local) return
+            viewModelScope.launch {
+                try {
+                    val videoId = seed.youTubeVideoId ?: withContext(Dispatchers.IO) {
+                        `in`.melo.data.youtube.TrackMatcher.resolve(`in`.melo.data.youtube.MatchQuery(
+                            key = seed.id, title = seed.title, artists = seed.subtitle,
+                            durationMs = seed.durationMs, album = seed.album,
+                        ))
+                    } ?: throw YouTubeFailure("YouTube Music could not find this radio seed.")
+                    val tracks = withContext(Dispatchers.IO) {
+                        YouTubeMusic.watchQueue("RDAMVM$videoId", videoId, limit = 100)
+                    }
+                    play(tracks)
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
+                } catch (failure: Exception) {
+                    mutableMessage.value = readable(failure)
+                }
+            }
+            return
+        }
         val source = radio ?: return
         viewModelScope.launch {
             try {
@@ -942,8 +1727,11 @@ class MeloModel(private val app: Application) : AndroidViewModel(app) {
         spotifyPlaylists.add(playlist.id, tracks) {
             detailJobs.remove(playlist.id)?.cancel()
             val content = mutableDetails.value[playlist.id]?.content ?: CatalogDetail(playlist, before)
-            val updated = content.copy(tracks = before + tracks, total = content.total + tracks.size, nextPage = null)
+            val total = content.total + tracks.size
+            val updated = content.copy(item = content.item.copy(subtitle = formatSongCount(total)),
+                tracks = before + tracks, total = total, nextPage = null)
             mutableDetails.update { it + (playlist.id to DetailUi(updated)) }
+            syncSpotifyPlaylistSummary(updated.item, updated.total)
             withContext(Dispatchers.IO) { store.saveDetail(playlist.id, updated) }
             if (`in`.melo.playback.DownloadCenter.collections.value.containsKey(playlist.id)) {
                 `in`.melo.playback.DownloadCenter.enqueue(app, updated.item, updated.tracks)
@@ -976,9 +1764,12 @@ class MeloModel(private val app: Application) : AndroidViewModel(app) {
             val position = if (latest.tracks.getOrNull(index)?.id == track.id) index
                 else latest.tracks.withIndex().filter { it.value.id == track.id }.getOrNull(occurrence)?.index ?: return@remove
             // The next page starts at a row offset, which moves back by the removed row.
-            val updated = latest.copy(tracks = latest.tracks.toMutableList().apply { removeAt(position) }, total = (latest.total - 1).coerceAtLeast(0),
+            val total = (latest.total - 1).coerceAtLeast(0)
+            val updated = latest.copy(item = latest.item.copy(subtitle = formatSongCount(total)),
+                tracks = latest.tracks.toMutableList().apply { removeAt(position) }, total = total,
                 nextPage = latest.nextPage?.toIntOrNull()?.let { (it - 1).coerceAtLeast(0).toString() } ?: latest.nextPage)
             mutableDetails.update { it + (playlist.id to DetailUi(updated)) }
+            syncSpotifyPlaylistSummary(updated.item, updated.total)
             withContext(Dispatchers.IO) { store.saveDetail(playlist.id, updated) }
         }
     }
@@ -1555,6 +2346,7 @@ class MeloModel(private val app: Application) : AndroidViewModel(app) {
 
     companion object {
         const val LIKED_SONGS = "spotify:collection:tracks"
+        private const val PODCAST_FEED_TTL_MS = 6L * 60 * 60 * 1000
         private const val YOUTUBE_PAGE_TTL_MS = 24L * 60 * 60 * 1000
         private const val SEARCH_DEBOUNCE_MS = 250L
         const val TRACKS_SPOTIFY = "spotify"
@@ -1564,6 +2356,9 @@ class MeloModel(private val app: Application) : AndroidViewModel(app) {
         private const val KEY_PENDING_LIKES = "pending_likes"
         private const val KEY_YOUTUBE_LIKES = "youtube_likes"
         private const val KEY_PLAYLIST_COVERS = "playlist_covers"
+        private const val KEY_HOME_RECOMMENDATIONS = "home_recommendations"
+        private const val KEY_HOME_CATEGORY_CHIPS = "home_category_chips"
+        private const val KEY_HOME_FEED = "home_feed"
         private const val KEY_PENDING_UNLIKES = "pending_unlikes"
         private const val KEY_YOUTUBE_PLAYLISTS = "youtube_playlists"
         private const val KEY_YOUTUBE_EDITABLE = "youtube_editable"

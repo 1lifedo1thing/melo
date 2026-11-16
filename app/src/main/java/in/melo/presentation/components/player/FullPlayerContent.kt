@@ -505,7 +505,7 @@ fun FullPlayerContent(
             onLyricsClick = onLyricsClick,
             playerOnBaseColor = playerOnBaseColor,
             playerViewModel = playerViewModel,
-            gradientEdgeColor = LocalMaterialTheme.current.primaryContainer,
+            gradientEdgeColor = if (appSettings.playerArtworkGradient) Color.Transparent else LocalMaterialTheme.current.primaryContainer,
             chipColor = playerOnAccentColor.copy(alpha = 0.8f),
             chipContentColor = playerAccentColor,
             onQueueClick = onSongMetadataQueueClick,
@@ -528,7 +528,7 @@ fun FullPlayerContent(
             onLyricsClick = onLyricsClick,
             playerOnBaseColor = playerOnBaseColor,
             playerViewModel = playerViewModel,
-            gradientEdgeColor = LocalMaterialTheme.current.primaryContainer,
+            gradientEdgeColor = if (appSettings.playerArtworkGradient) Color.Transparent else LocalMaterialTheme.current.primaryContainer,
             chipColor = playerOnAccentColor.copy(alpha = 0.8f),
             chipContentColor = playerAccentColor,
             onQueueClick = onSongMetadataQueueClick,
@@ -537,6 +537,10 @@ fun FullPlayerContent(
         )
     }
 
+    Box(Modifier.fillMaxSize()) {
+        if (appSettings.playerArtworkGradient) {
+            PlayerArtworkBackdrop(song.albumArtUriString, Modifier.matchParentSize())
+        }
     Scaffold(
         containerColor = Color.Transparent,
         modifier = Modifier.pointerInput(currentSheetState, queueGestureBottomExclusionPx) {
@@ -746,6 +750,7 @@ fun FullPlayerContent(
                 )
             }
         }
+    }
     }
     AnimatedVisibility(
         visible = showLyricsSheet,
@@ -1300,7 +1305,7 @@ private fun SongMetadataDisplaySection(
             Box(
                 modifier = Modifier
                     .size(height = 42.dp, width = 50.dp)
-                    .clip(RoundedCornerShape(topStart = 50.dp, topEnd = 6.dp, bottomStart = 50.dp, bottomEnd = 6.dp))
+                    .clip(RoundedCornerShape(16.dp))
                     .background(chipColor)
                     .clickable { onClickLyrics() },
                 contentAlignment = Alignment.Center

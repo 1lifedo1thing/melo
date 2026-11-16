@@ -72,7 +72,7 @@ internal fun CollectionDetailLayout(
     val coroutineScope = rememberCoroutineScope()
     val hasSong by ui.derivedHasSong.collectAsStateWithLifecycle()
     val fabBottomPadding by animateDpAsState(if (hasSong) MiniPlayerHeight + 16.dp else 16.dp, label = "detailBottom")
-    MaterialTheme(colorScheme = colors) {
+    MaterialTheme(colorScheme = base) {
         val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
         val minTopBarHeight = 64.dp + statusBarHeight
         val maxTopBarHeight = 300.dp
@@ -164,7 +164,7 @@ internal fun CollectionDetailLayout(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
-                    color = MaterialTheme.colorScheme.surface
+                    color = MaterialTheme.colorScheme.background
                 )
                 .nestedScroll(nestedScrollConnection)
         ) {

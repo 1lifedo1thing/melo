@@ -22,7 +22,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -57,6 +60,7 @@ import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.TouchApp
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
@@ -87,6 +91,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import coil.imageLoader
 import `in`.melo.presentation.components.PrivacyPolicyLink
+import `in`.melo.presentation.components.meloPanel
 import `in`.melo.R
 import `in`.melo.MeloModel
 import `in`.melo.data.UsageAnalytics
@@ -112,12 +117,12 @@ private fun SettingsScaffold(title: String, navController: NavHostController, co
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             TopAppBar(
-                title = { Text(title, fontFamily = GoogleSansRounded, modifier = Modifier.padding(start = 8.dp)) },
+                title = { Text(title, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.padding(start = 4.dp)) },
                 navigationIcon = {
-                    FilledTonalIconButton(
-                        modifier = Modifier.padding(start = 10.dp),
-                        colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    IconButton(
+                        modifier = Modifier.padding(start = 10.dp).meloPanel(CircleShape),
+                        colors = IconButtonDefaults.iconButtonColors(
+                            containerColor = Color.Transparent,
                             contentColor = MaterialTheme.colorScheme.onSurface
                         ),
                         onClick = { navController.popBackStack() }
@@ -136,7 +141,7 @@ private fun SettingsScaffold(title: String, navController: NavHostController, co
                 .padding(PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp,
                     bottom = 32.dp + `in`.melo.presentation.components.MiniPlayerHeight +
                         androidx.compose.foundation.layout.WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding())),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
             content = content,
         )
     }
@@ -145,11 +150,13 @@ private fun SettingsScaffold(title: String, navController: NavHostController, co
 @Composable
 private fun CategoryRow(title: String, subtitle: String, icon: ImageVector, onClick: () -> Unit) {
     Surface(
-        color = MaterialTheme.colorScheme.surfaceContainer,
-        modifier = Modifier.fillMaxWidth().clip(`in`.melo.ui.theme.MeloLayout.CardShape).clickable(onClick = onClick),
+        color = Color.Transparent,
+        modifier = Modifier.fillMaxWidth().meloPanel().clickable(onClick = onClick),
     ) {
         Row(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(icon, null, Modifier.size(26.dp), tint = MaterialTheme.colorScheme.primary)
+            Box(Modifier.size(38.dp).meloPanel(RoundedCornerShape(12.dp)), contentAlignment = Alignment.Center) {
+                Icon(icon, null, Modifier.size(22.dp), tint = MaterialTheme.colorScheme.onSurface)
+            }
             Column(Modifier.weight(1f).padding(horizontal = 16.dp)) {
                 Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                 Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -259,6 +266,10 @@ private fun AppearanceSettings(model: MeloModel, navController: NavHostControlle
                 onSelectionChanged = { key -> update { it.copy(themeMode = key) } },
                 leadingIcon = { Icon(Icons.Outlined.LightMode, null, tint = MaterialTheme.colorScheme.secondary) },
             )
+            SwitchSettingItem(stringResource(R.string.settings_surface_gradients_title), stringResource(R.string.settings_surface_gradients_subtitle), s.surfaceGradients, { v -> update { it.copy(surfaceGradients = v) } }, leadingIcon = { Icon(Icons.Outlined.Style, null, tint = MaterialTheme.colorScheme.secondary) })
+            SwitchSettingItem(stringResource(R.string.home_gradients_setting), "", s.homeGradients, { v -> update { it.copy(homeGradients = v) } }, leadingIcon = { Icon(Icons.Outlined.Style, null, tint = MaterialTheme.colorScheme.secondary) })
+            SwitchSettingItem(stringResource(R.string.home_press_motion_setting), stringResource(R.string.settings_touch_motion_subtitle), s.homePressMotion, { v -> update { it.copy(homePressMotion = v) } }, leadingIcon = { Icon(Icons.Rounded.TouchApp, null, tint = MaterialTheme.colorScheme.secondary) })
+            SwitchSettingItem(stringResource(R.string.home_loading_animation_setting), "", s.homeLoadingAnimations, { v -> update { it.copy(homeLoadingAnimations = v) } }, leadingIcon = { Icon(Icons.Outlined.PlayCircle, null, tint = MaterialTheme.colorScheme.secondary) })
             SwitchSettingItem(stringResource(R.string.settings_show_scrollbar_title), stringResource(R.string.settings_show_scrollbar_subtitle), s.showScrollbar, { v -> update { it.copy(showScrollbar = v) } }, leadingIcon = { Icon(Icons.Rounded.UnfoldMore, null, tint = MaterialTheme.colorScheme.secondary) })
         }
         CategoryRow(stringResource(R.string.melo_advanced), stringResource(R.string.melo_advanced_description), Icons.Rounded.Tune) {
@@ -269,6 +280,13 @@ private fun AppearanceSettings(model: MeloModel, navController: NavHostControlle
             SwitchSettingItem(stringResource(R.string.settings_source_badges_title), stringResource(R.string.settings_source_badges_subtitle), s.showSourceBadges, { v -> update { it.copy(showSourceBadges = v) } }, leadingIcon = { Icon(Icons.Outlined.Style, null, tint = MaterialTheme.colorScheme.secondary) })
         }
         SettingsSection(title = stringResource(R.string.settings_now_playing_section), icon = {}) {
+            SwitchSettingItem(
+                stringResource(R.string.settings_player_artwork_gradient_title),
+                stringResource(R.string.settings_player_artwork_gradient_subtitle),
+                s.playerArtworkGradient,
+                { value -> update { it.copy(playerArtworkGradient = value) } },
+                leadingIcon = { Icon(Icons.Outlined.Style, null, tint = MaterialTheme.colorScheme.secondary) },
+            )
             ThemeSelectorItem(
                 label = stringResource(R.string.settings_player_theme_title), description = "",
                 options = mapOf(
@@ -333,8 +351,10 @@ private fun AppearanceSettings(model: MeloModel, navController: NavHostControlle
                 label = stringResource(R.string.settings_default_tab_title), description = "",
                 options = mapOf(
                     AppSettings.TAB_HOME to stringResource(R.string.nav_bar_home),
+                    AppSettings.TAB_EXPLORE to stringResource(R.string.nav_bar_explore),
                     AppSettings.TAB_SEARCH to stringResource(R.string.nav_bar_search),
                     AppSettings.TAB_LIBRARY to stringResource(R.string.nav_bar_library),
+                    AppSettings.TAB_PODCASTS to stringResource(R.string.nav_bar_podcasts),
                 ),
                 selectedKey = s.defaultTab,
                 onSelectionChanged = { key -> update { it.copy(defaultTab = key) } },

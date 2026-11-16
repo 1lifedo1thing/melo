@@ -2,6 +2,8 @@ package `in`.melo.data.youtube
 
 import `in`.melo.data.Music
 import `in`.melo.data.MusicKind
+import `in`.melo.data.HomeHistoryTrack
+import `in`.melo.data.YouTubeWatchTarget
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -33,6 +35,106 @@ object YouTubeLibrary {
     internal fun accountInfo(credential: YouTubeCredential): YouTubeAccountInfo =
         parseAccountMenu(request("account/account_menu", JSONObject(), credential))
             ?: throw YouTubeAuthRequired("Google did not open a YouTube Music session.")
+
+    /** Personalized podcast browse/search when signed in, with the public catalogue as fallback. */
+    internal fun podcastRequest(endpoint: String, body: JSONObject): JSONObject {
+        val credential = YouTubeAccount.current() ?: return YouTubeMusic.browseRequest(endpoint, body)
+        return try {
+            request(endpoint, body, credential)
+        } catch (_: Exception) {
+            YouTubeMusic.browseRequest(endpoint, body)
+        }
+    }
+
+    /** YouTube Music's personalized Home feed, using the linked account when available. */
+    internal fun homeRequest(endpoint: String, body: JSONObject): JSONObject {
+        val credential = YouTubeAccount.current() ?: return YouTubeMusic.browseRequest(endpoint, body)
+        return try {
+            request(endpoint, body, credential)
+        } catch (_: Exception) {
+            YouTubeMusic.browseRequest(endpoint, body)
+        }
+    }
+
+    private data class RecommendationHistoryCache(
+        val listener: String,
+        val loadedAt: Long,
+        val rows: List<HomeHistoryTrack>,
+        val complete: Boolean,
+    )
+    @Volatile private var recommendationHistoryCache: RecommendationHistoryCache? = null
+
+    /** The account's personalized Supermix, Discover Mix, New Release Mix and other Home mixes. */
+    internal fun mixedForYou(): List<Music> {
+        if (!YouTubeAccount.signedIn) return emptyList()
+        return YouTubePages.recommendationPlaylists(request("browse", JSONObject().put("browseId", "FEmusic_mixed_for_you")))
+    }
+
+    /** Signed-in account history used to personalize Home; bounded and read only. */
+    internal fun recentHistory(limit: Int = 20): List<Music> = recentHistoryRows(limit).map(HomeHistoryTrack::track)
+
+    /** The full recommendation history, including artist channel IDs and podcast filtering data. */
+    @Synchronized internal fun recentHistoryRows(limit: Int = 2_000): List<HomeHistoryTrack> {
+        if (!YouTubeAccount.signedIn) return emptyList()
+        val listener = YouTubeAccount.info.value?.let { it.handle.ifBlank { it.name } }.orEmpty()
+        recommendationHistoryCache?.takeIf {
+            it.listener == listener && System.currentTimeMillis() - it.loadedAt < HISTORY_CACHE_MS &&
+                (it.complete || it.rows.size >= limit)
+        }?.let { return it.rows.take(limit) }
+        val first = request("browse", JSONObject().put("browseId", "FEmusic_history"))
+        val tracks = ArrayList(YouTubePages.recommendationHistoryRows(first))
+        val seen = HashSet<String>()
+        var token = findContinuation(first, preferShelf = false)
+        var pages = 0
+        var complete = token == null
+        while (token != null && tracks.size < limit && seen.add(token) && pages++ < MAX_HISTORY_PAGES) {
+            val page = request("browse", JSONObject().put("continuation", token))
+            val rows = YouTubePages.recommendationHistoryRows(page)
+            if (rows.isEmpty()) { complete = true; break }
+            tracks += rows
+            token = findContinuation(page, preferShelf = false)
+            if (token == null) complete = true
+        }
+        return tracks.distinctBy { it.track.id }.take(limit).also { rows ->
+            recommendationHistoryCache = RecommendationHistoryCache(listener, System.currentTimeMillis(), rows, complete)
+        }
+    }
+
+    /** Starts a personalized Mix with the user's Google session; its tracks still use ytm:// playback. */
+    internal fun watchQueue(playlistId: String, limit: Int = MAX_TRACKS, preferAudio: Boolean = false): List<Music> {
+        return watchQueue(YouTubeWatchTarget(playlistId.removePrefix("VL")), limit, preferAudio)
+    }
+
+    /** Starts the exact artist Mix/Shuffle endpoint, including the returned seed and params. */
+    internal fun watchQueue(
+        target: YouTubeWatchTarget,
+        limit: Int = MAX_TRACKS,
+        preferAudio: Boolean = false,
+    ): List<Music> {
+        val bareId = target.playlistId.removePrefix("VL")
+        val ids = listOf(target.playlistId, bareId, "VL$bareId").distinct()
+        for (queueId in ids) {
+            val body = JSONObject().put("playlistId", queueId).apply {
+                target.videoId?.let { put("videoId", it) }
+                target.params?.let { put("params", it) }
+            }
+            val first = request("next", body)
+            val tracks = ArrayList(YouTubePages.watchQueueRows(first, preferAudio))
+            val seen = HashSet<String>()
+            var token = findContinuation(first, preferShelf = false)
+            var pages = 0
+            while (token != null && tracks.size < limit && seen.add(token) && pages++ < MAX_RECOMMENDATION_PAGES) {
+                val page = request("next", JSONObject().put("continuation", token))
+                val rows = YouTubePages.watchQueueRows(page, preferAudio)
+                if (rows.isEmpty()) break
+                tracks += rows
+                token = findContinuation(page, preferShelf = false)
+            }
+            val unique = tracks.distinctBy(Music::id).take(limit)
+            if (unique.isNotEmpty()) return unique
+        }
+        return emptyList()
+    }
 
     /** Playlists of the library: the account's own, the ones it saved, and Liked Music. */
     fun libraryPlaylists(): List<Music> {
@@ -178,7 +280,7 @@ object YouTubeLibrary {
     private fun requestOnce(endpoint: String, body: JSONObject, credential: YouTubeCredential): JSONObject {
         val sapisid = credential.sapisid ?: throw YouTubeAuthRequired("The Google session is incomplete. Connect the account again.")
         val client = JSONObject().put("clientName", "WEB_REMIX").put("clientVersion", YouTubeMusic.MUSIC_CLIENT_VERSION)
-            .put("hl", "en").put("gl", "US")
+            .put("hl", YouTubeMusic.catalogueLanguage()).put("gl", YouTubeMusic.contentRegion())
         credential.visitorData?.let { client.put("visitorData", it) }
         val context = JSONObject().put("client", client)
         delegatedPageId(credential.dataSyncId)?.let { context.put("user", JSONObject().put("onBehalfOfUser", it)) }
@@ -220,6 +322,9 @@ object YouTubeLibrary {
 
     private const val ORIGIN = "https://music.youtube.com"
     private const val MAX_LIBRARY_PAGES = 20
+    private const val MAX_RECOMMENDATION_PAGES = 5
+    private const val MAX_HISTORY_PAGES = 20
+    private const val HISTORY_CACHE_MS = 120_000L
     private const val MAX_TRACKS = 5000
     private const val EDIT_BATCH = 100
     private val RETRY_DELAYS_MS = longArrayOf(4_000, 12_000)

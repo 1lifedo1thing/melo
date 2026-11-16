@@ -198,18 +198,7 @@ fun SearchResultAlbumItem(
     onLongPress: () -> Unit = {},
     onSelectionToggle: () -> Unit = {}
 ) {
-    val itemShape = remember {
-        AbsoluteSmoothCornerShape(
-            cornerRadiusTL = 26.dp,
-            smoothnessAsPercentTR = 60,
-            cornerRadiusTR = 26.dp,
-            smoothnessAsPercentBR = 60,
-            cornerRadiusBR = 26.dp,
-            smoothnessAsPercentBL = 60,
-            cornerRadiusBL = 26.dp,
-            smoothnessAsPercentTL = 60
-        )
-    }
+    val itemShape = RoundedCornerShape(12.dp)
 
     val selectionScale by animateFloatAsState(
         targetValue = if (isSelected) 0.98f else 1f,
@@ -225,7 +214,7 @@ fun SearchResultAlbumItem(
     Card(
         shape = itemShape,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+            containerColor = Color.Transparent
         ),
         modifier = Modifier
             .fillMaxWidth()
@@ -257,7 +246,7 @@ fun SearchResultAlbumItem(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(12.dp),
+                    .padding(horizontal = 8.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 SmartImage(
@@ -332,23 +321,12 @@ fun SearchResultArtistItem(
     onPlayClick: () -> Unit,
     onLongPress: () -> Unit = {},
 ) {
-    val itemShape = remember {
-        AbsoluteSmoothCornerShape(
-            cornerRadiusTL = 26.dp,
-            smoothnessAsPercentTR = 60,
-            cornerRadiusTR = 26.dp,
-            smoothnessAsPercentBR = 60,
-            cornerRadiusBR = 26.dp,
-            smoothnessAsPercentBL = 60,
-            cornerRadiusBL = 26.dp,
-            smoothnessAsPercentTL = 60
-        )
-    }
+    val itemShape = RoundedCornerShape(12.dp)
 
     Card(
         shape = itemShape,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+            containerColor = Color.Transparent
         ),
         modifier = Modifier
             .fillMaxWidth()
@@ -358,7 +336,7 @@ fun SearchResultArtistItem(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
+                .padding(horizontal = 8.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (!artist.effectiveImageUrl.isNullOrBlank()) {
@@ -377,7 +355,7 @@ fun SearchResultArtistItem(
                     modifier = Modifier
                         .size(56.dp)
                         .background(MaterialTheme.colorScheme.tertiaryContainer, CircleShape)
-                        .padding(12.dp),
+                        .padding(horizontal = 8.dp, vertical = 8.dp),
                     tint = MaterialTheme.colorScheme.onTertiaryContainer
                 )
             }
@@ -423,18 +401,7 @@ fun SearchResultPlaylistItem(
     onLongPress: () -> Unit = {},
     onSelectionToggle: () -> Unit = {}
 ) {
-    val itemShape = remember {
-        AbsoluteSmoothCornerShape(
-            cornerRadiusTL = 26.dp,
-            smoothnessAsPercentTR = 60,
-            cornerRadiusTR = 26.dp,
-            smoothnessAsPercentBR = 60,
-            cornerRadiusBR = 26.dp,
-            smoothnessAsPercentBL = 60,
-            cornerRadiusBL = 26.dp,
-            smoothnessAsPercentTL = 60
-        )
-    }
+    val itemShape = RoundedCornerShape(12.dp)
 
     val selectionScale by animateFloatAsState(
         targetValue = if (isSelected) 0.98f else 1f,
@@ -450,7 +417,7 @@ fun SearchResultPlaylistItem(
     Card(
         shape = itemShape,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+            containerColor = Color.Transparent
         ),
         modifier = Modifier
             .fillMaxWidth()
@@ -482,7 +449,7 @@ fun SearchResultPlaylistItem(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(12.dp),
+                    .padding(horizontal = 8.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 SmartImage(
@@ -568,13 +535,13 @@ fun SearchFilterChip(
         onClick = { onSelect(filterType) },
         label = { Text(stringResource(labelResId)) },
         modifier = modifier,
-        shape = CircleShape,
+        shape = RoundedCornerShape(12.dp),
         border = BorderStroke(
-            width = 0.dp,
-            color = Color.Transparent
+            width = 0.75.dp,
+            color = if (selected) Color.Transparent else MaterialTheme.colorScheme.outlineVariant
         ),
         colors = FilterChipDefaults.filterChipColors(
-            containerColor =  MaterialTheme.colorScheme.secondaryContainer,
+            containerColor = MaterialTheme.colorScheme.surface,
             labelColor = MaterialTheme.colorScheme.onSecondaryContainer,
             selectedContainerColor = MaterialTheme.colorScheme.primary,
             selectedLabelColor = MaterialTheme.colorScheme.onPrimary,

@@ -97,6 +97,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import `in`.melo.presentation.components.meloPanel
 import `in`.melo.R
 import `in`.melo.data.equalizer.EqualizerPreset
 import `in`.melo.presentation.components.CollapsibleCommonTopBar
@@ -549,9 +550,9 @@ private fun BandSlidersSection(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = 16.dp).meloPanel(RoundedCornerShape(24.dp)),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+            containerColor = Color.Transparent
         ),
         shape = RoundedCornerShape(24.dp)
     ) {
@@ -1260,9 +1261,9 @@ private fun EffectCard(
     onEnabledChange: (Boolean) -> Unit
 ) {
     Card(
-        modifier = Modifier.width(150.dp).fillMaxHeight(), // Match parent intrinsic height
+        modifier = Modifier.width(150.dp).fillMaxHeight().meloPanel(RoundedCornerShape(24.dp)), // Match parent intrinsic height
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+            containerColor = Color.Transparent
         ),
         shape = RoundedCornerShape(24.dp)
     ) {
@@ -1327,7 +1328,7 @@ private fun UnsupportedEffectCard(
     onDismiss: () -> Unit
 ) {
      Card(
-        modifier = Modifier.width(150.dp).fillMaxHeight(), // Match parent intrinsic height
+        modifier = Modifier.width(150.dp).fillMaxHeight().meloPanel(RoundedCornerShape(24.dp)), // Match parent intrinsic height
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
         ),
@@ -1498,9 +1499,9 @@ private fun VolumeControlCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = 16.dp).meloPanel(RoundedCornerShape(24.dp)),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+            containerColor = Color.Transparent
         ),
         shape = RoundedCornerShape(24.dp)
     ) {

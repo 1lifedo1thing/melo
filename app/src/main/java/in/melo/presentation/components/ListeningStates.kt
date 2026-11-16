@@ -22,9 +22,9 @@ fun ListeningStatusCard(title: String, message: String, action: String, onAction
 }
 
 @Composable
-fun ListeningShelfPlaceholder(modifier: Modifier = Modifier) {
+fun ListeningShelfPlaceholder(modifier: Modifier = Modifier, label: String? = null) {
     Column(modifier.padding(horizontal = MeloLayout.PageGutter), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text(stringResource(R.string.melo_loading_library), style = MaterialTheme.typography.labelLarge,
+        Text(label ?: stringResource(R.string.melo_loading_library), style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant)
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             repeat(3) {

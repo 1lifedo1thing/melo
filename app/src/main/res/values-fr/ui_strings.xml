@@ -265,6 +265,14 @@
     <string name="settings_album_art_palette_title">Style de palette de pochette</string>
     <string name="settings_app_language_title">Langue de l\'application</string>
     <string name="settings_app_theme_title">Thème de l\'application</string>
+    <string name="settings_youtube_country_title">Pays des recommandations YouTube</string>
+    <string name="settings_youtube_country_subtitle">Personnalise les podcasts et les découvertes musicales.</string>
+    <string name="settings_country_india">Inde</string>
+    <string name="settings_country_us">États-Unis</string>
+    <string name="settings_country_uk">Royaume-Uni</string>
+    <string name="settings_country_canada">Canada</string>
+    <string name="settings_country_australia">Australie</string>
+    <string name="settings_country_device">Pays de l\'appareil</string>
     <string name="settings_auto_rotate_patterns_subtitle">Changer de motif de pêle-mêle à chaque visite de l\'Accueil.</string>
     <string name="settings_auto_rotate_patterns_title">Rotation auto des motifs</string>
     <string name="settings_carousel_style_title">Style du carrousel</string>
@@ -302,6 +310,8 @@
     <string name="settings_navbar_style_title">Style de la barre de navigation</string>
     <string name="settings_navigation_bar_section">Barre de navigation</string>
     <string name="settings_now_playing_section">En cours de lecture</string>
+    <string name="settings_player_artwork_gradient_title">Dégradé de la pochette</string>
+    <string name="settings_player_artwork_gradient_subtitle">Diffuser les couleurs de la pochette derrière le lecteur</string>
     <string name="settings_pause_on_volume_zero">Mettre en pause quand le volume atteint zéro</string>
     <string name="settings_pause_on_volume_zero_desc">Mettre automatiquement en pause la lecture lorsque le volume est à 0</string>
     <string name="settings_persistent_shuffle_subtitle">Conserver le mode aléatoire entre les sessions.</string>

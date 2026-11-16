@@ -47,7 +47,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
+import `in`.melo.presentation.components.MeloBottomSheet as ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -75,6 +75,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.sp
 import androidx.core.view.HapticFeedbackConstantsCompat
+import `in`.melo.presentation.components.meloPanel
 import `in`.melo.R
 import `in`.melo.data.model.Song
 import `in`.melo.data.model.Album
@@ -98,14 +99,14 @@ fun SettingsSection(title: String, icon: @Composable () -> Unit, content: @Compo
     Column(modifier = Modifier.padding(vertical = 4.dp)) {
         Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(vertical = 8.dp)
+                modifier = Modifier.padding(start = 4.dp, top = 16.dp, bottom = 10.dp)
         ) {
             Spacer(modifier = Modifier.width(12.dp))
             Text(
                     text = title,
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -123,10 +124,10 @@ fun SettingsItem(
         onClick: () -> Unit
 ) {
     Surface(
-            color = MaterialTheme.colorScheme.surfaceContainer,
+            color = Color.Transparent,
             modifier =
                     Modifier.fillMaxWidth()
-                            .clip(`in`.melo.ui.theme.MeloLayout.CardShape)
+                            .meloPanel()
                             .clickable(onClick = onClick)
     ) {
         Row(
@@ -134,7 +135,7 @@ fun SettingsItem(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp).fillMaxWidth()
         ) {
             Box(
-                    modifier = Modifier.padding(end = 16.dp).size(24.dp),
+                    modifier = Modifier.padding(end = 14.dp).size(36.dp).meloPanel(RoundedCornerShape(12.dp)),
                     contentAlignment = Alignment.Center
             ) { leadingIcon() }
 
@@ -174,8 +175,8 @@ fun SwitchSettingItem(
     val appHapticsConfig = LocalAppHapticsConfig.current
 
     Surface(
-            color = MaterialTheme.colorScheme.surfaceContainer,
-            modifier = Modifier.fillMaxWidth().clip(`in`.melo.ui.theme.MeloLayout.CardShape)
+            color = Color.Transparent,
+            modifier = Modifier.fillMaxWidth().meloPanel()
     ) {
         Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -262,9 +263,9 @@ fun ThemeSelectorItem(
     val selectedOption = options[selectedKey] ?: selectedKey
 
     Surface(
-            color = MaterialTheme.colorScheme.surfaceContainer,
+            color = Color.Transparent,
             modifier =
-                    Modifier.fillMaxWidth().clip(`in`.melo.ui.theme.MeloLayout.CardShape).clickable {
+                    Modifier.fillMaxWidth().meloPanel().clickable {
                         showSheet = true
                     }
     ) {
@@ -274,7 +275,7 @@ fun ThemeSelectorItem(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Box(
-                    modifier = Modifier.padding(end = 16.dp).size(24.dp),
+                    modifier = Modifier.padding(end = 14.dp).size(36.dp).meloPanel(RoundedCornerShape(12.dp)),
                         contentAlignment = Alignment.Center
                 ) { leadingIcon() }
 
@@ -305,7 +306,7 @@ fun ThemeSelectorItem(
     }
 
     if (showSheet) {
-        androidx.compose.material3.ModalBottomSheet(
+        `in`.melo.presentation.components.MeloBottomSheet(
             onDismissRequest = { showSheet = false },
             containerColor = MaterialTheme.colorScheme.surface,
             contentColor = MaterialTheme.colorScheme.onSurface
@@ -380,8 +381,8 @@ fun SliderSettingsItem(
         enabled: Boolean = true,
 ) {
     Surface(
-            color = MaterialTheme.colorScheme.surfaceContainer,
-            modifier = Modifier.fillMaxWidth().clip(`in`.melo.ui.theme.MeloLayout.CardShape)
+            color = Color.Transparent,
+            modifier = Modifier.fillMaxWidth().meloPanel()
     ) {
         Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
             Row(
@@ -428,8 +429,8 @@ fun ActionSettingsItem(
     enabled: Boolean = true
 ) {
     Surface(
-        color = MaterialTheme.colorScheme.surfaceContainer,
-        modifier = Modifier.fillMaxWidth().clip(`in`.melo.ui.theme.MeloLayout.CardShape)
+        color = Color.Transparent,
+        modifier = Modifier.fillMaxWidth().meloPanel()
     ) {
         Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
             Row(
@@ -437,7 +438,7 @@ fun ActionSettingsItem(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Box(
-                    modifier = Modifier.padding(end = 16.dp).size(24.dp),
+                    modifier = Modifier.padding(end = 14.dp).size(36.dp).meloPanel(RoundedCornerShape(12.dp)),
                     contentAlignment = Alignment.Center
                 ) {
                     icon()

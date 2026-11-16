@@ -52,6 +52,8 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import `in`.melo.BottomNavItem
@@ -97,6 +99,12 @@ fun MeloMain(model: MeloModel) {
         }
         return
     }
+    var returnedFromBackground by remember { mutableStateOf(false) }
+    LifecycleEventEffect(Lifecycle.Event.ON_PAUSE) { returnedFromBackground = true }
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        if (returnedFromBackground) model.refreshLibrary()
+        returnedFromBackground = false
+    }
     val playerViewModel = model.ui
     val settings by playerViewModel.settings.collectAsStateWithLifecycle()
     val navController = rememberNavController()
@@ -109,8 +117,10 @@ fun MeloMain(model: MeloModel) {
     val commonNavItems = remember {
         persistentListOf(
             BottomNavItem("Home", R.string.nav_bar_home, R.drawable.rounded_home_24, R.drawable.home_24_rounded_filled, Screen.Home),
+            BottomNavItem("Explore", R.string.nav_bar_explore, R.drawable.ic_explore_24, R.drawable.ic_explore_24, Screen.Explore),
             BottomNavItem("Search", R.string.nav_bar_search, R.drawable.rounded_search_24, R.drawable.rounded_search_24, Screen.Search),
             BottomNavItem("Library", R.string.nav_bar_library, R.drawable.rounded_library_music_24, R.drawable.round_library_music_24, Screen.Library),
+            BottomNavItem("Podcasts", R.string.nav_bar_podcasts, R.drawable.rounded_headphones_24, R.drawable.rounded_headphones_24, Screen.Podcasts),
         )
     }
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -118,7 +128,7 @@ fun MeloMain(model: MeloModel) {
     var isSearchBarActive by remember { mutableStateOf(false) }
     val routesWithHiddenNavigationBar = remember {
         setOf(Screen.Settings.route, Screen.Equalizer.route, Screen.SettingsCategory.route, Screen.PlaylistDetail.route, Screen.AlbumDetail.route,
-            Screen.ArtistDetail.route, Screen.Convert.route, Screen.GoogleSignIn.route)
+            Screen.ArtistDetail.route, Screen.PodcastDetail.route, Screen.Convert.route, Screen.GoogleSignIn.route)
     }
     val shouldHideNavigationBar by remember(currentRoute, isSearchBarActive) {
         derivedStateOf {
@@ -180,6 +190,8 @@ fun MeloMain(model: MeloModel) {
     LaunchedEffect(hapticsEnabled, rootView) { rootView.rootView?.isHapticFeedbackEnabled = hapticsEnabled }
     val scopedHaptics = remember(platformHaptics, hapticsEnabled) { if (hapticsEnabled) platformHaptics else NoOpHapticFeedback }
     CompositionLocalProvider(
+        `in`.melo.presentation.components.LocalSurfaceGradients provides settings.surfaceGradients,
+        `in`.melo.presentation.components.LocalHomePressMotion provides settings.homePressMotion,
         LocalAppHapticsConfig provides remember(hapticsEnabled) { AppHapticsConfig(enabled = hapticsEnabled) },
         LocalHapticFeedback provides scopedHaptics,
     ) {

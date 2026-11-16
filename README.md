@@ -52,7 +52,7 @@ Service access and available playback features depend on the source, account, re
 
 ## Get Melo
 
-Download **Melo 1.0.0** from the [latest GitHub release](https://github.com/aarush-io/melo/releases/latest), then open the APK on an ARM64 Android device running Android 8.0 or later. Android will ask you to allow installation from the app you used to open the download.
+Download **Melo 1.1.0** from the [latest GitHub release](https://github.com/aarush-io/melo/releases/latest), then open the APK on an ARM64 Android device running Android 8.0 or later. Android will ask you to allow installation from the app you used to open the download.
 
 Melo uses its own application ID and keeps its settings, sign-in, and downloads separate from other apps.
 

@@ -146,7 +146,7 @@ internal fun CollapsingAlbumTopBar(
     onBackPressed: () -> Unit,
     onPlayClick: () -> Unit
 ) {
-    val surfaceColor = MaterialTheme.colorScheme.surface
+    val surfaceColor = MaterialTheme.colorScheme.background
     val statusBarColor =
         if (LocalMeloDarkTheme.current) Color.Black.copy(alpha = 0.6f) else Color.White.copy(
             alpha = 0.4f
