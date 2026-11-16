@@ -1,10 +1,10 @@
 <p align="center">
-  <img src="design/melo-banner.svg" alt="Melo — Your music. Nothing else." width="100%" />
+  <img src="design/melo-banner.svg" alt="Melo — Your music. Your space." width="100%" />
 </p>
 
 <p align="center">
-  <strong>A quieter home for your music.</strong><br />
-  Spotify. YouTube Music. Your files. One listening space.
+  <strong>Your music. Your space.</strong><br />
+  Spotify, YouTube Music, and your local library in one Android player.
 </p>
 
 <p align="center">
@@ -16,27 +16,24 @@
 
 ---
 
-## Melo, in tune
+## One listening space
 
-Melo is a native Android music player built with Kotlin and Jetpack Compose. Its interface stays quiet and monochrome so your music can bring the colour: album art, artist imagery, and playlists remain vivid.
+Melo is a native Android music player built with Kotlin and Jetpack Compose. Bring your listening together, find something for the moment, and keep your favorite music close.
 
-The app ID is **in.melo**. Melo is independent of Spotify, YouTube, Google.
+The app ID is **in.melo**. Melo is independent of Spotify, YouTube, and Google.
 
-## Screenshots
+## Take a look
 
 <p align="center">
-  <img src="docs/assets/img/readme/melo-home-library-board.png" alt="Melo Home screen and music library" width="100%" />
+  <img src="docs/assets/img/readme/melo-product-showcase.png" alt="Melo Home discovery feed and Now Playing screen" width="100%" />
 </p>
 
 <details>
-  <summary>See playback and customization screens</summary>
+  <summary>View the full-size screenshots</summary>
 
   <p align="center">
-    <img src="docs/assets/img/readme/melo-playback-showcase.png" alt="Melo player, queue, and music search" width="100%" />
-  </p>
-
-  <p align="center">
-    <img src="docs/assets/img/readme/melo-customization-showcase.png" alt="Melo appearance, home layout, and equalizer settings" width="100%" />
+    <img src="docs/assets/img/readme/screens/home-feed.png" alt="Melo Home with mood controls and music discovery shelves" width="49%" />
+    <img src="docs/assets/img/readme/screens/now-playing.png" alt="Melo Now Playing with album artwork and playback controls" width="49%" />
   </p>
 </details>
 
@@ -64,7 +61,7 @@ For an update to install over an existing Melo build, publish a higher version c
 
     Melo-vVERSION.apk
 
-For example, version 1.0.1 uses the tag v1.0.1 and the asset Melo-v1.0.1.apk.
+For example, version 1.1.0 uses the tag v1.1.0 and the asset Melo-v1.1.0.apk.
 
 ## Build from source
 
