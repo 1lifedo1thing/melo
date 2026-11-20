@@ -43,15 +43,18 @@ fun Modifier.artworkRim(shape: Shape, glass: Boolean = false): Modifier = drawWi
 }
 
 @Composable
-fun Modifier.homePress(source: MutableInteractionSource): Modifier {
+fun Modifier.meloPress(source: MutableInteractionSource, enabled: Boolean = true): Modifier {
     val pressed by source.collectIsPressedAsState()
-    val enabled = LocalHomePressMotion.current && !LocalReducedMotion.current
+    val motionEnabled = enabled && LocalHomePressMotion.current && !LocalReducedMotion.current
     val scale by animateFloatAsState(
-        if (pressed && enabled) 0.96f else 1f,
+        if (pressed && motionEnabled) 0.96f else 1f,
         animationSpec = spring(dampingRatio = 0.8f, stiffness = 650f), label = "artworkPress",
     )
     return graphicsLayer { scaleX = scale; scaleY = scale }
 }
+
+@Composable
+fun Modifier.homePress(source: MutableInteractionSource): Modifier = meloPress(source)
 
 /** Mood colors paired with contrasting text for legibility. */
 fun moodColors(mood: HomeMood): Pair<Color, Color> = when (mood) {

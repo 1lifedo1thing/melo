@@ -213,7 +213,7 @@ fun SearchScreen(
                         },
                         expanded = false,
                         onExpandedChange = {},
-                        modifier = Modifier.meloPanel(MeloLayout.SearchShape),
+                        modifier = Modifier.meloPanel(MeloLayout.PillShape),
                         colors = SearchBarDefaults.colors(
                             containerColor = Color.Transparent,
                             dividerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
