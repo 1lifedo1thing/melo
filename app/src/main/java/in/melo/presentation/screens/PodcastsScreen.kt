@@ -112,8 +112,8 @@ fun PodcastsScreen(model: MeloModel, navController: NavHostController, paddingVa
     val refreshing = podcastState.refreshing
     val loadingMore = podcastState.loadingMore
 
-    LaunchedEffect(settings.youtubeContentCountry, youtubeAccount) { model.loadPodcastFeed() }
-    LaunchedEffect(query, searchRetry, settings.youtubeContentCountry) {
+    LaunchedEffect(youtubeAccount) { model.loadPodcastFeed() }
+    LaunchedEffect(query, searchRetry) {
         val term = query.trim()
         if (term.length < 2) {
             searchShelves = emptyList()
