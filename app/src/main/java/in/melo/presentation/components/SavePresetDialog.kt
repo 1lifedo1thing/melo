@@ -4,11 +4,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -63,7 +61,8 @@ fun SavePresetDialog(
             }
         },
         confirmButton = {
-            Button(
+            MeloButton(
+                text = stringResource(R.string.common_save),
                 onClick = {
                     if (name.isBlank()) {
                         isError = true
@@ -71,15 +70,17 @@ fun SavePresetDialog(
                         onSave(name)
                         onDismiss()
                     }
-                }
-            ) {
-                Text(stringResource(R.string.common_save))
-            }
+                },
+                size = MeloButtonSize.Medium,
+            )
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.common_cancel), maxLines = 1, overflow = TextOverflow.Ellipsis)
-            }
+            MeloButton(
+                text = stringResource(R.string.common_cancel),
+                onClick = onDismiss,
+                size = MeloButtonSize.Medium,
+                style = MeloButtonStyle.Text,
+            )
         }
     )
 }
@@ -122,7 +123,8 @@ fun RenamePresetDialog(
             }
         },
         confirmButton = {
-            Button(
+            MeloButton(
+                text = stringResource(R.string.equalizer_action_rename),
                 onClick = {
                     if (name.isBlank()) {
                         isError = true
@@ -130,15 +132,17 @@ fun RenamePresetDialog(
                         onRename(name.trim())
                         onDismiss()
                     }
-                }
-            ) {
-                Text(stringResource(R.string.equalizer_action_rename))
-            }
+                },
+                size = MeloButtonSize.Medium,
+            )
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.common_cancel), maxLines = 1, overflow = TextOverflow.Ellipsis)
-            }
+            MeloButton(
+                text = stringResource(R.string.common_cancel),
+                onClick = onDismiss,
+                size = MeloButtonSize.Medium,
+                style = MeloButtonStyle.Text,
+            )
         }
     )
 }

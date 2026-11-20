@@ -12,7 +12,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import `in`.melo.ui.theme.MeloLayout
 
@@ -43,7 +42,6 @@ fun MeloBottomSheet(
     shape: Shape = MeloLayout.SheetShape,
     containerColor: Color = MaterialTheme.colorScheme.surface,
     contentColor: Color = MaterialTheme.colorScheme.onSurface,
-    tonalElevation: Dp = 0.dp,
     dragHandle: @Composable (() -> Unit)? = { BottomSheetDefaults.DragHandle() },
     contentWindowInsets: @Composable () -> WindowInsets = { WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom) },
     content: @Composable ColumnScope.() -> Unit,
@@ -55,7 +53,6 @@ fun MeloBottomSheet(
         shape = shape,
         containerColor = containerColor,
         contentColor = contentColor,
-        tonalElevation = 0.dp,
         scrimColor = MaterialTheme.colorScheme.scrim.copy(alpha = 0.6f),
         dragHandle = dragHandle,
         contentWindowInsets = contentWindowInsets,

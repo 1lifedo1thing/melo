@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import `in`.melo.ui.theme.MeloLayout
 
 /** Rounded, rimmed action panel shared by the page header menus. */
 @Composable
@@ -26,9 +27,8 @@ fun MeloMenu(
         expanded = expanded,
         onDismissRequest = onDismiss,
         modifier = Modifier.widthIn(min = 248.dp, max = 304.dp),
-        shape = RoundedCornerShape(24.dp),
+        shape = MeloLayout.PanelShape,
         containerColor = colors.surface,
-        tonalElevation = 0.dp,
         shadowElevation = 12.dp,
         border = BorderStroke(0.75.dp, Brush.verticalGradient(listOf(
             colors.onSurface.copy(alpha = 0.22f),
@@ -51,7 +51,7 @@ fun MeloMenuItem(label: String, icon: @Composable () -> Unit, enabled: Boolean =
         text = { Text(label, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium) },
         leadingIcon = {
             Box(
-                Modifier.size(34.dp).clip(RoundedCornerShape(10.dp))
+                Modifier.size(34.dp).clip(MeloLayout.CardShape)
                     .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.055f)),
                 contentAlignment = Alignment.Center,
             ) {
@@ -64,7 +64,7 @@ fun MeloMenuItem(label: String, icon: @Composable () -> Unit, enabled: Boolean =
             textColor = MaterialTheme.colorScheme.error,
             leadingIconColor = MaterialTheme.colorScheme.error,
         ) else MenuDefaults.itemColors(),
-        modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).clip(RoundedCornerShape(16.dp)),
+        modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).clip(MeloLayout.PanelShape),
         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
     )
 }

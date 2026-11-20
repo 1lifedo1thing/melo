@@ -14,11 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -33,7 +29,6 @@ import androidx.compose.ui.unit.dp
 import `in`.melo.R
 import `in`.melo.ui.theme.GoogleSansRounded
 import racra.compose.smooth_corner_rect_library.AbsoluteSmoothCornerShape
-import androidx.compose.ui.text.style.TextOverflow
 
 @Composable
 fun DismissUndoBar(
@@ -79,28 +74,21 @@ fun DismissUndoBar(
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Button(
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                            contentColor = MaterialTheme.colorScheme.onSurface
-                        ),
-                        onClick = onUndo
-                    ) {
-                        Text(stringResource(R.string.common_undo), color = MaterialTheme.colorScheme.primary, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    }
-                    FilledIconButton(
-                        colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                            contentColor = MaterialTheme.colorScheme.onSurface
-                        ),
-                        onClick = onClose
-                    ) {
-                        Icon(
-                            imageVector = Icons.Rounded.Close,
-                            contentDescription = stringResource(R.string.common_close),
-                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                        )
-                    }
+                    MeloButton(
+                        text = stringResource(R.string.common_undo),
+                        onClick = onUndo,
+                        size = MeloButtonSize.Medium,
+                        style = MeloButtonStyle.Tonal,
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                        contentColor = MaterialTheme.colorScheme.primary,
+                    )
+                    MeloIconButton(
+                        icon = Icons.Rounded.Close,
+                        contentDescription = stringResource(R.string.common_close),
+                        onClick = onClose,
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                        contentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                    )
                 }
             }
             Box(

@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Check
@@ -49,6 +48,7 @@ import `in`.melo.data.Music
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import `in`.melo.ui.theme.MeloLayout
 
 /**
  * Searches tracks and adds them to [playlist]. A Spotify playlist takes Spotify tracks and local
@@ -96,7 +96,7 @@ fun AddTracksSheet(
             OutlinedTextField(
                 value = query, onValueChange = { query = it }, singleLine = true, modifier = Modifier.fillMaxWidth(),
                 leadingIcon = { Icon(Icons.Rounded.Search, null) }, placeholder = { Text(stringResource(R.string.search_placeholder)) },
-                shape = RoundedCornerShape(28.dp),
+                shape = MeloLayout.PillShape,
             )
             if (sources.size > 1) SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                 sources.forEachIndexed { index, (key, label) ->
@@ -108,7 +108,7 @@ fun AddTracksSheet(
             LazyColumn(Modifier.fillMaxWidth().heightIn(min = 240.dp, max = 520.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 items(results, key = { it.id }) { track ->
                     Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                        SmartImage(model = track.imageUrl, contentDescription = null, shape = RoundedCornerShape(12.dp),
+                        SmartImage(model = track.imageUrl, contentDescription = null, shape = MeloLayout.CardShape,
                             contentScale = ContentScale.Crop, targetSize = SmartImageCompactListTargetSize, modifier = Modifier.size(48.dp))
                         Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
                             Text(track.title, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.bodyLarge)

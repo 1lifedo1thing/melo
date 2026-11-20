@@ -65,11 +65,7 @@ import androidx.compose.material.icons.rounded.Speaker
 import androidx.compose.material.icons.rounded.Tv
 import androidx.compose.material.icons.rounded.Wifi
 import androidx.compose.material.icons.rounded.WifiOff
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.BottomSheetDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -156,6 +152,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.roundToInt
+import `in`.melo.ui.theme.MeloLayout
 
 @androidx.annotation.OptIn(UnstableApi::class)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -346,9 +343,8 @@ fun CastBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
         dragHandle = { BottomSheetDefaults.DragHandle() },
-        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+        shape = MeloLayout.SheetShape,
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-        tonalElevation = 12.dp
     ) {
         // AQUÍ APLICAMOS EL FIX: Anulamos la fábrica de overscroll para todo lo que esté aquí adentro
         CompositionLocalProvider(
@@ -476,10 +472,9 @@ private fun CastPermissionStep(
             color = colors.onSurfaceVariant
         )
 
-        Card(
-            shape = RoundedCornerShape(26.dp),
-            colors = CardDefaults.cardColors(containerColor = colors.surfaceContainerHigh),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        MeloCard(
+            shape = MeloLayout.PanelShape,
+            color = colors.surfaceContainerHigh,
         ) {
             Column(
                 modifier = Modifier
@@ -500,13 +495,11 @@ private fun CastPermissionStep(
             }
         }
 
-        Button(
+        MeloButton(
+            text = stringResource(R.string.cast_allow_access),
             onClick = onRequestPermissions,
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(50)
-        ) {
-            Text(text = stringResource(R.string.cast_allow_access), maxLines = 1, overflow = TextOverflow.Ellipsis)
-        }
+        )
 
         if (missingPermissions.isNotEmpty()) {
             Text(
@@ -853,7 +846,7 @@ private fun CastDevicesTabContent(
                     LinearProgressIndicator(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(18.dp)),
+                            .clip(MeloLayout.PanelShape),
                         color = colors.primary,
                         trackColor = colors.primary.copy(alpha = 0.12f)
                     )
@@ -1105,8 +1098,7 @@ private fun CastSheetContainer(
                 }
                 .then(sheetDragModifier)
                 .nestedScroll(nestedScrollConnection),
-            shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
-            tonalElevation = 12.dp,
+            shape = MeloLayout.SheetShape,
             color = MaterialTheme.colorScheme.surfaceContainerLow
         ) {
             Box(modifier = Modifier.padding(bottom = 18.dp)) {
@@ -1261,7 +1253,7 @@ private fun DeviceSectionHeader(
                 containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                 contentColor = MaterialTheme.colorScheme.onSurface
             ),
-            modifier = Modifier.clip(RoundedCornerShape(16.dp))
+            modifier = Modifier.clip(MeloLayout.PanelShape)
         ) {
             Icon(Icons.Filled.Refresh, contentDescription = stringResource(R.string.cast_cd_refresh_devices))
         }
@@ -1296,12 +1288,9 @@ private fun ActiveDeviceHero(
         smoothnessAsPercentBR = 70
     )
 
-    Card(
+    MeloCard(
         shape = heroShape,
-        colors = CardDefaults.cardColors(
-            containerColor = if (device.isRemote) MaterialTheme.colorScheme.tertiaryContainer else MaterialTheme.colorScheme.tertiaryContainer
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+        color = MaterialTheme.colorScheme.tertiaryContainer,
     ) {
         Column(
             modifier = Modifier
@@ -1376,28 +1365,23 @@ private fun ActiveDeviceHero(
                         maxLines = 1
                     )
                     if (device.isRemote) {
-                        Button(
+                        MeloButton(
+                            text = stringResource(R.string.cast_disconnect),
                             onClick = onDisconnect,
                             enabled = !device.isConnecting,
-                            shape = RoundedCornerShape(50),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                                contentColor = MaterialTheme.colorScheme.onErrorContainer
-                            ),
-                            modifier = Modifier
-                                .height(46.dp)
-                                .padding(top = 4.dp)
-                        ) {
-                            Icon(
+                            size = MeloButtonSize.Medium,
+                            style = MeloButtonStyle.Tonal,
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                            contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                            modifier = Modifier.padding(top = 4.dp),
+                            leadingContent = {
+                                Icon(
                                 modifier = Modifier.size(22.dp),
                                 painter = painterResource(R.drawable.rounded_mimo_disconnect_24),
-                                contentDescription = stringResource(R.string.cast_disconnect),
+                                contentDescription = null,
                             )
-                            Spacer(
-                                modifier = Modifier.width(6.dp)
-                            )
-                            Text(stringResource(R.string.cast_disconnect))
-                        }
+                            },
+                        )
                     }
                 }
             }
@@ -1459,12 +1443,10 @@ private fun buildVolumeLabel(value: Float, max: Float): String {
 
 @Composable
 private fun EmptyDeviceState() {
-    Card(
+    MeloCard(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainer
-        ),
-        shape = RoundedCornerShape(22.dp)
+        color = MaterialTheme.colorScheme.surfaceContainer,
+        shape = MeloLayout.PanelShape,
     ) {
         Column(
             modifier = Modifier.padding(20.dp),
@@ -1548,7 +1530,6 @@ private fun CastDeviceRow(
                 }
             ),
         color = containerColor,
-        tonalElevation = 2.dp
     ) {
         // Usamos Row con IntrinsicSize.Min para que la altura se adapte al contenido de texto
         // pero permita que el icono se centre verticalmente de forma real.
@@ -1698,7 +1679,7 @@ private fun BadgeChip(
 ) {
     Row(
         modifier = Modifier
-            .clip(RoundedCornerShape(50))
+            .clip(MeloLayout.PillShape)
             .background(contentColor.copy(alpha = 0.08f))
             .padding(horizontal = 10.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,

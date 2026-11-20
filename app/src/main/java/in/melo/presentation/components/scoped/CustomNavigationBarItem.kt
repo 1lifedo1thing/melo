@@ -29,6 +29,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import `in`.melo.ui.theme.MeloLayout
 
 /** Selected capsule with stable touch targets and native tab semantics. */
 @Composable
@@ -57,7 +58,7 @@ fun RowScope.CustomNavigationBarItem(
     )
     Column(
         modifier.fillMaxHeight().heightIn(min = 48.dp)
-            .background(selection, RoundedCornerShape(50))
+            .background(selection, MeloLayout.PillShape)
             .selectable(selected = selected, enabled = enabled, role = Role.Tab,
                 interactionSource = interactionSource, indication = null, onClick = onClick)
             .semantics(mergeDescendants = true) {

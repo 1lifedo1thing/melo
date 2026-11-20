@@ -82,7 +82,13 @@ internal fun SpotifyPlaylistEditor(
                 }
                 if (!youTube) {
                     if (image != null || playlist?.imageUrl != null) AsyncImage(image ?: playlist?.imageUrl, null, Modifier.size(100.dp))
-                    OutlinedButton(onClick = { picker.launch("image/*") }, enabled = !busy) { Text(stringResource(R.string.spotify_playlist_cover)) }
+                    MeloButton(
+                        text = stringResource(R.string.spotify_playlist_cover),
+                        onClick = { picker.launch("image/*") },
+                        enabled = !busy,
+                        size = MeloButtonSize.Medium,
+                        style = MeloButtonStyle.Outlined,
+                    )
                 }
                 if (!local) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -95,7 +101,7 @@ internal fun SpotifyPlaylistEditor(
             }
         },
         confirmButton = {
-            TextButton(enabled = !busy && name.isNotBlank() && (local || knownVisibility), onClick = {
+            MeloButton(text = stringResource(R.string.action_save), enabled = !busy && name.isNotBlank() && (local || knownVisibility), onClick = {
                 busy = true; error = null
                 scope.launch {
                     try {
@@ -129,9 +135,9 @@ internal fun SpotifyPlaylistEditor(
                     catch (failure: Exception) { error = failure.message ?: saveFailure }
                     finally { busy = false }
                 }
-            }) { Text(stringResource(R.string.action_save)) }
+            }, size = MeloButtonSize.Medium)
         },
-        dismissButton = { TextButton(onClick = onDismiss, enabled = !busy) { Text(stringResource(R.string.action_cancel)) } },
+        dismissButton = { MeloButton(text = stringResource(R.string.action_cancel), onClick = onDismiss, enabled = !busy, size = MeloButtonSize.Medium, style = MeloButtonStyle.Text) },
     )
 }
 
@@ -190,14 +196,26 @@ internal fun LocalPlaylistEditor(model: MeloModel, playlist: Music, onDismiss: (
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(name, { name = it.take(100) }, label = { Text(stringResource(R.string.playlist_name)) }, singleLine = true, enabled = !busy)
                 if (shown != null) AsyncImage(shown, null, Modifier.size(100.dp))
-                OutlinedButton(onClick = { picker.launch("image/*") }, enabled = !busy) { Text(stringResource(R.string.spotify_playlist_cover)) }
-                if (shown != null) TextButton(onClick = { image = null; removeCover = true }, enabled = !busy) { Text(stringResource(R.string.playlist_cover_remove)) }
+                MeloButton(
+                    text = stringResource(R.string.spotify_playlist_cover),
+                    onClick = { picker.launch("image/*") },
+                    enabled = !busy,
+                    size = MeloButtonSize.Medium,
+                    style = MeloButtonStyle.Outlined,
+                )
+                if (shown != null) MeloButton(
+                    text = stringResource(R.string.playlist_cover_remove),
+                    onClick = { image = null; removeCover = true },
+                    enabled = !busy,
+                    size = MeloButtonSize.Medium,
+                    style = MeloButtonStyle.Text,
+                )
                 error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
                 if (busy) LinearProgressIndicator(Modifier.fillMaxWidth())
             }
         },
         confirmButton = {
-            TextButton(enabled = !busy && name.isNotBlank(), onClick = {
+            MeloButton(text = stringResource(R.string.action_save), enabled = !busy && name.isNotBlank(), onClick = {
                 busy = true
                 scope.launch {
                     try {
@@ -212,9 +230,9 @@ internal fun LocalPlaylistEditor(model: MeloModel, playlist: Music, onDismiss: (
                     catch (failure: Exception) { error = failure.message ?: saveFailure }
                     finally { busy = false }
                 }
-            }) { Text(stringResource(R.string.action_save)) }
+            }, size = MeloButtonSize.Medium)
         },
-        dismissButton = { TextButton(onClick = onDismiss, enabled = !busy) { Text(stringResource(R.string.action_cancel)) } },
+        dismissButton = { MeloButton(text = stringResource(R.string.action_cancel), onClick = onDismiss, enabled = !busy, size = MeloButtonSize.Medium, style = MeloButtonStyle.Text) },
     )
 }
 
@@ -248,7 +266,7 @@ internal fun YouTubePlaylistEditor(model: MeloModel, playlist: Music, onDismiss:
             }
         },
         confirmButton = {
-            TextButton(enabled = !busy && known && name.isNotBlank(), onClick = {
+            MeloButton(text = stringResource(R.string.action_save), enabled = !busy && known && name.isNotBlank(), onClick = {
                 busy = true; error = null
                 scope.launch {
                     try { model.editYouTubePlaylist(playlist, name, public); onDismiss() }
@@ -256,8 +274,8 @@ internal fun YouTubePlaylistEditor(model: MeloModel, playlist: Music, onDismiss:
                     catch (failure: Exception) { error = failure.message ?: saveFailure }
                     finally { busy = false }
                 }
-            }) { Text(stringResource(R.string.action_save)) }
+            }, size = MeloButtonSize.Medium)
         },
-        dismissButton = { TextButton(onClick = onDismiss, enabled = !busy) { Text(stringResource(R.string.action_cancel)) } },
+        dismissButton = { MeloButton(text = stringResource(R.string.action_cancel), onClick = onDismiss, enabled = !busy, size = MeloButtonSize.Medium, style = MeloButtonStyle.Text) },
     )
 }

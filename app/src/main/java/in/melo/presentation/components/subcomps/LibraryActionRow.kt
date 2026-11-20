@@ -77,8 +77,9 @@ import `in`.melo.R
 import `in`.melo.ui.theme.GoogleSansRounded
 import java.io.File
 import androidx.compose.ui.res.stringResource
+import `in`.melo.ui.theme.MeloLayout
 
-val defaultShape = RoundedCornerShape(26.dp) // Fallback shape
+val defaultShape = MeloLayout.PanelShape // Fallback shape
 val genHeight = 42.dp
 
 @Composable

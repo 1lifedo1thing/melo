@@ -49,7 +49,6 @@ import androidx.compose.material3.MediumExtendedFloatingActionButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -97,18 +96,23 @@ fun ReorderPresetsSheet(
             title = { Text(stringResource(R.string.equalizer_reset_presets_title)) },
             text = { Text(stringResource(R.string.equalizer_reset_presets_message)) },
             confirmButton = {
-                TextButton(
+                MeloButton(
+                    text = stringResource(R.string.common_reset),
                     onClick = {
                         onReset()
                         showResetDialog = false
                         onDismiss()
-                    }
-                ) {
-                    Text(stringResource(R.string.common_reset), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                }
+                    },
+                    size = MeloButtonSize.Medium,
+                )
             },
             dismissButton = {
-                TextButton(onClick = { showResetDialog = false }) { Text(stringResource(R.string.common_cancel), maxLines = 1, overflow = TextOverflow.Ellipsis) }
+                MeloButton(
+                    text = stringResource(R.string.common_cancel),
+                    onClick = { showResetDialog = false },
+                    size = MeloButtonSize.Medium,
+                    style = MeloButtonStyle.Text,
+                )
             }
         )
     }
@@ -311,7 +315,6 @@ fun ReorderPresetsSheet(
                                                 .clip(itemShape)
                                                 .clickable { togglePin(item) },
                                             shadowElevation = elevation,
-                                            tonalElevation = if (item.isPinned) 1.dp else 0.dp,
                                             color = bgColor,
                                             shape = itemShape
                                         ) {

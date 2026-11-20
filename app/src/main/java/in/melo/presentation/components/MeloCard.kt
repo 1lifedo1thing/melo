@@ -1,10 +1,10 @@
 package `in`.melo.presentation.components
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
@@ -17,13 +17,26 @@ fun MeloCard(
     modifier: Modifier = Modifier,
     shape: Shape = MeloLayout.CardShape,
     color: Color = MaterialTheme.colorScheme.surface,
-    content: @Composable ColumnScope.() -> Unit,
+    onClick: (() -> Unit)? = null,
+    content: @Composable () -> Unit,
 ) {
-    Surface(
-        modifier = modifier.meloPanel(shape, color),
-        shape = shape,
-        color = Color.Transparent,
-        shadowElevation = 0.dp,
-        tonalElevation = 0.dp,
-    ) { Column(content = content) }
+    val interactionSource = remember { MutableInteractionSource() }
+    val panelModifier = (if (onClick != null) modifier.meloPress(interactionSource) else modifier)
+        .meloPanel(shape, color)
+    if (onClick == null) {
+        Surface(
+            modifier = panelModifier,
+            shape = shape,
+            color = Color.Transparent,
+        ) { content() }
+    } else {
+        Surface(
+            onClick = onClick,
+            modifier = panelModifier,
+            enabled = true,
+            shape = shape,
+            color = Color.Transparent,
+            interactionSource = interactionSource,
+        ) { content() }
+    }
 }

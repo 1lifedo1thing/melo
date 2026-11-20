@@ -53,6 +53,11 @@ fun CollectionDownloadProgress(ui: PlayerViewModel, item: Music) {
             style = MaterialTheme.typography.labelMedium)
         LinearProgressIndicator(progress = { progress.percent / 100f }, modifier = Modifier.fillMaxWidth())
         if (progress.paused) Text(stringResource(R.string.download_waiting_network), style = MaterialTheme.typography.bodySmall)
-        if (progress.failed) TextButton(onClick = { ui.downloadItem(item) }) { Text(stringResource(R.string.download_retry_needed)) }
+        if (progress.failed) MeloButton(
+            text = stringResource(R.string.download_retry_needed),
+            onClick = { ui.downloadItem(item) },
+            size = MeloButtonSize.Medium,
+            style = MeloButtonStyle.Text,
+        )
     }
 }

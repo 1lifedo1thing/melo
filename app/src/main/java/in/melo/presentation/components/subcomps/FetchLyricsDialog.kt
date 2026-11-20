@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CloudUpload
 import androidx.compose.material.icons.rounded.ErrorOutline
@@ -27,7 +26,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularWavyProgressIndicator
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -35,7 +33,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -53,6 +50,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import `in`.melo.R
+import `in`.melo.presentation.components.MeloButton
+import `in`.melo.presentation.components.MeloButtonSize
+import `in`.melo.presentation.components.MeloButtonStyle
+import `in`.melo.presentation.components.MeloCard
+import `in`.melo.ui.theme.MeloLayout
 import `in`.melo.data.model.Song
 import `in`.melo.data.repository.LyricsSearchResult
 import `in`.melo.presentation.viewmodel.LyricsSearchUiState
@@ -77,13 +79,12 @@ fun FetchLyricsDialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
-        Surface(
+        MeloCard(
             modifier = Modifier
                 .padding(24.dp)
                 .fillMaxWidth(),
-            shape = RoundedCornerShape(32.dp), // Forma muy redondeada (Expressive)
+            shape = MaterialTheme.shapes.extraLarge,
             color = MaterialTheme.colorScheme.surfaceContainerHigh,
-            tonalElevation = 6.dp
         ) {
             Column(
                 modifier = Modifier.padding(24.dp),
@@ -205,12 +206,10 @@ private fun IdleContent(
 
     Spacer(modifier = Modifier.height(32.dp))
 
-    ElevatedCard(
+    MeloCard(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.elevatedCardColors(
-            containerColor = MaterialTheme.colorScheme.secondaryContainer
-        )
+        shape = MeloLayout.PanelShape,
+        color = MaterialTheme.colorScheme.secondaryContainer,
     ) {
         Row(
             modifier = Modifier
@@ -249,38 +248,33 @@ private fun IdleContent(
         verticalArrangement = Arrangement.spacedBy(12.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Button(
+        MeloButton(
+            text = stringResource(R.string.common_search),
             onClick = onSearch,
-            modifier = Modifier.fillMaxWidth().height(52.dp),
-            shape = CircleShape
-        ) {
-            Icon(Icons.Rounded.Search, contentDescription = null, modifier = Modifier.size(20.dp))
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(stringResource(R.string.common_search), maxLines = 1, overflow = TextOverflow.Ellipsis)
-        }
+            modifier = Modifier.fillMaxWidth(),
+            icon = Icons.Rounded.Search,
+            size = MeloButtonSize.Large,
+        )
 
-        Button(
+        MeloButton(
+            text = stringResource(R.string.common_import),
             onClick = onImport,
-            modifier = Modifier.fillMaxWidth().height(52.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.secondary,
-                contentColor = MaterialTheme.colorScheme.onSecondary
-            )
-        ) {
-            Icon(Icons.Rounded.CloudUpload, contentDescription = null, modifier = Modifier.size(20.dp))
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(stringResource(R.string.common_import))
-        }
+            modifier = Modifier.fillMaxWidth(),
+            icon = Icons.Rounded.CloudUpload,
+            size = MeloButtonSize.Large,
+            style = MeloButtonStyle.Tonal,
+            containerColor = MaterialTheme.colorScheme.secondary,
+            contentColor = MaterialTheme.colorScheme.onSecondary,
+        )
 
         // Botón Cancelar (Reemplaza a la X)
-        TextButton(
+        MeloButton(
+            text = stringResource(R.string.common_cancel),
             onClick = onCancel,
-            modifier = Modifier.fillMaxWidth().height(52.dp),
-            shape = RoundedCornerShape(18.dp)
-        ) {
-            Text(stringResource(R.string.common_cancel), maxLines = 1, overflow = TextOverflow.Ellipsis)
-        }
+            modifier = Modifier.fillMaxWidth(),
+            size = MeloButtonSize.Medium,
+            style = MeloButtonStyle.Text,
+        )
     }
 }
 
@@ -340,13 +334,14 @@ private fun PickResultContent(
     Spacer(modifier = Modifier.height(16.dp))
 
     // Botón Cancelar al final de la lista
-    TextButton(
+    MeloButton(
+        text = stringResource(R.string.common_cancel),
         onClick = onCancel,
         modifier = Modifier.fillMaxWidth(),
-        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurfaceVariant)
-    ) {
-        Text(stringResource(R.string.common_cancel), maxLines = 1, overflow = TextOverflow.Ellipsis)
-    }
+        size = MeloButtonSize.Medium,
+        style = MeloButtonStyle.Text,
+        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
 }
 
 @Composable
@@ -356,9 +351,9 @@ private fun ResultItemCard(
 ) {
     val hasSyncedLyrics = !result.record.syncedLyrics.isNullOrEmpty()
     
-    Surface(
+    MeloCard(
         onClick = onClick,
-        shape = RoundedCornerShape(16.dp),
+        shape = MeloLayout.CardShape,
         color = MaterialTheme.colorScheme.surfaceContainerHighest,
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -404,7 +399,7 @@ private fun ResultItemCard(
                     )
                     if (hasSyncedLyrics) {
                         Surface(
-                            shape = RoundedCornerShape(6.dp),
+                            shape = MeloLayout.PillShape,
                             color = MaterialTheme.colorScheme.primary,
                             contentColor = MaterialTheme.colorScheme.onPrimary
                         ) {
@@ -454,7 +449,7 @@ fun NotFoundContent(
     Box(
         modifier = Modifier
             .size(72.dp)
-            .clip(RoundedCornerShape(20.dp))
+            .clip(MeloLayout.PanelShape)
             .background(MaterialTheme.colorScheme.secondaryContainer),
         contentAlignment = Alignment.Center
     ) {
@@ -528,7 +523,8 @@ fun NotFoundContent(
         verticalArrangement = Arrangement.spacedBy(12.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Button(
+        MeloButton(
+            text = stringResource(R.string.common_search),
             onClick = {
                 onManualSearch(
                     title,
@@ -536,23 +532,18 @@ fun NotFoundContent(
                 )
             },
             enabled = title.isNotBlank(),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(52.dp),
-            shape = RoundedCornerShape(18.dp)
-        ) {
-            Icon(Icons.Rounded.Search, null)
-            Spacer(Modifier.width(8.dp))
-            Text(stringResource(R.string.common_search))
-        }
+            modifier = Modifier.fillMaxWidth(),
+            icon = Icons.Rounded.Search,
+            size = MeloButtonSize.Large,
+        )
 
-        TextButton(
+        MeloButton(
+            text = stringResource(R.string.common_cancel),
             onClick = onCancel,
-            modifier = Modifier.fillMaxWidth().height(52.dp),
-            shape = RoundedCornerShape(18.dp)
-        ) {
-            Text(stringResource(R.string.common_cancel), maxLines = 1, overflow = TextOverflow.Ellipsis)
-        }
+            modifier = Modifier.fillMaxWidth(),
+            size = MeloButtonSize.Medium,
+            style = MeloButtonStyle.Text,
+        )
     }
 }
 
@@ -564,7 +555,7 @@ private fun ErrorContent(
     Box(
         modifier = Modifier
             .size(72.dp)
-            .clip(RoundedCornerShape(20.dp))
+            .clip(MeloLayout.PanelShape)
             .background(MaterialTheme.colorScheme.errorContainer),
         contentAlignment = Alignment.Center
     ) {
@@ -595,17 +586,14 @@ private fun ErrorContent(
 
     Spacer(modifier = Modifier.height(32.dp))
 
-    Button(
+    MeloButton(
+        text = stringResource(R.string.common_ok),
         onClick = onDismiss,
-        modifier = Modifier.fillMaxWidth().height(50.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.error,
-            contentColor = MaterialTheme.colorScheme.onError
-        ),
-        shape = RoundedCornerShape(18.dp)
-    ) {
-        Text(stringResource(R.string.common_ok), maxLines = 1, overflow = TextOverflow.Ellipsis)
-    }
+        modifier = Modifier.fillMaxWidth(),
+        size = MeloButtonSize.Medium,
+        containerColor = MaterialTheme.colorScheme.error,
+        contentColor = MaterialTheme.colorScheme.onError,
+    )
 }
 
 ///**
@@ -628,7 +616,7 @@ private fun ErrorContent(
 //
 //    Dialog(onDismissRequest = onDismiss) {
 //        Surface(
-//            shape = RoundedCornerShape(28.dp),
+//            shape = MeloLayout.PanelShape,
 //            color = MaterialTheme.colorScheme.surfaceContainerHigh,
 //            contentColor = MaterialTheme.colorScheme.onSurface
 //        ) {
@@ -722,7 +710,7 @@ private fun ErrorContent(
 //
 //                                    OutlinedButton (
 //                                        modifier = Modifier.fillMaxWidth(),
-//                                        shape = RoundedCornerShape(12.dp),
+//                                        shape = MeloLayout.CardShape,
 //                                        contentPadding = PaddingValues(12.dp),
 //                                        onClick = { onPickResult(result) },
 //                                    ) {
@@ -833,7 +821,7 @@ private fun ErrorContent(
 //    Row(
 //        modifier = Modifier
 //            .fillMaxWidth()
-//            .clip(RoundedCornerShape(18.dp))
+//            .clip(MeloLayout.PanelShape)
 //            .padding(horizontal = 4.dp, vertical = 2.dp)
 //            .background(MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6f)),
 //        verticalAlignment = Alignment.CenterVertically
@@ -841,7 +829,7 @@ private fun ErrorContent(
 //        Box(
 //            modifier = Modifier
 //                .size(48.dp)
-//                .clip(RoundedCornerShape(16.dp)),
+//                .clip(MeloLayout.PanelShape),
 //            contentAlignment = Alignment.Center
 //        ) {
 //            Icon(

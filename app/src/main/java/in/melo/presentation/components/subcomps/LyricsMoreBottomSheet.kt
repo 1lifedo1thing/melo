@@ -56,9 +56,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import `in`.melo.R
 import `in`.melo.data.model.Lyrics
+import `in`.melo.presentation.components.MeloButton
+import `in`.melo.presentation.components.MeloButtonSize
+import `in`.melo.presentation.components.MeloButtonStyle
 import `in`.melo.presentation.components.ToggleSegmentButton
 import `in`.melo.presentation.components.player.BottomToggleRow
 import androidx.compose.ui.text.style.TextOverflow
+import `in`.melo.ui.theme.MeloLayout
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -108,7 +112,7 @@ fun LyricsMoreBottomSheet(
         sheetState = sheetState,
         containerColor = containerColor,
         contentColor = contentColor,
-        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+        shape = MeloLayout.SheetShape,
         contentWindowInsets = { WindowInsets(top = 0, bottom = 0) }
     ) {
         val screenHeight = LocalConfiguration.current.screenHeightDp.dp
@@ -169,7 +173,7 @@ fun LyricsMoreBottomSheet(
                 val resetShape = if (lyrics != null) {
                     RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp, bottomStart = 18.dp, bottomEnd = 18.dp)
                 } else {
-                    RoundedCornerShape(24.dp)
+                    MeloLayout.PanelShape
                 }
 
                 ListItem(
@@ -201,22 +205,25 @@ fun LyricsMoreBottomSheet(
                     title = { Text(stringResource(R.string.lyrics_reset_dialog_title)) },
                     text = { Text(stringResource(R.string.lyrics_reset_dialog_message)) },
                     confirmButton = {
-                        androidx.compose.material3.TextButton(
+                        MeloButton(
+                            text = stringResource(R.string.common_reset),
                             onClick = {
                                 showResetDialog = false
                                 onDismissRequest()
                                 onResetImportedLyrics()
-                            }
-                        ) {
-                            Text(stringResource(R.string.common_reset), color = MaterialTheme.colorScheme.error, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        }
+                            },
+                            size = MeloButtonSize.Medium,
+                            style = MeloButtonStyle.Text,
+                            contentColor = MaterialTheme.colorScheme.error,
+                        )
                     },
                     dismissButton = {
-                        androidx.compose.material3.TextButton(
-                            onClick = { showResetDialog = false }
-                        ) {
-                            Text(stringResource(R.string.common_cancel), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        }
+                        MeloButton(
+                            text = stringResource(R.string.common_cancel),
+                            onClick = { showResetDialog = false },
+                            size = MeloButtonSize.Medium,
+                            style = MeloButtonStyle.Text,
+                        )
                     },
                     containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                     textContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -239,7 +246,7 @@ fun LyricsMoreBottomSheet(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(24.dp))
+                        .clip(MeloLayout.PanelShape)
                         .background(itemBackgroundColor)
                         .padding(14.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -548,7 +555,7 @@ fun LyricsMoreBottomSheet(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(24.dp))
+                    .clip(MeloLayout.PanelShape)
                     //.background(contentColor.copy(alpha = 0.08f))
                     .padding(vertical = 0.dp, horizontal = 0.dp)
             ) {

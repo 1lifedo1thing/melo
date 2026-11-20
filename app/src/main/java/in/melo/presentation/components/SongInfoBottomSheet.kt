@@ -41,7 +41,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.QueueMusic
 import androidx.compose.material.icons.automirrored.rounded.PlaylistAdd
@@ -105,10 +104,9 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material.icons.rounded.PushPin
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.TextButton
 import `in`.melo.data.model.toMusic
 import `in`.melo.R
+import `in`.melo.ui.theme.MeloLayout
 import `in`.melo.data.model.Song
 import `in`.melo.data.model.Album
 import `in`.melo.data.model.Artist
@@ -143,7 +141,7 @@ fun SongInfoBottomSheet(
 ) {
     val context = LocalContext.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val infoShape = RoundedCornerShape(16.dp)
+    val infoShape = MeloLayout.PanelShape
     val discovery by playerViewModel.model.discovery.collectAsStateWithLifecycle()
     // Likes and radios are Spotify features: they need a Spotify track and an account.
     val spotifyPages = song.source == `in`.melo.data.MusicSource.Spotify && discovery.spotifyEnabled
@@ -165,7 +163,7 @@ fun SongInfoBottomSheet(
                 // YouTube Music tracks are liked on the device (and on the Google account when there is one).
                 onToggleFavorite = if (spotifyPages || song.source == `in`.melo.data.MusicSource.YouTubeMusic) onToggleFavorite else null,
                 onShareClick = if (song.isLocal) null else ({ context.shareMusic(song.toMusic()) }),
-                playButtonShape = OptionsPlayButtonShape,
+                playButtonShape = MeloLayout.PillShape,
                 evenCornerRadiusElems = 26.dp
             )
             Row2Actions(onAddToQueue = onAddToQueue, onAddNextToQueue = onAddNextToQueue)
@@ -175,9 +173,13 @@ fun SongInfoBottomSheet(
                 onStartRadio = if (spotifyPages) onStartRadio else null,
             )
             onRemoveFromPlaylist?.let { remove ->
-                TextButton(onClick = { remove(); onDismiss() }, modifier = Modifier.fillMaxWidth()) {
-                    Text(stringResource(R.string.playlist_remove_track))
-                }
+                MeloButton(
+                    text = stringResource(R.string.playlist_remove_track),
+                    onClick = { remove(); onDismiss() },
+                    modifier = Modifier.fillMaxWidth(),
+                    size = MeloButtonSize.Medium,
+                    style = MeloButtonStyle.Text,
+                )
             }
             SongInfoSegmentedListItem(
                 headline = stringResource(R.string.song_info_duration_label),
@@ -203,30 +205,21 @@ fun SongInfoBottomSheet(
                 onClick = if (catalogPages) onNavigateToArtist else null,
             )
             if (removeFromListTrigger != null) {
-                TextButton(onClick = removeFromListTrigger, modifier = Modifier.fillMaxWidth()) {
-                    Text(stringResource(R.string.remove_from_queue))
-                }
+                MeloButton(
+                    text = stringResource(R.string.remove_from_queue),
+                    onClick = removeFromListTrigger,
+                    modifier = Modifier.fillMaxWidth(),
+                    size = MeloButtonSize.Medium,
+                    style = MeloButtonStyle.Text,
+                )
             }
             Spacer(Modifier.height(12.dp))
         }
     }
 }
 
-private val OptionsPlayButtonShape = AbsoluteSmoothCornerShape(
-    cornerRadiusTR = 60.dp, smoothnessAsPercentTR = 60,
-    cornerRadiusBR = 60.dp, smoothnessAsPercentBR = 60,
-    cornerRadiusBL = 60.dp, smoothnessAsPercentBL = 60,
-    cornerRadiusTL = 60.dp, smoothnessAsPercentTL = 60,
-)
-private val OptionsArtShape = AbsoluteSmoothCornerShape(
-    cornerRadiusTR = 20.dp, smoothnessAsPercentTR = 60,
-    cornerRadiusBR = 20.dp, smoothnessAsPercentBR = 60,
-    cornerRadiusBL = 20.dp, smoothnessAsPercentBL = 60,
-    cornerRadiusTL = 20.dp, smoothnessAsPercentTL = 60,
-)
-
 @Composable
-private fun OptionsSheetHeader(artwork: String?, title: String, subtitle: String, artShape: Shape = OptionsArtShape) {
+private fun OptionsSheetHeader(artwork: String?, title: String, subtitle: String, artShape: Shape = MeloLayout.ArtworkShape) {
     Row(
         modifier = Modifier.fillMaxWidth().heightIn(min = 72.dp),
         horizontalArrangement = Arrangement.spacedBy(14.dp),
@@ -269,55 +262,46 @@ private fun RadioAndPinRow(item: Music, playerViewModel: PlayerViewModel, onStar
     val isLocal = `in`.melo.data.isLocalTrackId(item.id)
     if (!isLocal) {
         val entry = downloads[item.id]
-        FilledTonalButton(
+        MeloButton(
+            text = when {
+                item.id in preparations -> stringResource(R.string.download_cancel)
+                entry == null -> stringResource(R.string.download_action)
+                entry.failed -> stringResource(R.string.download_cancel)
+                entry.isComplete -> stringResource(R.string.download_remove)
+                else -> stringResource(R.string.download_progress, entry.percent.toInt().coerceAtLeast(0))
+            },
             onClick = { playerViewModel.toggleDownloadItem(item) },
-            modifier = Modifier.fillMaxWidth().height(58.dp),
-            shape = RoundedCornerShape(26.dp),
-        ) {
-            Icon(if (entry?.isComplete == true) Icons.Rounded.DownloadDone else Icons.Rounded.Download, contentDescription = null)
-            Spacer(Modifier.width(8.dp))
-            Text(
-                when {
-                    item.id in preparations -> stringResource(R.string.download_cancel)
-                    entry == null -> stringResource(R.string.download_action)
-                    entry.failed -> stringResource(R.string.download_cancel)
-                    entry.isComplete -> stringResource(R.string.download_remove)
-                    else -> stringResource(R.string.download_progress, entry.percent.toInt().coerceAtLeast(0))
-                },
-                maxLines = 1,
-            )
-        }
+            modifier = Modifier.fillMaxWidth(),
+            icon = if (entry?.isComplete == true) Icons.Rounded.DownloadDone else Icons.Rounded.Download,
+            style = MeloButtonStyle.Tonal,
+        )
     }
     var addingToPlaylist by remember { mutableStateOf(false) }
     if (addingToPlaylist) AddToLocalPlaylistSheet(item, playerViewModel) { addingToPlaylist = false }
-    FilledTonalButton(
+    MeloButton(
+        text = stringResource(R.string.playlist_add_to),
         onClick = { addingToPlaylist = true },
-        modifier = Modifier.fillMaxWidth().height(58.dp),
-        shape = RoundedCornerShape(26.dp),
-    ) {
-        Icon(Icons.AutoMirrored.Rounded.PlaylistAdd, contentDescription = null)
-        Spacer(Modifier.width(8.dp))
-        Text(stringResource(R.string.playlist_add_to), maxLines = 1)
-    }
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        if (onStartRadio != null) FilledTonalButton(
+        modifier = Modifier.fillMaxWidth(),
+        icon = Icons.AutoMirrored.Rounded.PlaylistAdd,
+        style = MeloButtonStyle.Tonal,
+    )
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(MeloLayout.Space3)) {
+        if (onStartRadio != null) MeloButton(
+            text = stringResource(R.string.radio),
             onClick = onStartRadio,
-            modifier = Modifier.weight(1f).height(58.dp),
-            shape = RoundedCornerShape(26.dp),
-        ) {
-            Icon(Icons.Rounded.Radio, contentDescription = null)
-            Spacer(Modifier.width(8.dp))
-            Text(stringResource(R.string.radio), maxLines = 1)
-        }
-        FilledTonalButton(
+            modifier = Modifier.weight(1f),
+            icon = Icons.Rounded.Radio,
+            size = MeloButtonSize.Medium,
+            style = MeloButtonStyle.Tonal,
+        )
+        MeloButton(
+            text = if (isPinned) stringResource(R.string.pin_remove) else stringResource(R.string.pin_add),
             onClick = { playerViewModel.togglePin(item) },
-            modifier = Modifier.weight(if (onStartRadio != null) 1.4f else 1f).height(58.dp),
-            shape = RoundedCornerShape(26.dp),
-        ) {
-            Icon(if (isPinned) Icons.Rounded.PushPin else Icons.Outlined.PushPin, contentDescription = null)
-            Spacer(Modifier.width(8.dp))
-            Text(if (isPinned) stringResource(R.string.pin_remove) else stringResource(R.string.pin_add), maxLines = 1)
-        }
+            modifier = Modifier.weight(if (onStartRadio != null) 1.4f else 1f),
+            icon = if (isPinned) Icons.Rounded.PushPin else Icons.Outlined.PushPin,
+            size = MeloButtonSize.Medium,
+            style = MeloButtonStyle.Tonal,
+        )
     }
 }
 
@@ -351,51 +335,43 @@ fun EntityOptionsSheet(
                 artwork = item.imageUrl,
                 title = item.title,
                 subtitle = item.subtitle.ifBlank { item.kind.label },
-                artShape = if (item.kind == MusicKind.Artist) CircleShape else OptionsArtShape,
+                artShape = if (item.kind == MusicKind.Artist) CircleShape else MeloLayout.ArtworkShape,
             )
             Row1Actions(
                 isFavorite = item.id in saved,
                 onPlaySong = { playerViewModel.playItem(item); onDismiss() },
                 onToggleFavorite = if (canSave) ({ playerViewModel.model.toggleFavorite(item) }) else null,
                 onShareClick = if (item.spotifyShareUrl() != null) ({ context.shareMusic(item) }) else null,
-                playButtonShape = OptionsPlayButtonShape,
+                playButtonShape = MeloLayout.PillShape,
                 evenCornerRadiusElems = 26.dp
             )
             Row2Actions(
                 onAddToQueue = { playerViewModel.addItemToQueue(item); onDismiss() },
                 onAddNextToQueue = { playerViewModel.addItemNext(item); onDismiss() },
             )
-            FilledTonalButton(
+            MeloButton(
+                text = stringResource(R.string.common_shuffle),
                 onClick = { playerViewModel.shuffleItem(item); onDismiss() },
-                modifier = Modifier.fillMaxWidth().height(58.dp),
-                shape = RoundedCornerShape(26.dp),
-            ) {
-                Icon(Icons.Rounded.Shuffle, contentDescription = null)
-                Spacer(Modifier.width(8.dp))
-                Text(stringResource(R.string.common_shuffle), maxLines = 1)
-            }
+                modifier = Modifier.fillMaxWidth(),
+                icon = Icons.Rounded.Shuffle,
+                style = MeloButtonStyle.Tonal,
+            )
             RadioAndPinRow(item, playerViewModel, if (isLiked || item.id.startsWith("local:")) null else onStartRadio)
-            FilledTonalButton(
+            MeloButton(
+                text = when (item.kind) {
+                    MusicKind.Artist -> stringResource(R.string.open_artist)
+                    MusicKind.Album -> stringResource(R.string.open_album)
+                    else -> stringResource(R.string.open_playlist)
+                },
                 onClick = { onDismiss(); onOpen() },
-                modifier = Modifier.fillMaxWidth().height(58.dp),
-                shape = RoundedCornerShape(26.dp),
-            ) {
-                Icon(
-                    when (item.kind) {
-                        MusicKind.Artist -> Icons.Rounded.Person
-                        MusicKind.Album -> Icons.Rounded.Album
-                        else -> Icons.AutoMirrored.Rounded.QueueMusic
-                    }, contentDescription = null,
-                )
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    when (item.kind) {
-                        MusicKind.Artist -> stringResource(R.string.open_artist)
-                        MusicKind.Album -> stringResource(R.string.open_album)
-                        else -> stringResource(R.string.open_playlist)
-                    }, maxLines = 1,
-                )
-            }
+                modifier = Modifier.fillMaxWidth(),
+                icon = when (item.kind) {
+                    MusicKind.Artist -> Icons.Rounded.Person
+                    MusicKind.Album -> Icons.Rounded.Album
+                    else -> Icons.AutoMirrored.Rounded.QueueMusic
+                },
+                style = MeloButtonStyle.Tonal,
+            )
             if (item.kind == MusicKind.Playlist) {
                 val library by playerViewModel.model.library.collectAsStateWithLifecycle()
                 val discovery by playerViewModel.model.discovery.collectAsStateWithLifecycle()
@@ -404,29 +380,25 @@ fun EntityOptionsSheet(
                 val youTubePlaylists by playerViewModel.model.youTubePlaylists.collectAsStateWithLifecycle()
                 val inLibrary = item.isLocalPlaylist || (discovery.spotifyEnabled && item.id.startsWith("spotify:playlist:") &&
                     library.content?.playlists?.any { it.id == item.id } == true) || youTubePlaylists.any { it.id == item.id }
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    FilledTonalButton(
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(MeloLayout.Space3)) {
+                    MeloButton(
+                        text = stringResource(R.string.playlist_export_csv_short),
                         onClick = { export(item) },
-                        modifier = Modifier.weight(1f).height(58.dp),
-                        shape = RoundedCornerShape(26.dp),
-                    ) {
-                        Icon(Icons.Rounded.TableChart, contentDescription = null)
-                        Spacer(Modifier.width(8.dp))
-                        Text(stringResource(R.string.playlist_export_csv_short), maxLines = 1)
-                    }
-                    if (inLibrary) FilledTonalButton(
+                        modifier = Modifier.weight(1f),
+                        icon = Icons.Rounded.TableChart,
+                        size = MeloButtonSize.Medium,
+                        style = MeloButtonStyle.Tonal,
+                    )
+                    if (inLibrary) MeloButton(
+                        text = stringResource(R.string.action_delete),
                         onClick = { deleting = true },
-                        modifier = Modifier.weight(1f).height(58.dp),
-                        shape = RoundedCornerShape(26.dp),
-                        colors = ButtonDefaults.filledTonalButtonColors(
-                            containerColor = MaterialTheme.colorScheme.errorContainer,
-                            contentColor = MaterialTheme.colorScheme.onErrorContainer,
-                        ),
-                    ) {
-                        Icon(Icons.Rounded.Delete, contentDescription = null)
-                        Spacer(Modifier.width(8.dp))
-                        Text(stringResource(R.string.action_delete), maxLines = 1)
-                    }
+                        modifier = Modifier.weight(1f),
+                        icon = Icons.Rounded.Delete,
+                        size = MeloButtonSize.Medium,
+                        style = MeloButtonStyle.Tonal,
+                        containerColor = MaterialTheme.colorScheme.errorContainer,
+                        contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                    )
                 }
                 if (deleting) DeletePlaylistDialog(playerViewModel.model, item, onDismiss = { deleting = false; onDismiss() })
             }

@@ -81,6 +81,7 @@ import `in`.melo.R
 import `in`.melo.ui.theme.GoogleSansRounded
 import `in`.melo.ui.theme.MeloStatusBarStyle
 import androidx.compose.ui.res.stringResource
+import `in`.melo.ui.theme.MeloLayout
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -260,7 +261,7 @@ private fun HomeDialSettingsOverlay(
             val panelTop = statusInset + 10.dp
             val panelMaxHeight = (maxHeight - panelTop - 16.dp).coerceAtLeast(220.dp)
             val panelWidth = (maxWidth - 24.dp).coerceAtMost(320.dp)
-            val shape = RoundedCornerShape(28.dp)
+            val shape = MeloLayout.PanelShape
             val noRipple = remember { MutableInteractionSource() }
             Box(
                 Modifier.matchParentSize()
@@ -291,8 +292,6 @@ private fun HomeDialSettingsOverlay(
                         ),
                     shape = shape,
                     color = colors.surface,
-                    tonalElevation = 0.dp,
-                    shadowElevation = 0.dp,
                 ) {
                     Column(
                         Modifier.fillMaxWidth()

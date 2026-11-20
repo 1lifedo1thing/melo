@@ -77,7 +77,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MediumExtendedFloatingActionButton
@@ -190,6 +189,7 @@ import java.util.RandomAccess
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import kotlin.math.abs
+import `in`.melo.ui.theme.MeloLayout
 
 private data class QueueUndoBarProjection(
     val isVisible: Boolean = false,
@@ -239,8 +239,7 @@ fun QueueBottomSheet(
     predictiveBackSwipeEdge: androidx.compose.runtime.State<Int?>,
     queueSheetOffset: Animatable<Float, androidx.compose.animation.core.AnimationVector1D>,
     modifier: Modifier = Modifier,
-    tonalElevation: Dp = 10.dp,
-    shape: RoundedCornerShape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+    shape: RoundedCornerShape = MeloLayout.SheetShape,
 ) {
     val colors = MaterialTheme.colorScheme
     var showTimerOptions by rememberSaveable { mutableStateOf(false) }
@@ -741,7 +740,6 @@ fun QueueBottomSheet(
                 }
             },
         shape = shape,
-        tonalElevation = tonalElevation,
         color = Color.Transparent,
     ) {
         Box(
@@ -1112,9 +1110,8 @@ fun QueueBottomSheet(
                 exit = fadeOut() + slideOutVertically(targetOffsetY = { it })
             ) {
                 Surface(
-                    shape = RoundedCornerShape(16.dp),
+                    shape = MeloLayout.PanelShape,
                     color = colors.inverseSurface,
-                    tonalElevation = 6.dp,
                     shadowElevation = 6.dp
                 ) {
                     Row(
@@ -1135,15 +1132,13 @@ fun QueueBottomSheet(
                             style = MaterialTheme.typography.bodyMedium,
                             color = colors.inverseOnSurface.copy(alpha = 0.7f),
                         )
-                        TextButton(
-                            onClick = { viewModel.undoRemoveSongFromQueue() }
-                        ) {
-                            Text(
-                                text = stringResource(R.string.common_undo),
-                                color = colors.inversePrimary,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
+                        MeloButton(
+                            text = stringResource(R.string.common_undo),
+                            onClick = { viewModel.undoRemoveSongFromQueue() },
+                            size = MeloButtonSize.Medium,
+                            style = MeloButtonStyle.Text,
+                            contentColor = colors.inversePrimary,
+                        )
                     }
                 }
             }
@@ -1172,21 +1167,22 @@ fun QueueBottomSheet(
                 title = { Text(stringResource(R.string.queue_dialog_clear_queue_title)) },
                 text = { Text(stringResource(R.string.queue_dialog_clear_queue_message)) },
                 confirmButton = {
-                    TextButton(
+                    MeloButton(
+                        text = stringResource(R.string.common_clear),
                         onClick = {
                             onClearQueue()
                             showClearQueueDialog = false
-                        }
-                    ) {
-                        Text(stringResource(R.string.common_clear), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    }
+                        },
+                        size = MeloButtonSize.Medium,
+                    )
                 },
                 dismissButton = {
-                    TextButton(
-                        onClick = { showClearQueueDialog = false }
-                    ) {
-                        Text(stringResource(R.string.common_cancel), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    }
+                    MeloButton(
+                        text = stringResource(R.string.common_cancel),
+                        onClick = { showClearQueueDialog = false },
+                        size = MeloButtonSize.Medium,
+                        style = MeloButtonStyle.Text,
+                    )
                 }
             )
         }
@@ -1217,9 +1213,8 @@ private fun QueueToolbarMenuButton(
                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                 onClick()
             },
-        shape = RoundedCornerShape(18.dp),
+        shape = MeloLayout.PanelShape,
         color = containerColor,
-        tonalElevation = 8.dp,
         shadowElevation = 8.dp
     ) {
         Row(
@@ -1356,8 +1351,6 @@ private fun QueueSourceBadge(
         modifier = modifier.widthIn(max = 190.dp),
         shape = CircleShape,
         color = colors.surfaceContainerHighest.copy(alpha = 0.88f),
-        tonalElevation = 0.dp,
-        shadowElevation = 0.dp
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
@@ -1626,7 +1619,7 @@ fun SaveQueueAsPlaylistSheet(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .focusRequester(focusRequester),
-                                shape = RoundedCornerShape(16.dp),
+                                shape = MeloLayout.PanelShape,
                                 singleLine = true,
                                 colors = TextFieldDefaults.colors(
                                     focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
@@ -1684,7 +1677,6 @@ fun SaveQueueAsPlaylistSheet(
                     ) {
                         Surface(
                             modifier = Modifier.fillMaxWidth(),
-                            tonalElevation = 6.dp,
                             shadowElevation = 4.dp,
                             shape = CircleShape,
                             color = MaterialTheme.colorScheme.secondaryContainer
@@ -1728,7 +1720,8 @@ fun SaveQueueAsPlaylistSheet(
                                     )
                                 }
 
-                                Button(
+                                MeloButton(
+                                    text = stringResource(R.string.common_save),
                                     onClick = {
                                         if (hasSelection) {
                                             val finalName =
@@ -1741,22 +1734,9 @@ fun SaveQueueAsPlaylistSheet(
                                         }
                                     },
                                     enabled = hasSelection,
-                                    modifier = Modifier.height(48.dp),
-                                    shape = CircleShape,
-                                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                                        containerColor = MaterialTheme.colorScheme.primary,
-                                        contentColor = MaterialTheme.colorScheme.onPrimary
-                                    ),
-                                    contentPadding = PaddingValues(horizontal = 20.dp)
-                                ) {
-                                    Icon(
-                                        Icons.Rounded.Check,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                    Spacer(Modifier.width(8.dp))
-                                    Text(stringResource(R.string.common_save))
-                                }
+                                    size = MeloButtonSize.Medium,
+                                    icon = Icons.Rounded.Check,
+                                )
                             }
                         }
                     }
@@ -1999,7 +1979,6 @@ fun QueuePlaylistSongItem(
                 },
             shape = itemShape,
             color = backgroundColor,
-            tonalElevation = elevation,
             shadowElevation = elevation
         ) {
             Row(

@@ -11,16 +11,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -31,7 +27,6 @@ import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberTimePickerState
@@ -54,6 +49,7 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import `in`.melo.R
 import androidx.compose.ui.text.style.TextOverflow
+import `in`.melo.ui.theme.MeloLayout
 
 val predefinedTimes = listOf(0, 5, 10, 15, 20, 30, 45, 60) // 0 represents 'Off'
 
@@ -162,12 +158,7 @@ fun TimerOptionsBottomSheet(
                         .padding(horizontal = 0.dp)
                         .background(
                             color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                            shape = RoundedCornerShape(
-                                topEnd = 18.dp,
-                                topStart = 18.dp,
-                                bottomStart = 18.dp,
-                                bottomEnd = 18.dp
-                            )
+                            shape = MeloLayout.PanelShape
                         )
                 ) {
                     Slider(
@@ -204,12 +195,7 @@ fun TimerOptionsBottomSheet(
                         .padding(horizontal = 0.dp)
                         .background(
                             color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                            shape = RoundedCornerShape(
-                                bottomEnd = 18.dp,
-                                bottomStart = 18.dp,
-                                topEnd = 6.dp,
-                                topStart = 6.dp
-                            )
+                            shape = MeloLayout.PanelShape
                         )
                 )
             }
@@ -241,7 +227,7 @@ fun TimerOptionsBottomSheet(
                         .padding(horizontal = 0.dp)
                         .background(
                             color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                            shape = RoundedCornerShape(18.dp)
+                            shape = MeloLayout.PanelShape
                         )
                 ) {
                     Slider(
@@ -333,54 +319,35 @@ fun TimerOptionsBottomSheet(
                 }
             }
 
-            val buttonHeight = 68.dp
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 16.dp, horizontal = 6.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    .padding(vertical = 16.dp, horizontal = MeloLayout.Space2),
+                horizontalArrangement = Arrangement.spacedBy(MeloLayout.Space2),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Button(
+                MeloButton(
+                    text = stringResource(R.string.sleep_timer_custom_time),
                     enabled = counterSliderPosition == 1f,
                     onClick = {
                         showCustomTimePicker = true
                     },
-                    shape = RoundedCornerShape(
-                        topStart = 50.dp,
-                        bottomStart = 50.dp,
-                        topEnd = 8.dp,
-                        bottomEnd = 8.dp
-                    ),
-                    modifier = Modifier
-                        .weight(1f) // Give buttons equal space if desired
-                        .height(buttonHeight)
-                ) {
-                    Text(stringResource(R.string.sleep_timer_custom_time))
-                }
-                Button(
+                    modifier = Modifier.weight(1f),
+                )
+                MeloButton(
+                    text = stringResource(R.string.sleep_timer_cancel_timer),
                     onClick = {
                         onCancelTimer()
                         onDismiss()
                         onCancelCountedPlay()
                     },
-                    shape = RoundedCornerShape(
-                        topStart = 8.dp,
-                        bottomStart = 8.dp,
-                        topEnd = 50.dp,
-                        bottomEnd = 50.dp
-                    ),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer,
-                        contentColor = MaterialTheme.colorScheme.onErrorContainer
-                    ),
+                    size = MeloButtonSize.Large,
+                    style = MeloButtonStyle.Tonal,
+                    containerColor = MaterialTheme.colorScheme.errorContainer,
+                    contentColor = MaterialTheme.colorScheme.onErrorContainer,
                     enabled = activeTimerValueDisplay != null || counterSliderPosition != 1f,
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(buttonHeight)
-                ) {
-                    Text(stringResource(R.string.sleep_timer_cancel_timer))
-                }
+                    modifier = Modifier.weight(1f),
+                )
             }
             Spacer(modifier = Modifier.height(16.dp))
         }
@@ -407,7 +374,8 @@ fun TimerOptionsBottomSheet(
                 TimePicker(state = timePickerState)
             },
             confirmButton = {
-                TextButton(
+                MeloButton(
+                    text = stringResource(R.string.common_ok),
                     onClick = {
                         val hour = timePickerState.hour
                         val minute = timePickerState.minute
@@ -418,19 +386,20 @@ fun TimerOptionsBottomSheet(
                         }
                         showCustomTimePicker = false // Dismiss the M3 dialog
                         onDismiss() // Dismiss the bottom sheet after setting time, as per original logic
-                    }
-                ) {
-                    Text(stringResource(R.string.common_ok))
-                }
+                    },
+                    size = MeloButtonSize.Medium,
+                    style = MeloButtonStyle.Text,
+                )
             },
             dismissButton = {
-                TextButton(
+                MeloButton(
+                    text = stringResource(R.string.common_cancel),
                     onClick = {
                         showCustomTimePicker = false // Dismiss the M3 dialog
-                    }
-                ) {
-                    Text(stringResource(R.string.common_cancel), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                }
+                    },
+                    size = MeloButtonSize.Medium,
+                    style = MeloButtonStyle.Text,
+                )
             }
         )
     }

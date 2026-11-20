@@ -16,7 +16,12 @@ fun ListeningStatusCard(title: String, message: String, action: String, onAction
         Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(title, style = MaterialTheme.typography.titleMedium)
             Text(message, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            TextButton(onClick = onAction) { Text(action) }
+            MeloButton(
+                text = action,
+                onClick = onAction,
+                size = MeloButtonSize.Medium,
+                style = MeloButtonStyle.Text,
+            )
         }
     }
 }

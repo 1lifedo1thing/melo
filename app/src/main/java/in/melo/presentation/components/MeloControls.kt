@@ -31,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import `in`.melo.ui.theme.MeloAlpha
 import `in`.melo.ui.theme.MeloLayout
@@ -44,30 +45,49 @@ fun MeloButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     icon: ImageVector? = null,
+    leadingContent: (@Composable () -> Unit)? = null,
     enabled: Boolean = true,
     size: MeloButtonSize = MeloButtonSize.Large,
     style: MeloButtonStyle = MeloButtonStyle.Primary,
+    containerColor: Color? = null,
+    contentColor: Color? = null,
 ) {
     val scheme = MaterialTheme.colorScheme
     val interactionSource = remember { MutableInteractionSource() }
+    val activeContainer = when (style) {
+        MeloButtonStyle.Primary -> containerColor ?: scheme.primary
+        MeloButtonStyle.Tonal -> containerColor ?: scheme.secondaryContainer
+        MeloButtonStyle.Outlined, MeloButtonStyle.Text -> containerColor ?: Color.Transparent
+    }
+    val activeContent = when (style) {
+        MeloButtonStyle.Primary -> contentColor ?: scheme.onPrimary
+        MeloButtonStyle.Tonal -> contentColor ?: scheme.onSecondaryContainer
+        MeloButtonStyle.Outlined, MeloButtonStyle.Text -> contentColor ?: scheme.primary
+    }
     val buttonColors = when (style) {
         MeloButtonStyle.Primary -> ButtonDefaults.buttonColors(
-            disabledContainerColor = scheme.primary,
-            disabledContentColor = scheme.onPrimary,
+            containerColor = activeContainer,
+            contentColor = activeContent,
+            disabledContainerColor = activeContainer,
+            disabledContentColor = activeContent,
         )
         MeloButtonStyle.Tonal -> ButtonDefaults.filledTonalButtonColors(
-            disabledContainerColor = scheme.secondaryContainer,
-            disabledContentColor = scheme.onSecondaryContainer,
+            containerColor = activeContainer,
+            contentColor = activeContent,
+            disabledContainerColor = activeContainer,
+            disabledContentColor = activeContent,
         )
         MeloButtonStyle.Outlined -> ButtonDefaults.outlinedButtonColors(
-            containerColor = Color.Transparent,
-            contentColor = scheme.primary,
-            disabledContainerColor = Color.Transparent,
-            disabledContentColor = scheme.primary,
+            containerColor = activeContainer,
+            contentColor = activeContent,
+            disabledContainerColor = activeContainer,
+            disabledContentColor = activeContent,
         )
         MeloButtonStyle.Text -> ButtonDefaults.textButtonColors(
-            disabledContainerColor = Color.Transparent,
-            disabledContentColor = scheme.primary,
+            containerColor = activeContainer,
+            contentColor = activeContent,
+            disabledContainerColor = activeContainer,
+            disabledContentColor = activeContent,
         )
     }
     val minHeight = when (size) {
@@ -79,11 +99,15 @@ fun MeloButton(
         .alpha(if (enabled) 1f else MeloAlpha.Disabled)
         .meloPress(interactionSource, enabled)
     val content: @Composable RowScope.() -> Unit = {
-        if (icon != null) {
-            Icon(icon, contentDescription = null, modifier = Modifier.size(MeloLayout.IconMedium))
+        if (leadingContent != null || icon != null) {
+            if (leadingContent != null) {
+                leadingContent()
+            } else {
+                icon?.let { Icon(it, contentDescription = null, modifier = Modifier.size(MeloLayout.IconMedium)) }
+            }
             Spacer(Modifier.size(MeloLayout.Space2))
         }
-        Text(text = text, style = MaterialTheme.typography.labelLarge, maxLines = 1)
+        Text(text = text, style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 
     when (style) {

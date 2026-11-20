@@ -43,6 +43,7 @@ import `in`.melo.data.model.Song
 import `in`.melo.presentation.components.SmartImage
 import `in`.melo.ui.theme.GoogleSansRounded
 import racra.compose.smooth_corner_rect_library.AbsoluteSmoothCornerShape
+import `in`.melo.ui.theme.MeloLayout
 
 private data class PlayerArtistShortcutItem(
     val artist: Artist,
@@ -98,7 +99,6 @@ internal fun PlayerArtistPickerBottomSheet(
             )
         },
         containerColor = colorScheme.surfaceContainerHigh,
-        tonalElevation = 8.dp
     ) {
         Column(
             modifier = Modifier
@@ -118,7 +118,7 @@ internal fun PlayerArtistPickerBottomSheet(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(26.dp)),
+                    .clip(MeloLayout.PanelShape),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 shortcutItems.forEachIndexed { index, item ->

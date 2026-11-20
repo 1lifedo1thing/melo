@@ -714,16 +714,15 @@ fun ExpressiveScrollBar(
                             androidx.compose.ui.unit.IntOffset(x.toInt(), y.toInt())
                         }
                         .size(dragLabelSize)
+                        .meloPanel(CircleShape, MaterialTheme.colorScheme.secondaryContainer)
                         .graphicsLayer {
                             alpha = dragLabelAlpha
                             scaleX = dragLabelScale
                             scaleY = dragLabelScale
                         },
                     shape = CircleShape,
-                    color = MaterialTheme.colorScheme.secondaryContainer,
+                    color = androidx.compose.ui.graphics.Color.Transparent,
                     contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                    tonalElevation = 6.dp,
-                    shadowElevation = 2.dp
                 ) {
                     Box(
                         modifier = Modifier.fillMaxSize(),

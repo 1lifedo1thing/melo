@@ -58,6 +58,7 @@ import `in`.melo.data.model.SortDirection
 import `in`.melo.data.model.SortOption
 import `in`.melo.ui.theme.GoogleSansRounded
 import racra.compose.smooth_corner_rect_library.AbsoluteSmoothCornerShape
+import `in`.melo.ui.theme.MeloLayout
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -99,7 +100,6 @@ fun LibrarySortBottomSheet(
         sheetState = sheetState,
         dragHandle = { BottomSheetDefaults.DragHandle() },
         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-        tonalElevation = 8.dp
     ) {
         Column(
             modifier = Modifier
@@ -477,7 +477,6 @@ fun PlaylistSortBottomSheet(
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         dragHandle = { BottomSheetDefaults.DragHandle() },
         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-        tonalElevation = 8.dp
     ) {
         Column(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp).selectableGroup(),
@@ -491,7 +490,7 @@ fun PlaylistSortBottomSheet(
                 modifier = Modifier.padding(start = 2.dp, bottom = 16.dp)
             )
             Column(
-                modifier = Modifier.clip(RoundedCornerShape(20.dp)),
+                modifier = Modifier.clip(MeloLayout.PanelShape),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 options.forEach { (option, label) ->
@@ -500,7 +499,7 @@ fun PlaylistSortBottomSheet(
                         color = if (isSelected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainerLow,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(8.dp))
+                            .clip(MeloLayout.ArtworkShape)
                             .selectable(selected = isSelected, onClick = { onSelected(option) }, role = Role.RadioButton)
                             .semantics { this.selected = isSelected }
                     ) {

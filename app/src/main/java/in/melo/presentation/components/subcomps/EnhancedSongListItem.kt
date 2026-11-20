@@ -55,6 +55,7 @@ import androidx.compose.ui.res.stringResource
 import `in`.melo.R
 import `in`.melo.presentation.components.SmartImage
 import `in`.melo.presentation.components.TrackDownloadIndicator
+import `in`.melo.ui.theme.MeloLayout
 
 /** Resolves the audio quality to show on a row; returns null while the setting is off. */
 val LocalTrackQuality = androidx.compose.runtime.staticCompositionLocalOf<(Song) -> String?> { { null } }
@@ -226,21 +227,21 @@ fun EnhancedSongListItem(
                         modifier = Modifier
                             .fillMaxWidth(0.7f)
                             .height(20.dp)
-                            .clip(RoundedCornerShape(4.dp))
+                            .clip(MeloLayout.ArtworkShape)
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     ShimmerBox(
                         modifier = Modifier
                             .fillMaxWidth(0.5f)
                             .height(16.dp)
-                            .clip(RoundedCornerShape(4.dp))
+                            .clip(MeloLayout.ArtworkShape)
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     ShimmerBox(
                         modifier = Modifier
                             .fillMaxWidth(0.3f)
                             .height(16.dp)
-                            .clip(RoundedCornerShape(4.dp))
+                            .clip(MeloLayout.ArtworkShape)
                     )
                 }
                 Spacer(modifier = Modifier.width(12.dp))

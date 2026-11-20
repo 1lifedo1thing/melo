@@ -11,10 +11,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -63,10 +61,13 @@ fun ImportPlaylistDialog(model: MeloModel, onDismiss: () -> Unit, onImported: (M
         title = { Text(stringResource(R.string.playlist_import)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedButton(
+                MeloButton(
+                    text = stringResource(R.string.import_from_file),
                     onClick = { picker.launch(arrayOf("text/csv", "text/comma-separated-values", "text/plain", "application/csv", "*/*")) },
                     enabled = !busy, modifier = Modifier.fillMaxWidth(),
-                ) { Text(stringResource(R.string.import_from_file)) }
+                    size = MeloButtonSize.Medium,
+                    style = MeloButtonStyle.Outlined,
+                )
                 Text(stringResource(R.string.import_from_link), style = MaterialTheme.typography.bodyMedium)
                 OutlinedTextField(
                     value = link, onValueChange = { link = it.trim() }, singleLine = true, enabled = !busy,
@@ -80,11 +81,22 @@ fun ImportPlaylistDialog(model: MeloModel, onDismiss: () -> Unit, onImported: (M
             }
         },
         confirmButton = {
-            TextButton(onClick = { run { model.importLink(link) } }, enabled = !busy && link.isNotBlank()) {
-                Text(stringResource(R.string.import_action))
-            }
+            MeloButton(
+                text = stringResource(R.string.import_action),
+                onClick = { run { model.importLink(link) } },
+                enabled = !busy && link.isNotBlank(),
+                size = MeloButtonSize.Medium,
+            )
         },
-        dismissButton = { TextButton(onClick = onDismiss, enabled = !busy) { Text(stringResource(R.string.action_cancel)) } },
+        dismissButton = {
+            MeloButton(
+                text = stringResource(R.string.action_cancel),
+                onClick = onDismiss,
+                enabled = !busy,
+                size = MeloButtonSize.Medium,
+                style = MeloButtonStyle.Text,
+            )
+        },
     )
 }
 
@@ -132,9 +144,22 @@ fun DeletePlaylistDialog(model: MeloModel, item: Music, onDismiss: () -> Unit, o
             }, item.title))
         },
         confirmButton = {
-            TextButton(onClick = { onDismiss(); model.deletePlaylist(item); onConfirmed() }) { Text(stringResource(R.string.action_delete)) }
+            MeloButton(
+                text = stringResource(R.string.action_delete),
+                onClick = { onDismiss(); model.deletePlaylist(item); onConfirmed() },
+                size = MeloButtonSize.Medium,
+                containerColor = MaterialTheme.colorScheme.errorContainer,
+                contentColor = MaterialTheme.colorScheme.onErrorContainer,
+            )
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
+        dismissButton = {
+            MeloButton(
+                text = stringResource(R.string.action_cancel),
+                onClick = onDismiss,
+                size = MeloButtonSize.Medium,
+                style = MeloButtonStyle.Text,
+            )
+        },
     )
 }
 

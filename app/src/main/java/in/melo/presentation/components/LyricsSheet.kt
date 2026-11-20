@@ -138,6 +138,7 @@ import androidx.compose.ui.text.style.TextGeometricTransform
 import androidx.compose.ui.text.style.TextOverflow
 import `in`.melo.presentation.components.subcomps.PlayingEqIcon
 import `in`.melo.utils.MultiLangRomanizer
+import `in`.melo.ui.theme.MeloLayout
 
 internal data class LyricsSheetColors(
     val container: Color,
@@ -568,7 +569,8 @@ fun LyricsSheet(
                     Text(stringResource(R.string.lyrics_save_dialog_message))
                     Spacer(modifier = Modifier.height(16.dp))
                     if (hasSynced) {
-                        FilledTonalButton(
+                        MeloButton(
+                            text = stringResource(R.string.lyrics_save_synced),
                             onClick = {
                                 showSaveLyricsDialog = false
                                 onSaveLyricsToFile(
@@ -577,14 +579,14 @@ fun LyricsSheet(
                                     true
                                 )
                             },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(stringResource(R.string.lyrics_save_synced))
-                        }
-                        Spacer(modifier = Modifier.height(8.dp))
+                            modifier = Modifier.fillMaxWidth(),
+                            style = MeloButtonStyle.Tonal,
+                        )
+                        Spacer(modifier = Modifier.height(MeloLayout.Space2))
                     }
                     if (hasPlain) {
-                        OutlinedButton(
+                        MeloButton(
+                            text = stringResource(R.string.lyrics_save_plain),
                             onClick = {
                                 showSaveLyricsDialog = false
                                 onSaveLyricsToFile(
@@ -593,18 +595,20 @@ fun LyricsSheet(
                                     false
                                 )
                             },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(stringResource(R.string.lyrics_save_plain))
-                        }
+                            modifier = Modifier.fillMaxWidth(),
+                            style = MeloButtonStyle.Outlined,
+                        )
                     }
                 }
             },
             confirmButton = {},
             dismissButton = {
-                TextButton(onClick = { showSaveLyricsDialog = false }) {
-                    Text(stringResource(R.string.common_cancel), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                }
+                MeloButton(
+                    text = stringResource(R.string.common_cancel),
+                    onClick = { showSaveLyricsDialog = false },
+                    size = MeloButtonSize.Medium,
+                    style = MeloButtonStyle.Text,
+                )
             }
         )
     }
@@ -628,7 +632,7 @@ fun LyricsSheet(
                 scaleY = scale
                 translationY = lerp(0f, size.height * 0.08f, p)
             }
-            .clip(RoundedCornerShape(32.dp))
+            .clip(MeloLayout.PanelShape)
             .pointerInput(Unit) {
                 detectDragGestures(
                     onDragStart = {
@@ -1404,7 +1408,7 @@ fun SyncedLyricsList(
 //                        .offset(y = metrics.topPadding)
 //                        .height(metrics.zoneHeight)
 //                        .align(Alignment.TopCenter)
-//                        .clip(RoundedCornerShape(18.dp))
+//                        .clip(MeloLayout.PanelShape)
 //                        .background(accentColor.copy(alpha = 0.12f))
 //                        .testTag("synced_highlight_zone")
 //                )
@@ -1566,7 +1570,7 @@ fun LyricLineRow(
         Column(
             modifier = animatedModifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
+                .clip(MeloLayout.CardShape)
                 .clickable { onClick() }
                 .padding(vertical = verticalPadding, horizontal = 2.dp),
             horizontalAlignment = horizontalAlignment
@@ -1624,7 +1628,7 @@ fun LyricLineRow(
         Column(
             modifier = animatedModifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
+                .clip(MeloLayout.CardShape)
                 .clickable { onClick() }
                 .padding(vertical = verticalPadding, horizontal = 2.dp),
             horizontalAlignment = horizontalAlignment

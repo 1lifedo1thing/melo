@@ -21,7 +21,6 @@ import `in`.melo.presentation.components.MeloBottomSheet as ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -48,6 +47,7 @@ import `in`.melo.data.Music
 import `in`.melo.data.isLocalTrack
 import `in`.melo.data.source
 import `in`.melo.presentation.viewmodel.PlayerViewModel
+import `in`.melo.ui.theme.MeloLayout
 
 /** The small marker that tells a device-only playlist from a Spotify one. */
 @Composable
@@ -56,7 +56,7 @@ fun LocalBadge(modifier: Modifier = Modifier) {
         modifier = modifier,
         color = MaterialTheme.colorScheme.tertiaryContainer,
         contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-        shape = RoundedCornerShape(8.dp),
+        shape = MeloLayout.ArtworkShape,
     ) {
         Text(
             stringResource(R.string.badge_local),
@@ -80,9 +80,22 @@ fun PlaylistNameDialog(title: String, initial: String = "", onDismiss: () -> Uni
             )
         },
         confirmButton = {
-            TextButton(onClick = { onConfirm(name) }, enabled = name.isNotBlank()) { Text(stringResource(R.string.action_save)) }
+            MeloButton(
+                text = stringResource(R.string.action_save),
+                onClick = { onConfirm(name) },
+                enabled = name.isNotBlank(),
+                size = MeloButtonSize.Medium,
+                style = MeloButtonStyle.Text,
+            )
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
+        dismissButton = {
+            MeloButton(
+                text = stringResource(R.string.action_cancel),
+                onClick = onDismiss,
+                size = MeloButtonSize.Medium,
+                style = MeloButtonStyle.Text,
+            )
+        },
     )
 }
 
@@ -119,7 +132,7 @@ fun AddToLocalPlaylistSheet(item: Music, ui: PlayerViewModel, onDismiss: () -> U
             LazyColumn(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 item(key = "new") {
                     Row(
-                        Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).clickable { creating = true }.padding(10.dp),
+                        Modifier.fillMaxWidth().clip(MeloLayout.PanelShape).clickable { creating = true }.padding(10.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Icon(Icons.Rounded.Add, null, Modifier.size(44.dp).padding(8.dp))
@@ -127,7 +140,7 @@ fun AddToLocalPlaylistSheet(item: Music, ui: PlayerViewModel, onDismiss: () -> U
                     }
                 }
                 items(accountPlaylists, key = { it.id }) { playlist ->
-                    Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).clickable(enabled = !adding) {
+                    Row(Modifier.fillMaxWidth().clip(MeloLayout.PanelShape).clickable(enabled = !adding) {
                         adding = true
                         scope.launch {
                             try {
@@ -139,14 +152,14 @@ fun AddToLocalPlaylistSheet(item: Music, ui: PlayerViewModel, onDismiss: () -> U
                             finally { adding = false }
                         }
                     }.padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
-                        SmartImage(model = playlist.imageUrl, contentDescription = null, shape = RoundedCornerShape(12.dp),
+                        SmartImage(model = playlist.imageUrl, contentDescription = null, shape = MeloLayout.CardShape,
                             targetSize = SmartImageCompactListTargetSize, modifier = Modifier.size(44.dp))
                         Text(playlist.title, Modifier.weight(1f).padding(horizontal = 12.dp), maxLines = 1, overflow = TextOverflow.Ellipsis)
                         Text("Spotify", style = MaterialTheme.typography.labelSmall)
                     }
                 }
                 items(youTubePlaylists, key = { it.id }) { playlist ->
-                    Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).clickable(enabled = !adding) {
+                    Row(Modifier.fillMaxWidth().clip(MeloLayout.PanelShape).clickable(enabled = !adding) {
                         adding = true
                         scope.launch {
                             try {
@@ -157,7 +170,7 @@ fun AddToLocalPlaylistSheet(item: Music, ui: PlayerViewModel, onDismiss: () -> U
                             finally { adding = false }
                         }
                     }.padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
-                        SmartImage(model = playlist.imageUrl, contentDescription = null, shape = RoundedCornerShape(12.dp),
+                        SmartImage(model = playlist.imageUrl, contentDescription = null, shape = MeloLayout.CardShape,
                             targetSize = SmartImageCompactListTargetSize, modifier = Modifier.size(44.dp))
                         Text(playlist.title, Modifier.weight(1f).padding(horizontal = 12.dp), maxLines = 1, overflow = TextOverflow.Ellipsis)
                         Text("YouTube Music", style = MaterialTheme.typography.labelSmall)
@@ -167,14 +180,14 @@ fun AddToLocalPlaylistSheet(item: Music, ui: PlayerViewModel, onDismiss: () -> U
                     Row(
                         Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(18.dp))
+                            .clip(MeloLayout.PanelShape)
                             .clickable { ui.addToLocalPlaylist(playlist.id, item); onDismiss() }
                             .padding(10.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         SmartImage(
                             model = playlist.asMusic().imageUrl, contentDescription = null,
-                            shape = RoundedCornerShape(12.dp), contentScale = ContentScale.Crop,
+                            shape = MeloLayout.CardShape, contentScale = ContentScale.Crop,
                             targetSize = SmartImageCompactListTargetSize, modifier = Modifier.size(44.dp),
                         )
                         Text(
