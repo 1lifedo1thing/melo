@@ -11,8 +11,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.ui.res.painterResource
 import androidx.compose.foundation.layout.Column
@@ -25,13 +23,10 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -55,7 +50,12 @@ import `in`.melo.R
 import `in`.melo.MeloModel
 import `in`.melo.ui.theme.GoogleSansRounded
 import `in`.melo.presentation.components.MeloWordmark
+import `in`.melo.presentation.components.MeloButton
+import `in`.melo.presentation.components.MeloButtonSize
+import `in`.melo.presentation.components.MeloButtonStyle
+import `in`.melo.presentation.components.MeloCard
 import androidx.compose.ui.res.stringResource
+import `in`.melo.ui.theme.MeloLayout
 
 @Composable
 fun AccountScreen(model: MeloModel, account: AccountUi) {
@@ -77,46 +77,49 @@ fun AccountScreen(model: MeloModel, account: AccountUi) {
             // On short screens or with the keyboard open, the flexible gap collapses and the page scrolls.
             Column(
                 Modifier.widthIn(max = 480.dp).fillMaxWidth().verticalScroll(rememberScrollState())
-                    .heightIn(min = maxHeight).padding(horizontal = 24.dp, vertical = 24.dp),
+                    .heightIn(min = maxHeight).padding(horizontal = MeloLayout.Space6, vertical = MeloLayout.Space6),
                 verticalArrangement = Arrangement.Top,
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(MeloLayout.Space3),
                 ) {
                     Icon(
                         painterResource(R.drawable.ic_melo_mark), null,
-                        Modifier.size(64.dp), tint = colors.onSurface,
+                        Modifier.size(MeloLayout.ArtHero), tint = colors.onSurface,
                     )
                     MeloWordmark()
                 }
-                Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(MeloLayout.Space6))
                 Spacer(Modifier.weight(1f))
                 Text(stringResource(R.string.melo_intro), style = MaterialTheme.typography.headlineMedium)
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(MeloLayout.Space2))
                 Text(stringResource(R.string.melo_intro_sources),
                     style = MaterialTheme.typography.bodyLarge, color = colors.onSurfaceVariant)
-                Spacer(Modifier.height(24.dp))
-                Surface(shape = RoundedCornerShape(20.dp), color = colors.surfaceContainer, modifier = Modifier.fillMaxWidth()) {
-                    Column(Modifier.padding(16.dp)) {
+                Spacer(Modifier.height(MeloLayout.Space6))
+                MeloCard(shape = MeloLayout.PanelShape, color = colors.surfaceContainer, modifier = Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(MeloLayout.PageGutter)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(painterResource(R.drawable.ic_source_spotify), null, Modifier.size(24.dp), tint = colors.primary)
-                            Text("Spotify", Modifier.padding(start = 10.dp).weight(1f), style = MaterialTheme.typography.titleLarge,
+                            Text("Spotify", Modifier.padding(start = MeloLayout.Space3).weight(1f), style = MaterialTheme.typography.titleLarge,
                                 fontFamily = GoogleSansRounded, fontWeight = FontWeight.SemiBold)
                             Surface(shape = CircleShape, color = colors.surfaceContainerHighest) {
-                                Text(ctx.getString(R.string.login_optional), Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                Text(ctx.getString(R.string.login_optional), Modifier.padding(horizontal = MeloLayout.Space3, vertical = MeloLayout.Space2),
                                     style = MaterialTheme.typography.labelMedium, color = colors.onSurfaceVariant)
                             }
                         }
                         SignInForm(account, model, googleFailed) { googleFailed = false; google = true }
                     }
                 }
-                Spacer(Modifier.height(16.dp))
-                if (account.codeLength == null) FilledTonalButton(
+                Spacer(Modifier.height(MeloLayout.Space4))
+                if (account.codeLength == null) MeloButton(
+                    text = ctx.getString(R.string.continue_without_account),
                     onClick = model::continueWithoutAccount,
                     enabled = !account.working,
-                    modifier = Modifier.fillMaxWidth().height(56.dp),
-                ) { Text(ctx.getString(R.string.continue_without_account), style = MaterialTheme.typography.titleSmall) }
+                    modifier = Modifier.fillMaxWidth(),
+                    size = MeloButtonSize.Large,
+                    style = MeloButtonStyle.Tonal,
+                )
             }
         }
     }
@@ -140,7 +143,7 @@ private fun SignInForm(account: AccountUi, model: MeloModel, googleFailed: Boole
                     Text(
                         account.codeEmail?.let { ctx.getString(R.string.code_prompt_email, it) }
                             ?: ctx.getString(R.string.code_prompt),
-                        Modifier.padding(top = 16.dp, bottom = 8.dp),
+                        Modifier.padding(top = MeloLayout.Space4, bottom = MeloLayout.Space2),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     OutlinedTextField(
@@ -149,10 +152,11 @@ private fun SignInForm(account: AccountUi, model: MeloModel, googleFailed: Boole
                         label = { Text(ctx.getString(R.string.code_label)) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true,
-                        shape = RoundedCornerShape(16.dp),
+                        shape = MeloLayout.PanelShape,
                         modifier = Modifier.fillMaxWidth(),
                     )
-                    Button(
+                    MeloButton(
+                        text = ctx.getString(R.string.code_confirm),
                         onClick = {
                             autofill?.cancel()
                             focus.clearFocus()
@@ -160,12 +164,18 @@ private fun SignInForm(account: AccountUi, model: MeloModel, googleFailed: Boole
                             code = ""
                         },
                         enabled = code.length == codeLength,
-                        modifier = Modifier.fillMaxWidth().padding(top = 12.dp).height(56.dp),
-                    ) { Text(ctx.getString(R.string.code_confirm)) }
-                    TextButton(onClick = model::disconnectSpotify) { Text(ctx.getString(R.string.action_cancel)) }
+                        modifier = Modifier.fillMaxWidth().padding(top = MeloLayout.Space3),
+                        size = MeloButtonSize.Large,
+                    )
+                    MeloButton(
+                        text = ctx.getString(R.string.action_cancel),
+                        onClick = model::disconnectSpotify,
+                        size = MeloButtonSize.Medium,
+                        style = MeloButtonStyle.Text,
+                    )
                 }
                 else -> {
-                    Spacer(Modifier.height(16.dp))
+                    Spacer(Modifier.height(MeloLayout.Space4))
                     OutlinedTextField(
                         value = username,
                         onValueChange = { username = it },
@@ -173,7 +183,7 @@ private fun SignInForm(account: AccountUi, model: MeloModel, googleFailed: Boole
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                         enabled = !working,
                         singleLine = true,
-                        shape = RoundedCornerShape(16.dp),
+                        shape = MeloLayout.PanelShape,
                         modifier = Modifier.fillMaxWidth().semantics {
                             contentType = ContentType.Username + ContentType.EmailAddress
                         },
@@ -186,12 +196,17 @@ private fun SignInForm(account: AccountUi, model: MeloModel, googleFailed: Boole
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                         enabled = !working,
                         singleLine = true,
-                        shape = RoundedCornerShape(16.dp),
+                        shape = MeloLayout.PanelShape,
                         modifier = Modifier.fillMaxWidth().padding(top = 8.dp).semantics {
                             contentType = ContentType.Password
                         },
                     )
-                    Button(
+                    MeloButton(
+                        text = when {
+                            account.working -> ctx.getString(R.string.login_connecting)
+                            passwordMode -> ctx.getString(R.string.login_with_password)
+                            else -> ctx.getString(R.string.login_with_code)
+                        },
                         onClick = {
                             if (!passwordMode) autofill?.cancel()
                             focus.clearFocus()
@@ -200,30 +215,34 @@ private fun SignInForm(account: AccountUi, model: MeloModel, googleFailed: Boole
                             password = ""
                         },
                         enabled = !working && username.isNotBlank() && (!passwordMode || password.isNotEmpty()),
-                        modifier = Modifier.fillMaxWidth().padding(top = 12.dp).height(56.dp),
-                    ) {
-                        Text(when {
-                            account.working -> ctx.getString(R.string.login_connecting)
-                            passwordMode -> ctx.getString(R.string.login_with_password)
-                            else -> ctx.getString(R.string.login_with_code)
-                        })
-                    }
-                    OutlinedButton(
+                        modifier = Modifier.fillMaxWidth().padding(top = MeloLayout.Space3),
+                        size = MeloButtonSize.Large,
+                    )
+                    MeloButton(
+                        text = ctx.getString(R.string.login_with_google),
                         onClick = onGoogle,
                         enabled = !working,
-                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp).height(56.dp),
-                    ) {
-                        Icon(painterResource(R.drawable.ic_google), null, Modifier.size(20.dp))
-                        Text(ctx.getString(R.string.login_with_google), Modifier.padding(start = 10.dp))
-                    }
-                    TextButton(
+                        modifier = Modifier.fillMaxWidth().padding(top = MeloLayout.Space2),
+                        size = MeloButtonSize.Large,
+                        style = MeloButtonStyle.Outlined,
+                        leadingContent = { Icon(painterResource(R.drawable.ic_google), null, Modifier.size(MeloLayout.IconMedium)) },
+                    )
+                    MeloButton(
+                        text = if (passwordMode) ctx.getString(R.string.login_use_code) else ctx.getString(R.string.login_use_password),
                         onClick = { passwordMode = !passwordMode; password = "" },
                         enabled = !working,
                         modifier = Modifier.align(Alignment.CenterHorizontally),
-                    ) { Text(if (passwordMode) ctx.getString(R.string.login_use_code) else ctx.getString(R.string.login_use_password)) }
-                    if (account.working) TextButton(onClick = model::disconnectSpotify) { Text(ctx.getString(R.string.action_cancel)) }
+                        size = MeloButtonSize.Medium,
+                        style = MeloButtonStyle.Text,
+                    )
+                    if (account.working) MeloButton(
+                        text = ctx.getString(R.string.action_cancel),
+                        onClick = model::disconnectSpotify,
+                        size = MeloButtonSize.Medium,
+                        style = MeloButtonStyle.Text,
+                    )
                     (account.error ?: ctx.getString(R.string.spotify_google_failed).takeIf { googleFailed && !working })?.let {
-                        Text(it, Modifier.padding(top = 8.dp), color = MaterialTheme.colorScheme.error)
+                        Text(it, Modifier.padding(top = MeloLayout.Space2), color = MaterialTheme.colorScheme.error)
                     }
                 }
             }

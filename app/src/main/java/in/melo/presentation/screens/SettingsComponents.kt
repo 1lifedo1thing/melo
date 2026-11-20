@@ -93,13 +93,19 @@ import `in`.melo.presentation.components.subcomps.TightWrapText
 import `in`.melo.presentation.components.MiniPlayerHeight
 import `in`.melo.utils.formatDuration
 import `in`.melo.ui.theme.ExpTitleTypography
+import `in`.melo.ui.theme.MeloLayout
+import `in`.melo.ui.theme.MeloAlpha
+import `in`.melo.presentation.components.MeloButton
+import `in`.melo.presentation.components.MeloButtonSize
+import `in`.melo.presentation.components.MeloButtonStyle
+import `in`.melo.presentation.components.MeloCard
 
 @Composable
 fun SettingsSection(title: String, icon: @Composable () -> Unit, content: @Composable () -> Unit) {
-    Column(modifier = Modifier.padding(vertical = 4.dp)) {
+    Column(modifier = Modifier.padding(vertical = MeloLayout.Space1)) {
         Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(start = 4.dp, top = 16.dp, bottom = 10.dp)
+                modifier = Modifier.padding(start = MeloLayout.Space1, top = MeloLayout.Space4, bottom = MeloLayout.Space3)
         ) {
             Spacer(modifier = Modifier.width(12.dp))
             Text(
@@ -109,7 +115,7 @@ fun SettingsSection(title: String, icon: @Composable () -> Unit, content: @Compo
                     color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(MeloLayout.Space2)) {
             content()
         }
     }
@@ -123,25 +129,22 @@ fun SettingsItem(
         trailingIcon: @Composable () -> Unit = {},
         onClick: () -> Unit
 ) {
-    Surface(
-            color = Color.Transparent,
-            modifier =
-                    Modifier.fillMaxWidth()
-                            .meloPanel()
-                            .clickable(onClick = onClick)
+    MeloCard(
+            modifier = Modifier.fillMaxWidth(),
+            onClick = onClick,
     ) {
         Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp).fillMaxWidth()
+                modifier = Modifier.padding(horizontal = MeloLayout.PageGutter, vertical = MeloLayout.Space3).fillMaxWidth()
         ) {
             Box(
-                    modifier = Modifier.padding(end = 14.dp).size(36.dp).meloPanel(RoundedCornerShape(12.dp)),
+                    modifier = Modifier.padding(end = MeloLayout.Space3).size(MeloLayout.ControlVisual).meloPanel(MeloLayout.CardShape),
                     contentAlignment = Alignment.Center
             ) { leadingIcon() }
 
             Column(
-                    modifier = Modifier.weight(1f).padding(end = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                    modifier = Modifier.weight(1f).padding(end = MeloLayout.Space2),
+                    verticalArrangement = Arrangement.spacedBy(MeloLayout.Space1)
             ) {
                 Text(
                         text = title,
@@ -180,8 +183,8 @@ fun SwitchSettingItem(
     ) {
         Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp).fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                modifier = Modifier.padding(horizontal = MeloLayout.PageGutter, vertical = MeloLayout.Space3).fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(MeloLayout.Space3)
         ) {
             if (leadingIcon != null) {
                 Box(
@@ -192,21 +195,21 @@ fun SwitchSettingItem(
 
             Column(
                     modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                verticalArrangement = Arrangement.spacedBy(MeloLayout.Space1)
             ) {
                 Text(
                         text = title,
                         style = MaterialTheme.typography.titleMedium,
                         color =
                                 if (enabled) MaterialTheme.colorScheme.onSurface
-                                else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                else MaterialTheme.colorScheme.onSurface.copy(alpha = MeloAlpha.Disabled)
                 )
                 Text(
                         text = subtitle,
                         style = MaterialTheme.typography.bodyMedium,
                         color =
                                 if (enabled) MaterialTheme.colorScheme.onSurfaceVariant
-                                else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                                else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = MeloAlpha.Disabled)
                 )
             }
 
@@ -262,20 +265,17 @@ fun ThemeSelectorItem(
     var showSheet by remember { mutableStateOf(false) }
     val selectedOption = options[selectedKey] ?: selectedKey
 
-    Surface(
-            color = Color.Transparent,
-            modifier =
-                    Modifier.fillMaxWidth().meloPanel().clickable {
-                        showSheet = true
-                    }
+    MeloCard(
+            modifier = Modifier.fillMaxWidth(),
+            onClick = { showSheet = true },
     ) {
-        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+        Column(modifier = Modifier.padding(horizontal = MeloLayout.PageGutter, vertical = MeloLayout.Space3)) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Box(
-                    modifier = Modifier.padding(end = 14.dp).size(36.dp).meloPanel(RoundedCornerShape(12.dp)),
+                    modifier = Modifier.padding(end = MeloLayout.Space3).size(MeloLayout.ControlVisual).meloPanel(MeloLayout.CardShape),
                         contentAlignment = Alignment.Center
                 ) { leadingIcon() }
 
@@ -286,7 +286,7 @@ fun ThemeSelectorItem(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     if (description.isNotBlank()) {
-                        Spacer(modifier = Modifier.height(6.dp))
+                        Spacer(modifier = Modifier.height(MeloLayout.Space2))
                         Text(
                             text = description,
                             style = MaterialTheme.typography.bodyMedium,
@@ -294,7 +294,7 @@ fun ThemeSelectorItem(
                         )
                     }
                     
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(MeloLayout.Space1))
                     Text(
                         text = selectedOption,
                         style = MaterialTheme.typography.bodyMedium,
@@ -311,33 +311,33 @@ fun ThemeSelectorItem(
             containerColor = MaterialTheme.colorScheme.surface,
             contentColor = MaterialTheme.colorScheme.onSurface
         ) {
-            Column(modifier = Modifier.padding(bottom = 24.dp)) {
+            Column(modifier = Modifier.padding(bottom = MeloLayout.Space6)) {
                 Text(
                     text = label,
                     style = MaterialTheme.typography.headlineSmall, // Larger header
-                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp),
+                    modifier = Modifier.padding(horizontal = MeloLayout.Space6, vertical = MeloLayout.Space4),
                     fontWeight = FontWeight.Bold
                 )
                 
                 LazyColumn(
                     modifier = Modifier
-                        .padding(horizontal = 16.dp)
+                        .padding(horizontal = MeloLayout.PageGutter)
                         .heightIn(max = 400.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    verticalArrangement = Arrangement.spacedBy(MeloLayout.Space2)
                 ) {
                     items(options.entries.toList()) { (key, optionLabel) ->
                         val isSelected = key == selectedKey
                         val containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainer
                         val contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
                         
-                        Surface(
+                        MeloCard(
                             onClick = {
                                 onSelectionChanged(key)
                                 showSheet = false
                             },
-                            shape = RoundedCornerShape(24.dp),
+                            shape = MeloLayout.PanelShape,
                             color = containerColor,
-                            modifier = Modifier.fillMaxWidth().height(72.dp)
+                            modifier = Modifier.fillMaxWidth().height(MeloLayout.RowMinHeight)
                         ) {
                             Row(
                                 modifier = Modifier
@@ -384,7 +384,7 @@ fun SliderSettingsItem(
             color = Color.Transparent,
             modifier = Modifier.fillMaxWidth().meloPanel()
     ) {
-        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+        Column(modifier = Modifier.padding(horizontal = MeloLayout.PageGutter, vertical = MeloLayout.Space3)) {
             Row(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     modifier = Modifier.fillMaxWidth()
@@ -393,13 +393,13 @@ fun SliderSettingsItem(
                         text = label,
                         modifier = Modifier.weight(1f),
                         style = MaterialTheme.typography.titleMedium,
-                        color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                        color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = MeloAlpha.Disabled)
                 )
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(MeloLayout.Space2))
                 Text(
                         text = valueText(value),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                        color = if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = MeloAlpha.Disabled),
                         fontWeight = FontWeight.Bold,
                         maxLines = 1,
                         softWrap = false
@@ -428,17 +428,16 @@ fun ActionSettingsItem(
     onSecondaryAction: (() -> Unit)? = null,
     enabled: Boolean = true
 ) {
-    Surface(
-        color = Color.Transparent,
-        modifier = Modifier.fillMaxWidth().meloPanel()
+    MeloCard(
+        modifier = Modifier.fillMaxWidth(),
     ) {
-        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+        Column(modifier = Modifier.padding(horizontal = MeloLayout.PageGutter, vertical = MeloLayout.Space3)) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Box(
-                    modifier = Modifier.padding(end = 14.dp).size(36.dp).meloPanel(RoundedCornerShape(12.dp)),
+                    modifier = Modifier.padding(end = MeloLayout.Space3).size(MeloLayout.ControlVisual).meloPanel(MeloLayout.CardShape),
                     contentAlignment = Alignment.Center
                 ) {
                     icon()
@@ -446,7 +445,7 @@ fun ActionSettingsItem(
 
                 Column(
                     modifier = Modifier.weight(1f).padding(end = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                    verticalArrangement = Arrangement.spacedBy(MeloLayout.Space1)
                 ) {
                     Text(
                         text = title,
@@ -461,27 +460,29 @@ fun ActionSettingsItem(
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(MeloLayout.Space3))
 
             // Primary Action
-            FilledTonalButton(
+            MeloButton(
+                text = primaryActionLabel,
                 onClick = onPrimaryAction,
                 enabled = enabled,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(primaryActionLabel, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            }
+                modifier = Modifier.fillMaxWidth(),
+                size = MeloButtonSize.Large,
+                style = MeloButtonStyle.Tonal,
+            )
 
             // Secondary Action (Optional)
             if (secondaryActionLabel != null && onSecondaryAction != null) {
-                Spacer(modifier = Modifier.height(8.dp))
-                OutlinedButton(
+                Spacer(modifier = Modifier.height(MeloLayout.Space2))
+                MeloButton(
+                    text = secondaryActionLabel,
                     onClick = onSecondaryAction,
                     enabled = enabled,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(secondaryActionLabel, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                }
+                    modifier = Modifier.fillMaxWidth(),
+                    size = MeloButtonSize.Medium,
+                    style = MeloButtonStyle.Outlined,
+                )
             }
         }
     }

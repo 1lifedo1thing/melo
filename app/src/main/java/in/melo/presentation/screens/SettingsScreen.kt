@@ -92,6 +92,11 @@ import androidx.navigation.NavHostController
 import coil.imageLoader
 import `in`.melo.presentation.components.PrivacyPolicyLink
 import `in`.melo.presentation.components.meloPanel
+import `in`.melo.presentation.components.MeloButton
+import `in`.melo.presentation.components.MeloButtonSize
+import `in`.melo.presentation.components.MeloButtonStyle
+import `in`.melo.presentation.components.MeloCard
+import `in`.melo.presentation.components.MeloIconButton
 import `in`.melo.R
 import `in`.melo.MeloModel
 import `in`.melo.data.UsageAnalytics
@@ -108,6 +113,7 @@ import `in`.melo.utils.AppLocales
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import `in`.melo.ui.theme.MeloLayout
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -119,14 +125,12 @@ private fun SettingsScaffold(title: String, navController: NavHostController, co
             TopAppBar(
                 title = { Text(title, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.padding(start = 4.dp)) },
                 navigationIcon = {
-                    IconButton(
-                        modifier = Modifier.padding(start = 10.dp).meloPanel(CircleShape),
-                        colors = IconButtonDefaults.iconButtonColors(
-                            containerColor = Color.Transparent,
-                            contentColor = MaterialTheme.colorScheme.onSurface
-                        ),
-                        onClick = { navController.popBackStack() }
-                    ) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, stringResource(R.string.common_back)) }
+                    MeloIconButton(
+                        icon = Icons.AutoMirrored.Rounded.ArrowBack,
+                        contentDescription = stringResource(R.string.common_back),
+                        onClick = { navController.popBackStack() },
+                        modifier = Modifier.padding(start = MeloLayout.Space2),
+                    )
                 },
                 scrollBehavior = scrollBehavior,
             )
@@ -138,10 +142,10 @@ private fun SettingsScaffold(title: String, navController: NavHostController, co
                 .padding(inner)
                 .verticalScroll(rememberScrollState())
                 // Room for the mini player and the navigation bar under the last item.
-                .padding(PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp,
-                    bottom = 32.dp + `in`.melo.presentation.components.MiniPlayerHeight +
+                .padding(PaddingValues(start = MeloLayout.PageGutter, end = MeloLayout.PageGutter, top = MeloLayout.Space2,
+                    bottom = MeloLayout.Space8 + `in`.melo.presentation.components.MiniPlayerHeight +
                         androidx.compose.foundation.layout.WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding())),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+            verticalArrangement = Arrangement.spacedBy(MeloLayout.Space3),
             content = content,
         )
     }
@@ -149,15 +153,15 @@ private fun SettingsScaffold(title: String, navController: NavHostController, co
 
 @Composable
 private fun CategoryRow(title: String, subtitle: String, icon: ImageVector, onClick: () -> Unit) {
-    Surface(
-        color = Color.Transparent,
-        modifier = Modifier.fillMaxWidth().meloPanel().clickable(onClick = onClick),
+    MeloCard(
+        modifier = Modifier.fillMaxWidth(),
+        onClick = onClick,
     ) {
-        Row(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.size(38.dp).meloPanel(RoundedCornerShape(12.dp)), contentAlignment = Alignment.Center) {
-                Icon(icon, null, Modifier.size(22.dp), tint = MaterialTheme.colorScheme.onSurface)
+        Row(Modifier.padding(horizontal = MeloLayout.PageGutter, vertical = MeloLayout.Space3), verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.size(MeloLayout.ControlVisual).meloPanel(MeloLayout.CardShape), contentAlignment = Alignment.Center) {
+                Icon(icon, null, Modifier.size(MeloLayout.IconDefault), tint = MaterialTheme.colorScheme.onSurface)
             }
-            Column(Modifier.weight(1f).padding(horizontal = 16.dp)) {
+            Column(Modifier.weight(1f).padding(horizontal = MeloLayout.PageGutter)) {
                 Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                 Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
@@ -572,7 +576,7 @@ private fun DiagnosticsSettings(model: MeloModel, navController: NavHostControll
             primaryActionLabel = stringResource(R.string.diagnostics_clear_action),
             onPrimaryAction = { scope.launch { model.clearDiagnostics(); revision++ } },
         )
-        Surface(color = MaterialTheme.colorScheme.surfaceContainer, modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))) {
+        MeloCard(color = MaterialTheme.colorScheme.surfaceContainer, shape = MeloLayout.CardShape, modifier = Modifier.fillMaxWidth()) {
             androidx.compose.foundation.text.selection.SelectionContainer {
                 Text(report ?: stringResource(R.string.diagnostics_loading), modifier = Modifier.padding(12.dp),
                     style = MaterialTheme.typography.bodySmall, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
@@ -649,7 +653,7 @@ private fun AccountSettings(model: MeloModel, navController: NavHostController) 
                 subtitle = stringResource(R.string.google_connect_subtitle),
                 leadingIcon = { Icon(painterResource(R.drawable.ic_source_youtube_music), null, tint = MaterialTheme.colorScheme.secondary) },
                 onClick = { navController.navigateSafely(Screen.GoogleSignIn.route) },
-            ) else Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            ) else Column(verticalArrangement = Arrangement.spacedBy(MeloLayout.Space1)) {
                 SettingsItem(
                     title = account.name,
                     subtitle = account.handle.ifBlank { stringResource(R.string.google_connected_subtitle) },
@@ -710,31 +714,29 @@ private fun HomeSettings(model: MeloModel, navController: NavHostController) {
         Text(stringResource(R.string.settings_home_description), Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
             style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         shelves.forEachIndexed { index, config ->
-            Surface(color = MaterialTheme.colorScheme.surfaceContainer, shape = RoundedCornerShape(24.dp), modifier = Modifier.fillMaxWidth()) {
-                Column(Modifier.padding(start = 16.dp, end = 8.dp, top = 8.dp, bottom = 12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            MeloCard(color = MaterialTheme.colorScheme.surfaceContainer, shape = MeloLayout.PanelShape, modifier = Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(start = MeloLayout.PageGutter, end = MeloLayout.Space2, top = MeloLayout.Space2, bottom = MeloLayout.Space3), verticalArrangement = Arrangement.spacedBy(MeloLayout.Space2)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(shelfName(config.shelf), Modifier.weight(1f), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                        androidx.compose.material3.IconButton(onClick = { move(index, index - 1) }, enabled = index > 0) {
-                            Icon(Icons.Rounded.KeyboardArrowUp, stringResource(R.string.shelf_move_up))
-                        }
-                        androidx.compose.material3.IconButton(onClick = { move(index, index + 1) }, enabled = index < shelves.lastIndex) {
-                            Icon(Icons.Rounded.KeyboardArrowDown, stringResource(R.string.shelf_move_down))
-                        }
+                        MeloIconButton(Icons.Rounded.KeyboardArrowUp, stringResource(R.string.shelf_move_up),
+                            onClick = { move(index, index - 1) }, enabled = index > 0)
+                        MeloIconButton(Icons.Rounded.KeyboardArrowDown, stringResource(R.string.shelf_move_down),
+                            onClick = { move(index, index + 1) }, enabled = index < shelves.lastIndex)
                         androidx.compose.material3.Switch(config.visible, { visible -> change(index) { it.copy(visible = visible) } })
                     }
                     if (config.visible) {
-                        if (config.shelf.styles.size > 1) androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        if (config.shelf.styles.size > 1) androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(MeloLayout.Space2)) {
                             config.shelf.styles.forEach { style ->
                                 androidx.compose.material3.FilterChip(selected = config.style == style, onClick = { change(index) { it.copy(style = style) } },
-                                    label = { Text(styleName(style)) })
+                                    label = { Text(styleName(style)) }, shape = MeloLayout.PillShape)
                             }
                         }
-                        if (config.shelf.counts) androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        if (config.shelf.counts) androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(MeloLayout.Space2),
                             itemVerticalAlignment = Alignment.CenterVertically) {
                             Text(stringResource(R.string.shelf_items), Modifier.padding(end = 4.dp), style = MaterialTheme.typography.labelLarge)
                             `in`.melo.data.preferences.HomeLayout.COUNTS.forEach { count ->
                                 androidx.compose.material3.FilterChip(selected = config.count == count, onClick = { change(index) { it.copy(count = count) } },
-                                    label = { Text(count.toString()) })
+                                    label = { Text(count.toString()) }, shape = MeloLayout.PillShape)
                             }
                         }
                         if (config.style != `in`.melo.data.preferences.ShelfStyle.CARD && config.style != `in`.melo.data.preferences.ShelfStyle.COLLAGE) Row(verticalAlignment = Alignment.CenterVertically) {
@@ -745,9 +747,13 @@ private fun HomeSettings(model: MeloModel, navController: NavHostController) {
                 }
             }
         }
-        androidx.compose.material3.TextButton(onClick = { model.ui.updateSettings { it.copy(homeShelves = "") } }, modifier = Modifier.fillMaxWidth()) {
-            Text(stringResource(R.string.shelf_reset))
-        }
+        MeloButton(
+            text = stringResource(R.string.shelf_reset),
+            onClick = { model.ui.updateSettings { it.copy(homeShelves = "") } },
+            modifier = Modifier.fillMaxWidth(),
+            size = MeloButtonSize.Medium,
+            style = MeloButtonStyle.Text,
+        )
     }
 }
 
@@ -769,26 +775,28 @@ private fun PageActionsSettings(model: MeloModel, navController: NavHostControll
             Text(stringResource(title), Modifier.padding(start = 8.dp, top = 16.dp, bottom = 4.dp),
                 style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
             slots.forEachIndexed { index, slot ->
-                Surface(color = MaterialTheme.colorScheme.surfaceContainer, shape = RoundedCornerShape(20.dp), modifier = Modifier.fillMaxWidth()) {
+                MeloCard(color = MaterialTheme.colorScheme.surfaceContainer, shape = MeloLayout.PanelShape, modifier = Modifier.fillMaxWidth()) {
                     Row(Modifier.padding(start = 16.dp, end = 8.dp, top = 4.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
                             Text(actionName(slot.action), style = MaterialTheme.typography.bodyLarge)
                             Text(stringResource(if (slot.shown) R.string.settings_pages_in_bar else R.string.settings_pages_in_menu),
                                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
-                        androidx.compose.material3.IconButton(onClick = { move(index, index - 1) }, enabled = index > 0) {
-                            Icon(Icons.Rounded.KeyboardArrowUp, stringResource(R.string.shelf_move_up))
-                        }
-                        androidx.compose.material3.IconButton(onClick = { move(index, index + 1) }, enabled = index < slots.lastIndex) {
-                            Icon(Icons.Rounded.KeyboardArrowDown, stringResource(R.string.shelf_move_down))
-                        }
+                        MeloIconButton(Icons.Rounded.KeyboardArrowUp, stringResource(R.string.shelf_move_up),
+                            onClick = { move(index, index - 1) }, enabled = index > 0)
+                        MeloIconButton(Icons.Rounded.KeyboardArrowDown, stringResource(R.string.shelf_move_down),
+                            onClick = { move(index, index + 1) }, enabled = index < slots.lastIndex)
                         androidx.compose.material3.Switch(slot.shown, { shown -> save(slots.mapIndexed { i, it -> if (i == index) it.copy(shown = shown) else it }) })
                     }
                 }
             }
         }
-        androidx.compose.material3.TextButton(onClick = { model.ui.updateSettings { it.copy(albumActions = "", playlistActions = "") } }, modifier = Modifier.fillMaxWidth()) {
-            Text(stringResource(R.string.settings_pages_reset))
-        }
+        MeloButton(
+            text = stringResource(R.string.settings_pages_reset),
+            onClick = { model.ui.updateSettings { it.copy(albumActions = "", playlistActions = "") } },
+            modifier = Modifier.fillMaxWidth(),
+            size = MeloButtonSize.Medium,
+            style = MeloButtonStyle.Text,
+        )
     }
 }
