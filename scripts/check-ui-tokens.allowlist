@@ -1,0 +1,2 @@
+# check|repository-relative Kotlin path|intentional exception
+font|app/src/main/java/in/melo/presentation/components/MeloIdentity.kt|The dot-matrix identity mark uses fixed glyph metrics.

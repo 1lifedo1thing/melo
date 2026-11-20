@@ -1,5 +1,6 @@
 package `in`.melo.presentation.screens
 
+import `in`.melo.ui.theme.MeloLayout
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -98,7 +99,7 @@ internal fun HistoryScreen(model: MeloModel, navController: NavHostController) {
                 title = { Text(title, fontFamily = GoogleSansRounded, modifier = Modifier.padding(start = 8.dp)) },
                 navigationIcon = {
                     FilledTonalIconButton(
-                        modifier = Modifier.padding(start = 10.dp),
+                        modifier = Modifier.padding(start = MeloLayout.Space3),
                         colors = IconButtonDefaults.filledIconButtonColors(
                             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                             contentColor = MaterialTheme.colorScheme.onSurface,

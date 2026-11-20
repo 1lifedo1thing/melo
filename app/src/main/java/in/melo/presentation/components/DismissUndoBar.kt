@@ -1,5 +1,7 @@
 package `in`.melo.presentation.components
 
+import `in`.melo.ui.theme.MeloAlpha
+import `in`.melo.ui.theme.MeloLayout
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
@@ -65,7 +67,7 @@ fun DismissUndoBar(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    modifier = Modifier.padding(start = 10.dp),
+                    modifier = Modifier.padding(start = MeloLayout.Space3),
                     text = stringResource(R.string.playlist_dismissed_message),
                     style = MaterialTheme.typography.titleSmall
                         .copy(
@@ -87,7 +89,7 @@ fun DismissUndoBar(
                         contentDescription = stringResource(R.string.common_close),
                         onClick = onClose,
                         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                        contentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                        contentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = MeloAlpha.Secondary),
                     )
                 }
             }
@@ -97,7 +99,7 @@ fun DismissUndoBar(
                     .fillMaxWidth(fraction = progress.value.coerceIn(0f, 1f))
                     .fillMaxHeight()
                     .background(
-                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.22f),
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = MeloAlpha.Divider),
                         shape = AbsoluteSmoothCornerShape(
                             cornerRadiusTR = 12.dp,
                             smoothnessAsPercentTL = 60,

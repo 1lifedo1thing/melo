@@ -154,7 +154,7 @@ fun SongInfoBottomSheet(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp)
                 .navigationBarsPadding(),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+            verticalArrangement = Arrangement.spacedBy(MeloLayout.Space3)
         ) {
             OptionsSheetHeader(song.albumArtUriString, song.title, song.displayArtist)
             Row1Actions(
@@ -222,7 +222,7 @@ fun SongInfoBottomSheet(
 private fun OptionsSheetHeader(artwork: String?, title: String, subtitle: String, artShape: Shape = MeloLayout.ArtworkShape) {
     Row(
         modifier = Modifier.fillMaxWidth().heightIn(min = 72.dp),
-        horizontalArrangement = Arrangement.spacedBy(14.dp),
+        horizontalArrangement = Arrangement.spacedBy(MeloLayout.Space4),
         verticalAlignment = Alignment.CenterVertically
     ) {
         SmartImage(
@@ -243,7 +243,7 @@ private fun OptionsSheetHeader(artwork: String?, title: String, subtitle: String
             )
             if (subtitle.isNotBlank()) Text(
                 text = subtitle,
-                modifier = Modifier.padding(top = 2.dp),
+                modifier = Modifier.padding(top = MeloLayout.Space1),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
@@ -329,7 +329,7 @@ fun EntityOptionsSheet(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp)
                 .navigationBarsPadding(),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+            verticalArrangement = Arrangement.spacedBy(MeloLayout.Space3)
         ) {
             OptionsSheetHeader(
                 artwork = item.imageUrl,
@@ -546,7 +546,7 @@ private fun Row1Actions(
             .fillMaxWidth()
             .height(IntrinsicSize.Min),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
+        horizontalArrangement = Arrangement.spacedBy(MeloLayout.Space3)
     ) {
         FilledTonalButton(
             modifier = Modifier
@@ -556,7 +556,7 @@ private fun Row1Actions(
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer
             ),
-            contentPadding = PaddingValues(horizontal = 10.dp),
+            contentPadding = PaddingValues(horizontal = MeloLayout.Space3),
             shape = playButtonShape,
             interactionSource = playInteractionSource,
             onClick = {
@@ -575,7 +575,7 @@ private fun Row1Actions(
                 Icons.Rounded.PlayArrow,
                 contentDescription = stringResource(R.string.song_info_cd_play),
             )
-            Spacer(Modifier.width(6.dp))
+            Spacer(Modifier.width(MeloLayout.Space2))
             TightWrapText(
                 text = stringResource(R.string.song_info_action_play),
                 modifier = Modifier.padding(end = 4.dp),
@@ -700,7 +700,7 @@ private fun Row2Actions(
             .fillMaxWidth()
             .height(IntrinsicSize.Min),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
+        horizontalArrangement = Arrangement.spacedBy(MeloLayout.Space3)
     ) {
         FilledTonalButton(
             modifier = Modifier
@@ -710,7 +710,7 @@ private fun Row2Actions(
                 containerColor = MaterialTheme.colorScheme.tertiaryContainer,
                 contentColor = MaterialTheme.colorScheme.onTertiaryContainer
             ),
-            contentPadding = PaddingValues(horizontal = 10.dp),
+            contentPadding = PaddingValues(horizontal = MeloLayout.Space3),
             shape = CircleShape,
             interactionSource = queueInteractionSource,
             onClick = {
@@ -729,7 +729,7 @@ private fun Row2Actions(
                 Icons.AutoMirrored.Rounded.QueueMusic,
                 contentDescription = stringResource(R.string.song_info_cd_add_to_queue),
             )
-            Spacer(Modifier.width(6.dp))
+            Spacer(Modifier.width(MeloLayout.Space2))
             TightWrapText(
                 text = stringResource(R.string.song_info_action_add_to_queue),
                 modifier = Modifier.padding(end = 4.dp),
@@ -747,7 +747,7 @@ private fun Row2Actions(
                 containerColor = MaterialTheme.colorScheme.tertiary,
                 contentColor = MaterialTheme.colorScheme.onTertiary
             ),
-            contentPadding = PaddingValues(horizontal = 10.dp),
+            contentPadding = PaddingValues(horizontal = MeloLayout.Space3),
             shape = CircleShape,
             interactionSource = nextInteractionSource,
             onClick = {
@@ -766,7 +766,7 @@ private fun Row2Actions(
                 Icons.AutoMirrored.Filled.QueueMusic,
                 contentDescription = stringResource(R.string.song_info_cd_queue_next)
             )
-            Spacer(Modifier.width(6.dp))
+            Spacer(Modifier.width(MeloLayout.Space2))
             TightWrapText(
                 text = stringResource(R.string.song_info_action_queue_next),
                 modifier = Modifier.padding(end = 4.dp),

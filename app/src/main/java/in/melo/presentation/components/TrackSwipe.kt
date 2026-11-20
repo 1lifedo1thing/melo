@@ -1,5 +1,6 @@
 package `in`.melo.presentation.components
 
+import `in`.melo.ui.theme.MeloAlpha
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -103,8 +104,8 @@ fun TrackSwipeBox(
     val colors = MaterialTheme.colorScheme
     val background = when {
         shown == null -> Color.Transparent
-        shown == TrackSwipeAction.REMOVE -> if (reached) colors.errorContainer else colors.errorContainer.copy(alpha = 0.6f)
-        else -> if (reached) colors.tertiaryContainer else colors.tertiaryContainer.copy(alpha = 0.6f)
+        shown == TrackSwipeAction.REMOVE -> if (reached) colors.errorContainer else colors.errorContainer.copy(alpha = MeloAlpha.Scrim)
+        else -> if (reached) colors.tertiaryContainer else colors.tertiaryContainer.copy(alpha = MeloAlpha.Scrim)
     }
     val iconTint = if (shown == TrackSwipeAction.REMOVE) colors.onErrorContainer else colors.onTertiaryContainer
 

@@ -127,6 +127,7 @@ import `in`.melo.presentation.components.scoped.rememberSmoothProgress
 import `in`.melo.presentation.viewmodel.PlayerSheetState
 import `in`.melo.presentation.viewmodel.PlayerViewModel
 import `in`.melo.ui.theme.GoogleSansRounded
+import `in`.melo.ui.theme.MeloLayout
 import `in`.melo.utils.formatDuration
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.Dispatchers
@@ -1305,7 +1306,7 @@ private fun SongMetadataDisplaySection(
             Box(
                 modifier = Modifier
                     .size(height = 42.dp, width = 50.dp)
-                    .clip(RoundedCornerShape(16.dp))
+                    .clip(MeloLayout.PanelShape)
                     .background(chipColor)
                     .clickable { onClickLyrics() },
                 contentAlignment = Alignment.Center
@@ -1616,13 +1617,13 @@ private fun EfficientTimeLabels(
         ) {
             Text(
                 posStr,
-                style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
+                style = MaterialTheme.typography.bodySmall,
                 fontWeight = FontWeight.SemiBold,
                 color = textColor
             )
             Text(
                 durStr,
-                style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
+                style = MaterialTheme.typography.bodySmall,
                 fontWeight = FontWeight.SemiBold,
                 color = textColor
             )
@@ -1633,16 +1634,13 @@ private fun EfficientTimeLabels(
                 modifier = Modifier
                     .align(Alignment.Center)
                     .padding(horizontal = 58.dp),
-                shape = RoundedCornerShape(999.dp),
+                shape = MeloLayout.PillShape,
                 color = textColor.copy(alpha = 0.14f),
                 contentColor = textColor.copy(alpha = 0.96f)
             ) {
                 Text(
                     text = audioMetaLabel,
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 11.sp
-                    ),
+                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp)
@@ -1930,7 +1928,6 @@ private fun PlaceholderBox(
         modifier = modifier,
         shape = RoundedCornerShape(cornerRadius),
         color = color,
-        tonalElevation = 0.dp
     ) {}
 }
 
@@ -1945,9 +1942,8 @@ private fun AlbumPlaceholder(
         modifier = modifier
             .fillMaxWidth()
             .height(height),
-        shape = RoundedCornerShape(18.dp),
+        shape = MeloLayout.PanelShape,
         color = color,
-        tonalElevation = 0.dp
     ) {
         Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
             Icon(
@@ -2015,7 +2011,6 @@ private fun MetadataPlaceholder(
                         bottomEnd = 6.dp
                     ),
                     color = onColor,
-                    tonalElevation = 0.dp
                 ) {}
                 Surface(
                     modifier = Modifier.size(height = 42.dp, width = 50.dp),
@@ -2026,7 +2021,6 @@ private fun MetadataPlaceholder(
                         bottomEnd = 50.dp
                     ),
                     color = onColor,
-                    tonalElevation = 0.dp
                 ) {}
             }
         } else {
@@ -2167,7 +2161,6 @@ private fun ControlsPlaceholder(color: Color, onColor: Color) {
                         smoothnessAsPercentBR = 60
                     ),
                     color = color,
-                    tonalElevation = 0.dp
                 ) {}
                 PlaceholderBox(
                     modifier = Modifier

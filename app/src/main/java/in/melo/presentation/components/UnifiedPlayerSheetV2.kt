@@ -527,7 +527,6 @@ fun UnifiedPlayerSheetV2(
                     placeable.placeRelative(0, translationY)
                 }
             },
-        shadowElevation = 0.dp,
         color = Color.Transparent
     ) {
         Box(

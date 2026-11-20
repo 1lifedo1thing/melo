@@ -130,12 +130,12 @@ private fun LibraryArtworkRow(
     ) {
         if (loading) ShimmerBox(Modifier.size(artSize).clip(shape))
         else SmartImage(image, null, Modifier.size(artSize).artworkRim(shape), shape = shape, targetSize = SmartImageListTargetSize)
-        Column(Modifier.weight(1f).padding(horizontal = 12.dp), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+        Column(Modifier.weight(1f).padding(horizontal = 12.dp), verticalArrangement = Arrangement.spacedBy(MeloLayout.Space1)) {
             if (loading) {
                 ShimmerBox(Modifier.fillMaxWidth(0.7f).height(18.dp).clip(MeloLayout.ArtworkShape))
                 ShimmerBox(Modifier.fillMaxWidth(0.45f).height(14.dp).clip(MeloLayout.ArtworkShape))
             } else {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(MeloLayout.Space2)) {
                     Text(title, Modifier.weight(1f, fill = false), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     badge?.invoke()
                 }

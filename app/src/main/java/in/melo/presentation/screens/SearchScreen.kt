@@ -1,5 +1,6 @@
 package `in`.melo.presentation.screens
 
+import `in`.melo.ui.theme.MeloAlpha
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
@@ -153,7 +154,7 @@ fun SearchScreen(
             ) {
                 val inputColors = SearchBarDefaults.inputFieldColors(
                     focusedTextColor = MaterialTheme.colorScheme.onSurface,
-                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = MeloAlpha.Secondary),
                     focusedContainerColor = Color.Transparent,
                     unfocusedContainerColor = Color.Transparent,
                     cursorColor = MaterialTheme.colorScheme.primary
@@ -198,7 +199,7 @@ fun SearchScreen(
                                             modifier = Modifier
                                                 .size(48.dp)
                                                 .clip(CircleShape)
-                                                .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f))
+                                                .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = MeloAlpha.Divider))
                                         ) {
                                             Icon(
                                                 imageVector = Icons.Rounded.Close,
@@ -216,14 +217,14 @@ fun SearchScreen(
                         modifier = Modifier.meloPanel(MeloLayout.PillShape),
                         colors = SearchBarDefaults.colors(
                             containerColor = Color.Transparent,
-                            dividerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                            dividerColor = MaterialTheme.colorScheme.primary.copy(alpha = MeloAlpha.Divider),
                             inputFieldColors = inputColors
                         ),
                         content = {}
                     )
                 }
                 IconButton(
-                    modifier = Modifier.padding(bottom = 2.dp).meloPanel(CircleShape),
+                    modifier = Modifier.padding(bottom = MeloLayout.Space1).meloPanel(CircleShape),
                     colors = IconButtonDefaults.iconButtonColors(
                         containerColor = Color.Transparent,
                         contentColor = MaterialTheme.colorScheme.onSurface

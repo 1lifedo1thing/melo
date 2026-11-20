@@ -1,5 +1,6 @@
 package `in`.melo.presentation.components
 
+import `in`.melo.ui.theme.MeloAlpha
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -138,7 +139,7 @@ fun AlbumArtCollage(
                     painter = painterResource(R.drawable.rounded_music_note_24),
                     contentDescription = null,
                     modifier = Modifier.size(100.dp),
-                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = MeloAlpha.Disabled)
                 )
             }
         }

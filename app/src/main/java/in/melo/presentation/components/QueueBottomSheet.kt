@@ -1,5 +1,6 @@
 package `in`.melo.presentation.components
 
+import `in`.melo.ui.theme.MeloAlpha
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
@@ -818,7 +819,7 @@ fun QueueBottomSheet(
                             )
                         ) {
                             item("queue_top_spacer") {
-                                Spacer(modifier = Modifier.height(6.dp))
+                                Spacer(modifier = Modifier.height(MeloLayout.Space2))
                             }
 
                             // The tracks the user queued come first, apart from the rest of the list being played.
@@ -942,7 +943,7 @@ fun QueueBottomSheet(
                                 .align(Alignment.CenterEnd)
                                 .padding(
                                     top = 24.dp,
-                                    end = 14.dp,
+                                    end = MeloLayout.Space4,
                                     bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 14.dp
                                 )
                         )
@@ -1020,7 +1021,7 @@ fun QueueBottomSheet(
                         modifier = Modifier
                             .matchParentSize()
                             .zIndex(20f)
-                            .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.55f))
+                            .background(MaterialTheme.colorScheme.scrim.copy(alpha = MeloAlpha.Tertiary))
                             .clickable(
                                 interactionSource = remember { MutableInteractionSource() },
                                 indication = null
@@ -1057,7 +1058,7 @@ fun QueueBottomSheet(
                                 .wrapContentWidth(Alignment.CenterHorizontally)
                                 .padding(bottom = fabSpacing + menuSpacing),
                             horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                            verticalArrangement = Arrangement.spacedBy(MeloLayout.Space3)
                         ) {
                             if (currentSongDisplayIndex >= 0 && currentSongDisplayIndex < displaySongCount) {
                                 QueueToolbarMenuButton(
@@ -1130,7 +1131,7 @@ fun QueueBottomSheet(
                         Text(
                             text = stringResource(R.string.queue_song_removed),
                             style = MaterialTheme.typography.bodyMedium,
-                            color = colors.inverseOnSurface.copy(alpha = 0.7f),
+                            color = colors.inverseOnSurface.copy(alpha = MeloAlpha.Secondary),
                         )
                         MeloButton(
                             text = stringResource(R.string.common_undo),
@@ -1221,7 +1222,7 @@ private fun QueueToolbarMenuButton(
             modifier = Modifier
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(14.dp)
+            horizontalArrangement = Arrangement.spacedBy(MeloLayout.Space4)
         ) {
             Icon(
                 imageVector = icon,
@@ -1260,18 +1261,18 @@ private fun QueueHeaderSection(
         Box(
             modifier = Modifier
                 .align(Alignment.CenterHorizontally)
-                .padding(top = 2.dp, bottom = 14.dp)
+                .padding(top = MeloLayout.Space1, bottom = MeloLayout.Space4)
                 .width(42.dp)
                 .height(4.dp)
                 .clip(CircleShape)
-                .background(colors.onSurface.copy(alpha = 0.14f))
+                .background(colors.onSurface.copy(alpha = MeloAlpha.Divider))
         )
 
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+            verticalArrangement = Arrangement.spacedBy(MeloLayout.Space4)
         ) {
             QueueHeader(
                 queueSourceName = queueSourceName,
@@ -1336,7 +1337,7 @@ private fun QueueHeader(
         }
         QueueSourceBadge(
             queueSourceName = queueSourceName,
-            modifier = Modifier.padding(top = 6.dp)
+            modifier = Modifier.padding(top = MeloLayout.Space2)
         )
     }
 }
@@ -1350,7 +1351,7 @@ private fun QueueSourceBadge(
     Surface(
         modifier = modifier.widthIn(max = 190.dp),
         shape = CircleShape,
-        color = colors.surfaceContainerHighest.copy(alpha = 0.88f),
+        color = colors.surfaceContainerHighest.copy(alpha = MeloAlpha.Secondary),
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
@@ -1406,7 +1407,6 @@ private fun QueueControlsToolbar(
             smoothnessAsPercentBL = 60
         ),
         color = MaterialTheme.colorScheme.surfaceContainerHighest,
-        shadowElevation = 0.dp
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
@@ -1663,7 +1663,7 @@ fun SaveQueueAsPlaylistSheet(
                             )
                         }
                         HorizontalDivider(
-                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = MeloAlpha.Disabled)
                         )
                     }
                 },
@@ -1715,7 +1715,7 @@ fun SaveQueueAsPlaylistSheet(
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis,
                                         color = MaterialTheme.colorScheme.onSecondaryContainer.copy(
-                                            alpha = 0.8f
+                                            alpha = MeloAlpha.Secondary
                                         )
                                     )
                                 }
@@ -1766,7 +1766,7 @@ fun SaveQueueAsPlaylistSheet(
                                 Icon(
                                     imageVector = Icons.Rounded.Search,
                                     contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
+                                    tint = MaterialTheme.colorScheme.primary.copy(alpha = MeloAlpha.Scrim),
                                     modifier = Modifier.size(48.dp)
                                 )
                                 Text(
@@ -1793,7 +1793,7 @@ fun SaveQueueAsPlaylistSheet(
                                         color = MaterialTheme.colorScheme.surfaceContainerLowest,
                                         shape = CircleShape
                                     )
-                                    .padding(horizontal = 10.dp, vertical = 8.dp),
+                                    .padding(horizontal = MeloLayout.Space3, vertical = 8.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Checkbox(
@@ -1910,7 +1910,7 @@ fun QueuePlaylistSongItem(
     } else 0f
 
     val dismissBackgroundColor by animateColorAsState(
-        targetValue = if (isSwipeTargeted) colors.errorContainer else colors.errorContainer.copy(alpha = 0.82f),
+        targetValue = if (isSwipeTargeted) colors.errorContainer else colors.errorContainer.copy(alpha = MeloAlpha.Secondary),
         animationSpec = tween(durationMillis = 150),
         label = "dismissBackgroundColor"
     )
@@ -2038,7 +2038,7 @@ fun QueuePlaylistSongItem(
                         Text(
                             song.displayArtist, maxLines = 1, overflow = TextOverflow.Ellipsis,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = if (isCurrentSong) colors.primary.copy(alpha = 0.8f) else colors.onSurfaceVariant
+                            color = if (isCurrentSong) colors.primary.copy(alpha = MeloAlpha.Secondary) else colors.onSurfaceVariant
                         )
                     }
 
@@ -2069,7 +2069,7 @@ fun QueuePlaylistSongItem(
                             ),
                             modifier = Modifier
                                 .size(36.dp)
-                                .padding(end = 14.dp)
+                                .padding(end = MeloLayout.Space4)
                         ) {
                             Icon(
                                 imageVector = Icons.Rounded.MoreVert,

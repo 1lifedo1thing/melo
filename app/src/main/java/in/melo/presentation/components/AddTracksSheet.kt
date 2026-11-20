@@ -90,7 +90,7 @@ fun AddTracksSheet(
         loading = false
     }
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
-        Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp).navigationBarsPadding(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp).navigationBarsPadding(), verticalArrangement = Arrangement.spacedBy(MeloLayout.Space3)) {
             Text(stringResource(R.string.playlist_add_tracks_to, playlist.title), Modifier.padding(start = 8.dp),
                 style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
             OutlinedTextField(
@@ -113,7 +113,7 @@ fun AddTracksSheet(
                         Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
                             Text(track.title, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.bodyLarge)
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                SourceBadge(track.source, Modifier.padding(end = 6.dp))
+                                SourceBadge(track.source, Modifier.padding(end = MeloLayout.Space2))
                                 Text(track.subtitle, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }

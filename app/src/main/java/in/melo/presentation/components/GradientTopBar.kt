@@ -1,5 +1,6 @@
 package `in`.melo.presentation.components
 
+import `in`.melo.ui.theme.MeloAlpha
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.scaleIn
@@ -103,7 +104,7 @@ fun GenreGradientTopBar(
         scrollBehavior = scrollBehavior,
         title = {
             Text(
-                modifier = Modifier.padding(start = 6.dp),
+                modifier = Modifier.padding(start = MeloLayout.Space2),
                 text = title,
                 color = contentColor,
                 fontFamily = GoogleSansRounded
@@ -113,7 +114,7 @@ fun GenreGradientTopBar(
         modifier = Modifier.background(brush = gradientBrush),
         navigationIcon = {
             IconButton(
-                modifier = Modifier.padding(start = 10.dp),
+                modifier = Modifier.padding(start = MeloLayout.Space3),
                 onClick = onNavigationIconClick,
                 colors = IconButtonDefaults.iconButtonColors(
                     containerColor = contentColor
@@ -174,8 +175,8 @@ fun HomeGradientTopBar(
         Row(
             Modifier.align(Alignment.CenterEnd).offset(y = statusBarInset / 2).zIndex(1f)
                 .padding(end = 16.dp)
-                .background(colors.surface.copy(alpha = 0.94f), CircleShape)
-                .border(0.75.dp, colors.outlineVariant.copy(alpha = 0.65f), CircleShape),
+                .background(colors.surface.copy(alpha = 1f), CircleShape)
+                .border(0.75.dp, colors.outlineVariant.copy(alpha = MeloAlpha.Scrim), CircleShape),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             IconButton(onClick = onHistoryClick, modifier = Modifier.size(48.dp)) {
@@ -265,7 +266,7 @@ private fun HomeDialSettingsOverlay(
             val noRipple = remember { MutableInteractionSource() }
             Box(
                 Modifier.matchParentSize()
-                    .background(colors.scrim.copy(alpha = 0.34f))
+                    .background(colors.scrim.copy(alpha = MeloAlpha.Disabled))
                     .clickable(interactionSource = noRipple, indication = null, onClick = onDismiss),
             )
             AnimatedVisibility(
@@ -304,8 +305,8 @@ private fun HomeDialSettingsOverlay(
                     ) {
                         content()
                         HorizontalDivider(
-                            Modifier.padding(horizontal = 16.dp, vertical = 2.dp),
-                            color = colors.onSurface.copy(alpha = 0.10f),
+                            Modifier.padding(horizontal = 16.dp, vertical = MeloLayout.Space1),
+                            color = colors.onSurface.copy(alpha = MeloAlpha.Divider),
                         )
                         if (onReorderPinsClick != null) OverlayPanelAction(
                             label = stringResource(R.string.home_dial_reorder_pins),
@@ -330,7 +331,7 @@ private fun OverlayPanelAction(label: String, icon: @Composable () -> Unit, onCl
         Box(Modifier.size(30.dp), contentAlignment = Alignment.Center) { icon() }
         Text(
             text = label,
-            modifier = Modifier.weight(1f).padding(start = 10.dp),
+            modifier = Modifier.weight(1f).padding(start = MeloLayout.Space3),
             textAlign = TextAlign.Start,
             maxLines = 1,
         )

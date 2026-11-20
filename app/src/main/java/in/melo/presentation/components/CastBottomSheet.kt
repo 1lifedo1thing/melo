@@ -1,5 +1,6 @@
 package `in`.melo.presentation.components
 
+import `in`.melo.ui.theme.MeloAlpha
 import android.Manifest
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
@@ -352,7 +353,7 @@ fun CastBottomSheet(
         ) {
             Box(
                 modifier = Modifier
-                    .padding(bottom = 18.dp)
+                    .padding(bottom = MeloLayout.Space4)
             ) {
                 if (missingPermissions.isNotEmpty()) {
                     CastPermissionStep(
@@ -460,7 +461,7 @@ private fun CastPermissionStep(
             .fillMaxWidth()
             .navigationBarsPadding()
             .padding(horizontal = 20.dp, vertical = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(18.dp)
+        verticalArrangement = Arrangement.spacedBy(MeloLayout.Space4)
     ) {
         Text(
             text = stringResource(R.string.cast_perm_title),
@@ -480,7 +481,7 @@ private fun CastPermissionStep(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp)
+                verticalArrangement = Arrangement.spacedBy(MeloLayout.Space4)
             ) {
                 PermissionHighlight(
                     icon = Icons.Rounded.Bluetooth,
@@ -525,7 +526,7 @@ private fun PermissionHighlight(
             modifier = Modifier
                 .size(42.dp)
                 .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = MeloAlpha.Divider)),
             contentAlignment = Alignment.Center
         ) {
             Icon(
@@ -597,7 +598,7 @@ private fun CastSheetContent(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+            verticalArrangement = Arrangement.spacedBy(MeloLayout.Space3)
         ) {
             Box(
                 modifier = Modifier.background(
@@ -606,7 +607,7 @@ private fun CastSheetContent(
                 )
             ) {
                 Text(
-                    modifier = Modifier.padding(start = 6.dp, end = 8.dp),
+                    modifier = Modifier.padding(start = MeloLayout.Space2, end = 8.dp),
                     text = stringResource(R.string.cast_title_connect),
                     style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.SemiBold)
                 )
@@ -681,7 +682,7 @@ private fun CastSheetContent(
                 .padding(horizontal = 16.dp, vertical = 8.dp)
                 .clip(CircleShape)
                 .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                .padding(5.dp),
+                .padding(MeloLayout.Space2),
             containerColor = Color.Transparent,
             divider = {},
             indicator = {}
@@ -773,7 +774,7 @@ private fun CastControlsTabContent(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(MeloLayout.Space1)) {
                     Text(
                         text = stringResource(R.string.cast_connectivity),
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
@@ -848,7 +849,7 @@ private fun CastDevicesTabContent(
                             .fillMaxWidth()
                             .clip(MeloLayout.PanelShape),
                         color = colors.primary,
-                        trackColor = colors.primary.copy(alpha = 0.12f)
+                        trackColor = colors.primary.copy(alpha = MeloAlpha.Divider)
                     )
                 }
             }
@@ -1101,7 +1102,7 @@ private fun CastSheetContainer(
             shape = MeloLayout.SheetShape,
             color = MaterialTheme.colorScheme.surfaceContainerLow
         ) {
-            Box(modifier = Modifier.padding(bottom = 18.dp)) {
+            Box(modifier = Modifier.padding(bottom = MeloLayout.Space4)) {
                 content()
             }
         }
@@ -1165,7 +1166,7 @@ private fun CollapsibleCastTopBar(
 //                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
 //                modifier = Modifier
 //                    .align(Alignment.Center)
-//                    .padding(horizontal = 10.dp, vertical = 6.dp)
+//                    .padding(horizontal = MeloLayout.Space3, vertical = MeloLayout.Space2)
 //                    .graphicsLayer { alpha = (collapsedTitleAlpha) },
 //                maxLines = 1
 //            )
@@ -1179,7 +1180,7 @@ private fun CollapsibleCastTopBar(
                     alpha = contentAlpha
                     translationY = with(density) { translationYOffset.toPx() }
                 },
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+            verticalArrangement = Arrangement.spacedBy(MeloLayout.Space3)
         ) {
             Box(
                 modifier = Modifier
@@ -1234,7 +1235,7 @@ private fun DeviceSectionHeader(
     ) {
         Column(
             modifier = Modifier.padding(start = 4.dp, end = 4.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
+            verticalArrangement = Arrangement.spacedBy(MeloLayout.Space2)
         ) {
             Text(
                 text = stringResource(R.string.cast_nearby_devices),
@@ -1300,7 +1301,7 @@ private fun ActiveDeviceHero(
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(14.dp),
+                horizontalArrangement = Arrangement.spacedBy(MeloLayout.Space4),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(IntrinsicSize.Min)
@@ -1326,7 +1327,7 @@ private fun ActiveDeviceHero(
                             CircularProgressIndicator(
                                 modifier = Modifier.size(34.dp),
                                 color = MaterialTheme.colorScheme.onTertiaryContainer,
-                                trackColor = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.2f),
+                                trackColor = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = MeloAlpha.Divider),
                                 strokeWidth = 4.dp,
                                 strokeCap = StrokeCap.Round
                             )
@@ -1423,7 +1424,7 @@ private fun ActiveDeviceHero(
                     valueRange = device.volumeRange,
                     colors = SliderDefaults.colors(
                         activeTrackColor = MaterialTheme.colorScheme.tertiary,
-                        inactiveTrackColor = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.2f),
+                        inactiveTrackColor = MaterialTheme.colorScheme.tertiary.copy(alpha = MeloAlpha.Divider),
                         thumbColor = MaterialTheme.colorScheme.onTertiary
                     ),
                     modifier = Modifier.fillMaxWidth()
@@ -1557,7 +1558,7 @@ private fun CastDeviceRow(
                             scaleY = backgroundScale
                         )
                         .background(
-                            color = onContainer.copy(alpha = 0.12f),
+                            color = onContainer.copy(alpha = MeloAlpha.Divider),
                             shape = if (isActiveDevice) scallopShape else CircleShape
                         )
                 )
@@ -1680,10 +1681,10 @@ private fun BadgeChip(
     Row(
         modifier = Modifier
             .clip(MeloLayout.PillShape)
-            .background(contentColor.copy(alpha = 0.08f))
-            .padding(horizontal = 10.dp, vertical = 6.dp),
+            .background(contentColor.copy(alpha = MeloAlpha.Divider))
+            .padding(horizontal = MeloLayout.Space3, vertical = MeloLayout.Space2),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
+        horizontalArrangement = Arrangement.spacedBy(MeloLayout.Space2)
     ) {
         when {
             icon != null -> Icon(painterResource(id = icon), contentDescription = null, tint = contentColor, modifier = Modifier.size(16.dp))
@@ -1767,7 +1768,7 @@ private fun QuickSettingTile(
 
     // Colores dinámicos para el ICONO (Círculo interno)
     val iconBoxColor by animateColorAsState(
-        targetValue = if (isActive) MaterialTheme.colorScheme.primary else contentColor.copy(alpha = 0.1f),
+        targetValue = if (isActive) MaterialTheme.colorScheme.primary else contentColor.copy(alpha = MeloAlpha.Divider),
         label = "iconBoxColor"
     )
     val iconTint by animateColorAsState(
@@ -1820,7 +1821,7 @@ private fun QuickSettingTile(
                     style = MaterialTheme.typography.bodySmall,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    color = contentColor.copy(alpha = 0.7f)
+                    color = contentColor.copy(alpha = MeloAlpha.Secondary)
                 )
             }
         }
@@ -1861,7 +1862,7 @@ private fun ScanningIndicator(isActive: Boolean) {
     Box(
         modifier = Modifier
             .size(18.dp)
-            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f), CircleShape),
+            .background(MaterialTheme.colorScheme.primary.copy(alpha = MeloAlpha.Divider), CircleShape),
         contentAlignment = Alignment.Center
     ) {
         Canvas(modifier = Modifier.size(18.dp)) {

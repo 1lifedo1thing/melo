@@ -1,5 +1,6 @@
 package `in`.melo.presentation.components
 
+import `in`.melo.ui.theme.MeloAlpha
 import androidx.compose.animation.animateColor
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
@@ -106,14 +107,14 @@ fun LibrarySortBottomSheet(
                 .fillMaxWidth()
                 .padding(horizontal = 24.dp, vertical = 0.dp)
                 .selectableGroup(),
-            verticalArrangement = Arrangement.spacedBy(2.dp)
+            verticalArrangement = Arrangement.spacedBy(MeloLayout.Space1)
         ) {
             Text(
                 text = title,
                 style = MaterialTheme.typography.headlineMedium,
                 fontFamily = GoogleSansRounded,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(start = 2.dp, top = 0.dp, bottom = 16.dp)
+                modifier = Modifier.padding(start = MeloLayout.Space1, top = 0.dp, bottom = 16.dp)
             )
 
             // Cast to nullable list to handle potential runtime nulls, then filter
@@ -207,7 +208,7 @@ fun LibrarySortBottomSheet(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(start = 20.dp, end = 14.dp, top = 14.dp, bottom = 14.dp),
+                                .padding(start = 20.dp, end = MeloLayout.Space4, top = MeloLayout.Space4, bottom = MeloLayout.Space4),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
@@ -232,7 +233,7 @@ fun LibrarySortBottomSheet(
                     style = MaterialTheme.typography.headlineSmall,
                     fontFamily = GoogleSansRounded,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(start = 2.dp, top = 8.dp, bottom = 8.dp)
+                    modifier = Modifier.padding(start = MeloLayout.Space1, top = 8.dp, bottom = 8.dp)
                 )
 
                 if (viewToggleContent != null) {
@@ -255,7 +256,7 @@ fun LibrarySortBottomSheet(
                     style = MaterialTheme.typography.headlineSmall,
                     fontFamily = GoogleSansRounded,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(start = 2.dp, top = 8.dp, bottom = 8.dp)
+                    modifier = Modifier.padding(start = MeloLayout.Space1, top = 8.dp, bottom = 8.dp)
                 )
                 sourceToggleContent()
             }
@@ -351,9 +352,9 @@ private fun LibrarySheetSortDirectionCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 14.dp),
+                .padding(horizontal = MeloLayout.Space4, vertical = MeloLayout.Space4),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(14.dp)
+            horizontalArrangement = Arrangement.spacedBy(MeloLayout.Space4)
         ) {
             Box(
                 modifier = Modifier
@@ -377,7 +378,7 @@ private fun LibrarySheetSortDirectionCard(
                 Text(
                     text = stringResource(R.string.library_sort_order),
                     style = MaterialTheme.typography.labelLarge,
-                    color = contentColor.copy(alpha = 0.82f)
+                    color = contentColor.copy(alpha = MeloAlpha.Secondary)
                 )
                 Text(
                     text = label,
@@ -432,7 +433,7 @@ internal fun LibrarySheetToggleCard(
                 text = label,
                 modifier = Modifier
                     .weight(1f)
-                    .padding(start = 6.dp, end = 8.dp),
+                    .padding(start = MeloLayout.Space2, end = 8.dp),
                 style = MaterialTheme.typography.bodyLarge,
                 color = if (checked) MaterialTheme.colorScheme.onTertiary else MaterialTheme.colorScheme.onSurface
             )
@@ -480,14 +481,14 @@ fun PlaylistSortBottomSheet(
     ) {
         Column(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp).selectableGroup(),
-            verticalArrangement = Arrangement.spacedBy(2.dp)
+            verticalArrangement = Arrangement.spacedBy(MeloLayout.Space1)
         ) {
             Text(
                 text = stringResource(R.string.playlist_sort),
                 style = MaterialTheme.typography.headlineMedium,
                 fontFamily = GoogleSansRounded,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(start = 2.dp, bottom = 16.dp)
+                modifier = Modifier.padding(start = MeloLayout.Space1, bottom = 16.dp)
             )
             Column(
                 modifier = Modifier.clip(MeloLayout.PanelShape),
@@ -504,7 +505,7 @@ fun PlaylistSortBottomSheet(
                             .semantics { this.selected = isSelected }
                     ) {
                         Row(
-                            modifier = Modifier.fillMaxWidth().padding(start = 20.dp, end = 14.dp, top = 14.dp, bottom = 14.dp),
+                            modifier = Modifier.fillMaxWidth().padding(start = 20.dp, end = MeloLayout.Space4, top = MeloLayout.Space4, bottom = MeloLayout.Space4),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {

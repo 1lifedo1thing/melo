@@ -2,6 +2,8 @@
 
 package `in`.melo.presentation.components
 
+import `in`.melo.ui.theme.MeloAlpha
+import `in`.melo.ui.theme.MeloLayout
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -89,7 +91,7 @@ internal fun MiniPlayerContentInternal(
         modifier = modifier
             .fillMaxWidth()
             .height(MiniPlayerHeight)
-            .padding(start = 10.dp, end = 12.dp),
+            .padding(start = MeloLayout.Space3, end = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         val albumArtModel = song.albumArtUriString?.takeIf { it.isNotBlank() }
@@ -120,17 +122,15 @@ internal fun MiniPlayerContentInternal(
             verticalArrangement = Arrangement.Center
         ) {
             val titleStyle = MaterialTheme.typography.titleSmall.copy(
-                fontSize = 15.sp,
                 fontWeight = FontWeight.SemiBold,
                 letterSpacing = (-0.2).sp,
                 fontFamily = GoogleSansRounded,
                 color = LocalMaterialTheme.current.onPrimaryContainer
             )
             val artistStyle = MaterialTheme.typography.bodySmall.copy(
-                fontSize = 13.sp,
                 letterSpacing = 0.sp,
                 fontFamily = GoogleSansRounded,
-                color = LocalMaterialTheme.current.onPrimaryContainer.copy(alpha = 0.7f)
+                color = LocalMaterialTheme.current.onPrimaryContainer.copy(alpha = MeloAlpha.Secondary)
             )
 
             AutoScrollingText(

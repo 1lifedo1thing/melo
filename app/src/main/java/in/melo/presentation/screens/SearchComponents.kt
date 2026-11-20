@@ -359,7 +359,7 @@ fun SearchResultHistoryList(
             items(items, key = { "history_${it.kind}_${it.id}" }, contentType = { "search_history" }) { item ->
                 Row(
                 modifier = Modifier.fillMaxWidth().clip(MeloLayout.CardShape)
-                        .clickable { onOpen(item) }.padding(horizontal = 8.dp, vertical = 6.dp),
+                        .clickable { onOpen(item) }.padding(horizontal = 8.dp, vertical = MeloLayout.Space2),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     `in`.melo.presentation.components.SmartImage(
@@ -384,7 +384,7 @@ fun SearchResultHistoryList(
                                 else -> `in`.melo.data.musicSourceOf(item.id)
                             }
                             if (source != null && `in`.melo.presentation.components.LocalSourceBadges.current) {
-                                `in`.melo.presentation.components.SourceBadge(source, Modifier.padding(end = 6.dp),
+                                `in`.melo.presentation.components.SourceBadge(source, Modifier.padding(end = MeloLayout.Space2),
                                     MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                             Text(listOfNotNull(kind, detail).joinToString(" • "), style = MaterialTheme.typography.bodySmall,

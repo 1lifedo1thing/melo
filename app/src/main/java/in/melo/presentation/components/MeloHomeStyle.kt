@@ -1,5 +1,6 @@
 package `in`.melo.presentation.components
 
+import `in`.melo.ui.theme.MeloAlpha
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Canvas
@@ -100,7 +101,7 @@ fun MoodArtwork(mood: HomeMood, modifier: Modifier = Modifier) {
                 }
                 drawPath(path, ink.copy(alpha = 1f - index * 0.14f), style = Stroke(2.dp.toPx()))
             }
-            else -> repeat(4) { index -> drawCircle(ink.copy(alpha = 0.8f - index * 0.13f), r * (0.3f + index * 0.24f), Offset(cx, cy), style = Stroke(2.dp.toPx())) }
+            else -> repeat(4) { index -> drawCircle(ink.copy(alpha = MeloAlpha.Secondary - index * 0.13f), r * (0.3f + index * 0.24f), Offset(cx, cy), style = Stroke(2.dp.toPx())) }
         }
     }
 }

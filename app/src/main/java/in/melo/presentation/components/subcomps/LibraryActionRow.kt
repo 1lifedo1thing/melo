@@ -151,7 +151,7 @@ fun LibraryActionRow(
                             contentColor = buttonContentColor
                         ),
                         elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp, pressedElevation = 6.dp),
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = MeloLayout.Space3),
                         modifier = Modifier.height(genHeight)
                     ) {
                         val icon = if (isPlaylistTab) Icons.AutoMirrored.Rounded.PlaylistAdd else Icons.Rounded.Shuffle
@@ -224,8 +224,8 @@ fun LibraryActionRow(
                                     pressedElevation = 6.dp
                                 ),
                                 contentPadding = PaddingValues(
-                                    horizontal = 14.dp,
-                                    vertical = 10.dp
+                                    horizontal = MeloLayout.Space4,
+                                    vertical = MeloLayout.Space3
                                 ),
                                 modifier = Modifier.height(genHeight)
                             ) {

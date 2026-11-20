@@ -1,5 +1,7 @@
 package `in`.melo.presentation.components
 
+import `in`.melo.ui.theme.MeloAlpha
+import `in`.melo.ui.theme.MeloLayout
 import `in`.melo.presentation.navigation.navigateToTopLevelSafely
 
 import android.os.SystemClock
@@ -119,14 +121,14 @@ private fun PlayerInternalNavigationItemsRow(
             .padding(top = 0.dp, bottom = innerRowPadding, start = 12.dp, end = 12.dp)
     } else {
         modifier
-            .padding(start = 10.dp, end = 10.dp, bottom = innerRowPadding)
+            .padding(start = MeloLayout.Space3, end = MeloLayout.Space3, bottom = innerRowPadding)
             .fillMaxWidth()
     }
     Row(
         modifier = rowModifier
             .padding(horizontal = 8.dp, vertical = 4.dp)
-            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.97f), CircleShape)
-            .border(0.75.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f), CircleShape)
+            .background(MaterialTheme.colorScheme.surface.copy(alpha = 1f), CircleShape)
+            .border(0.75.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = MeloAlpha.Secondary), CircleShape)
             .selectableGroup(),
         horizontalArrangement = Arrangement.SpaceAround,
         verticalAlignment = Alignment.CenterVertically

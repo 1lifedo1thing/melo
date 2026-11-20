@@ -1,5 +1,7 @@
 package `in`.melo.presentation.components
 
+import `in`.melo.ui.theme.MeloAlpha
+import `in`.melo.ui.theme.MeloLayout
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -39,9 +41,9 @@ fun TrackDownloadIndicator(trackId: String, title: String) {
         entry.failed -> Icon(Icons.Outlined.ErrorOutline, label, modifier, tint = MaterialTheme.colorScheme.error)
         entry.paused || (!entry.queued && entry.percent > 0f) -> CircularProgressIndicator(
             progress = { entry.percent / 100f }, modifier = modifier.semantics { contentDescription = label },
-            strokeWidth = 2.dp, trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.25f),
+            strokeWidth = 2.dp, trackColor = MaterialTheme.colorScheme.primary.copy(alpha = MeloAlpha.Divider),
         )
         else -> CircularProgressIndicator(modifier = modifier.semantics { contentDescription = label }, strokeWidth = 2.dp)
     }
-    Spacer(Modifier.width(6.dp))
+    Spacer(Modifier.width(MeloLayout.Space2))
 }

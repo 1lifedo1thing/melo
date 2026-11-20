@@ -21,7 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
 import `in`.melo.R
-import androidx.compose.ui.unit.sp
+import `in`.melo.ui.theme.MeloLayout
 
 @Composable
 fun LyricsSyncControls(
@@ -36,14 +36,14 @@ fun LyricsSyncControls(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .height(52.dp)
+            .height(MeloLayout.ButtonLarge)
             .background(
                 color = backgroundColor,
                 shape = CircleShape
             )
             .padding(4.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
+        horizontalArrangement = Arrangement.spacedBy(MeloLayout.Space2)
     ) {
         // -0.5s
         SyncButton(
@@ -73,7 +73,6 @@ fun LyricsSyncControls(
             containerColor = if (offsetMillis != 0) accentColor else backgroundColor,
             contentColor = if (offsetMillis != 0) onAccentColor else onBackgroundColor,
             enabled = offsetMillis != 0,
-            fontSize = 12.sp
         )
         // +0.1s
         SyncButton(
@@ -102,7 +101,6 @@ private fun androidx.compose.foundation.layout.RowScope.SyncButton(
     containerColor: Color,
     contentColor: Color,
     enabled: Boolean = true,
-    fontSize: androidx.compose.ui.unit.TextUnit = 11.sp
 ) {
     FilledTonalButton(
         onClick = onClick,
@@ -122,7 +120,6 @@ private fun androidx.compose.foundation.layout.RowScope.SyncButton(
         Text(
             text = text,
             style = MaterialTheme.typography.labelSmall,
-            fontSize = fontSize,
             fontWeight = FontWeight.Bold,
             maxLines = 1
         )

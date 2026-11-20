@@ -60,7 +60,7 @@ fun LocalBadge(modifier: Modifier = Modifier) {
     ) {
         Text(
             stringResource(R.string.badge_local),
-            modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp),
+            modifier = Modifier.padding(horizontal = MeloLayout.Space2, vertical = MeloLayout.Space1),
             style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.Bold,
         )
@@ -129,10 +129,10 @@ fun AddToLocalPlaylistSheet(item: Music, ui: PlayerViewModel, onDismiss: () -> U
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
             )
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(MeloLayout.Space2)) {
                 item(key = "new") {
                     Row(
-                        Modifier.fillMaxWidth().clip(MeloLayout.PanelShape).clickable { creating = true }.padding(10.dp),
+                        Modifier.fillMaxWidth().clip(MeloLayout.PanelShape).clickable { creating = true }.padding(MeloLayout.Space3),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Icon(Icons.Rounded.Add, null, Modifier.size(44.dp).padding(8.dp))
@@ -151,7 +151,7 @@ fun AddToLocalPlaylistSheet(item: Music, ui: PlayerViewModel, onDismiss: () -> U
                             catch (failure: Exception) { ui.model.showMessage(failure.message.orEmpty()) }
                             finally { adding = false }
                         }
-                    }.padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                    }.padding(MeloLayout.Space3), verticalAlignment = Alignment.CenterVertically) {
                         SmartImage(model = playlist.imageUrl, contentDescription = null, shape = MeloLayout.CardShape,
                             targetSize = SmartImageCompactListTargetSize, modifier = Modifier.size(44.dp))
                         Text(playlist.title, Modifier.weight(1f).padding(horizontal = 12.dp), maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -169,7 +169,7 @@ fun AddToLocalPlaylistSheet(item: Music, ui: PlayerViewModel, onDismiss: () -> U
                             catch (failure: Exception) { ui.model.showMessage(failure.message.orEmpty()) }
                             finally { adding = false }
                         }
-                    }.padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                    }.padding(MeloLayout.Space3), verticalAlignment = Alignment.CenterVertically) {
                         SmartImage(model = playlist.imageUrl, contentDescription = null, shape = MeloLayout.CardShape,
                             targetSize = SmartImageCompactListTargetSize, modifier = Modifier.size(44.dp))
                         Text(playlist.title, Modifier.weight(1f).padding(horizontal = 12.dp), maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -182,7 +182,7 @@ fun AddToLocalPlaylistSheet(item: Music, ui: PlayerViewModel, onDismiss: () -> U
                             .fillMaxWidth()
                             .clip(MeloLayout.PanelShape)
                             .clickable { ui.addToLocalPlaylist(playlist.id, item); onDismiss() }
-                            .padding(10.dp),
+                            .padding(MeloLayout.Space3),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         SmartImage(

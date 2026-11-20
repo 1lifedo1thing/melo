@@ -41,6 +41,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import `in`.melo.R
+import `in`.melo.ui.theme.MeloLayout
 import `in`.melo.data.model.Lyrics
 import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material3.HorizontalDivider
@@ -121,7 +122,7 @@ fun LyricsFloatingToolbar(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             ToggleSegmentButton(
-                modifier = Modifier.weight(1f).height(50.dp),
+                modifier = Modifier.weight(1f).height(MeloLayout.ButtonMedium),
                 active = showSyncedLyrics,
                 enabled = hasSyncedLyrics,
                 activeColor = accentColor,
@@ -136,7 +137,7 @@ fun LyricsFloatingToolbar(
             )
 
             ToggleSegmentButton(
-                modifier = Modifier.weight(1f).height(50.dp),
+                modifier = Modifier.weight(1f).height(MeloLayout.ButtonMedium),
                 active = !showSyncedLyrics,
                 enabled = true,
                 activeColor = accentColor,

@@ -113,7 +113,7 @@ fun TimerOptionsBottomSheet(
     ) {
         Column(
             modifier = Modifier
-                .padding(horizontal = 18.dp, vertical = 4.dp)
+                .padding(horizontal = MeloLayout.Space4, vertical = 4.dp)
                 .fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -184,7 +184,7 @@ fun TimerOptionsBottomSheet(
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 14.dp, vertical = 12.dp)
+                            .padding(horizontal = MeloLayout.Space4, vertical = 12.dp)
                     )
                 }
                 Spacer(modifier = Modifier.height(4.dp))
@@ -246,7 +246,7 @@ fun TimerOptionsBottomSheet(
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 14.dp, vertical = 12.dp)
+                            .padding(horizontal = MeloLayout.Space4, vertical = 12.dp)
                     )
                 }
             }

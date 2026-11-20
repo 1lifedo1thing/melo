@@ -1,5 +1,6 @@
 package `in`.melo.presentation.components.player
 
+import `in`.melo.ui.theme.MeloAlpha
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -95,7 +96,7 @@ internal fun PlayerArtistPickerBottomSheet(
         sheetState = sheetState,
         dragHandle = {
             BottomSheetDefaults.DragHandle(
-                color = colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                color = colorScheme.onSurfaceVariant.copy(alpha = MeloAlpha.Disabled)
             )
         },
         containerColor = colorScheme.surfaceContainerHigh,
@@ -168,11 +169,11 @@ private fun PlayerArtistShortcutCard(
         colorScheme.onSurfaceVariant
     }
     val avatarBackground = if (isPrimary) {
-        colorScheme.onSecondaryContainer.copy(alpha = 0.12f)
+        colorScheme.onSecondaryContainer.copy(alpha = MeloAlpha.Divider)
     } else {
         colorScheme.surfaceContainerHighest
     }
-    val trailingContainerColor = contentColor.copy(alpha = 0.12f)
+    val trailingContainerColor = contentColor.copy(alpha = MeloAlpha.Divider)
     val avatarSize = 52.dp
 
     Surface(
@@ -185,9 +186,9 @@ private fun PlayerArtistShortcutCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 14.dp),
+                .padding(horizontal = MeloLayout.Space4, vertical = MeloLayout.Space4),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(14.dp)
+            horizontalArrangement = Arrangement.spacedBy(MeloLayout.Space4)
         ) {
             Box(
                 modifier = Modifier
@@ -211,7 +212,7 @@ private fun PlayerArtistShortcutCard(
 
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
+                verticalArrangement = Arrangement.spacedBy(MeloLayout.Space2)
             ) {
                 Text(
                     text = artist.name,
@@ -237,7 +238,7 @@ private fun PlayerArtistShortcutCard(
                         ),
                         style = MaterialTheme.typography.labelMedium,
                         color = labelContentColor,
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                        modifier = Modifier.padding(horizontal = MeloLayout.Space3, vertical = MeloLayout.Space2)
                     )
                 }
             }

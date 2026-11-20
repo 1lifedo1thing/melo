@@ -1,5 +1,6 @@
 package `in`.melo.presentation.components
 
+import `in`.melo.ui.theme.MeloAlpha
 import android.widget.Toast
 import `in`.melo.data.model.Song
 import `in`.melo.data.model.Lyrics
@@ -735,7 +736,7 @@ fun LyricsSheet(
                             .widthIn(max = 340.dp)
                             .wrapContentWidth()
                             .padding(
-                                top = 4.dp, bottom = 24.dp, start = 18.dp, end = 18.dp
+                                top = 4.dp, bottom = 24.dp, start = MeloLayout.Space4, end = MeloLayout.Space4
                             )
                             .background(
                                 color = backgroundColor,
@@ -774,7 +775,7 @@ fun LyricsSheet(
                                             )
                                             Spacer(modifier = Modifier.height(8.dp))
                                             LinearWavyProgressIndicator(
-                                                trackColor = accentColor.copy(alpha = 0.4f),
+                                                trackColor = accentColor.copy(alpha = MeloAlpha.Disabled),
                                                 color = accentColor,
                                                 modifier = Modifier.width(100.dp)
                                             )
@@ -1389,7 +1390,7 @@ fun SyncedLyricsList(
                         BubblesLine(
                             positionFlow = playbackPositionFlow,
                             time = line.time,
-                            color = LocalContentColor.current.copy(alpha = 0.6f),
+                            color = LocalContentColor.current.copy(alpha = MeloAlpha.Scrim),
                             nextTime = nextTime,
                             modifier = parallaxModifier
                                 .fillMaxWidth()
@@ -1449,7 +1450,7 @@ fun LyricLineRow(
     val isCurrentLine by remember(position, line.time, lineEndTime) {
         derivedStateOf { position in line.time.toLong()..<lineEndTime }
     }
-    val unhighlightedColor = LocalContentColor.current.copy(alpha = 0.45f)
+    val unhighlightedColor = LocalContentColor.current.copy(alpha = MeloAlpha.Disabled)
     val lineColor by animateColorAsState(
         targetValue = if (isCurrentLine) accentColor else unhighlightedColor,
         animationSpec = if (useAnimatedLyrics) spring(
@@ -1572,7 +1573,7 @@ fun LyricLineRow(
                 .fillMaxWidth()
                 .clip(MeloLayout.CardShape)
                 .clickable { onClick() }
-                .padding(vertical = verticalPadding, horizontal = 2.dp),
+                .padding(vertical = verticalPadding, horizontal = MeloLayout.Space1),
             horizontalAlignment = horizontalAlignment
         ) {
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = boxAlignment) {
@@ -1609,7 +1610,7 @@ fun LyricLineRow(
                     style = secondaryStyle,
                     color = translationColor,
                     textAlign = textAlign,
-                    modifier = Modifier.padding(top = 2.dp)
+                    modifier = Modifier.padding(top = MeloLayout.Space1)
                 )
             }
         }
@@ -1630,15 +1631,15 @@ fun LyricLineRow(
                 .fillMaxWidth()
                 .clip(MeloLayout.CardShape)
                 .clickable { onClick() }
-                .padding(vertical = verticalPadding, horizontal = 2.dp),
+                .padding(vertical = verticalPadding, horizontal = MeloLayout.Space1),
             horizontalAlignment = horizontalAlignment
         ) {
             FlowRow(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = when (lyricsAlignment) {
-                    "center" -> Arrangement.spacedBy(3.dp, Alignment.CenterHorizontally)
-                    "right" -> Arrangement.spacedBy(3.dp, Alignment.End)
-                    else -> Arrangement.spacedBy(3.dp, Alignment.Start)
+                    "center" -> Arrangement.spacedBy(MeloLayout.Space1, Alignment.CenterHorizontally)
+                    "right" -> Arrangement.spacedBy(MeloLayout.Space1, Alignment.End)
+                    else -> Arrangement.spacedBy(MeloLayout.Space1, Alignment.Start)
                 },
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
@@ -1675,7 +1676,7 @@ fun LyricLineRow(
                     style = secondaryStyle,
                     color = translationColor,
                     textAlign = textAlign,
-                    modifier = Modifier.padding(top = 2.dp)
+                    modifier = Modifier.padding(top = MeloLayout.Space1)
                 )
             }
         }
@@ -1803,11 +1804,11 @@ fun PlainLyricsLine(
             fontWeight = FontWeight.Normal
         )
     }
-    val translationColor = LocalContentColor.current.copy(alpha = 0.45f)
+    val translationColor = LocalContentColor.current.copy(alpha = MeloAlpha.Disabled)
 
     Column(modifier = modifier, horizontalAlignment = horizontalAlignment) {
         if (primaryText.isNotBlank()) {
-            Text(text = primaryText, style = style, color = LocalContentColor.current.copy(alpha = 0.7f), textAlign = textAlign)
+            Text(text = primaryText, style = style, color = LocalContentColor.current.copy(alpha = MeloAlpha.Secondary), textAlign = textAlign)
 
             if (showRomanization && romanizationText.isNotBlank()) {
                 Text(
@@ -2055,7 +2056,7 @@ private fun LyricsTrackInfo(
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
+        horizontalArrangement = Arrangement.spacedBy(MeloLayout.Space2)
     ) {
         SmartImage(
             model = song.albumArtUriString ?: R.drawable.rounded_album_24,
@@ -2063,7 +2064,7 @@ private fun LyricsTrackInfo(
             contentDescription = "Cover Art",
             modifier = Modifier
                 .size(66.dp)
-                .padding(6.dp)
+                .padding(MeloLayout.Space2)
                 .graphicsLayer {
                     rotationZ = currentRotation.value % 360f
                 }
@@ -2074,8 +2075,8 @@ private fun LyricsTrackInfo(
         Column(
             modifier = Modifier
                 .weight(1f, fill = false) // Allow shrinking if content is small
-                .padding(vertical = 6.dp)
-                .padding(end = 6.dp),
+                .padding(vertical = MeloLayout.Space2)
+                .padding(end = MeloLayout.Space2),
             verticalArrangement = Arrangement.Center
         ) {
             Text(
@@ -2091,7 +2092,7 @@ private fun LyricsTrackInfo(
             Text(
                 text = song.displayArtist,
                 style = MaterialTheme.typography.bodyMedium.copy(
-                    color = contentColor.copy(alpha = 0.7f),
+                    color = contentColor.copy(alpha = MeloAlpha.Secondary),
                     //textGeometricTransform = TextGeometricTransform(scaleX = (0.9f)),
                 ),
                 maxLines = 1,
@@ -2101,7 +2102,7 @@ private fun LyricsTrackInfo(
 
         PlayingEqIcon(
             modifier = Modifier
-                .padding(start = 8.dp, end = 18.dp)
+                .padding(start = 8.dp, end = MeloLayout.Space4)
                 .size(width = 18.dp, height = 16.dp),
             color = contentColor,
             isPlaying = isPlaying

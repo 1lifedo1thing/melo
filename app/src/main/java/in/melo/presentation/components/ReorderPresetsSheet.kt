@@ -1,5 +1,7 @@
 package `in`.melo.presentation.components
 
+import `in`.melo.ui.theme.MeloAlpha
+import `in`.melo.ui.theme.MeloLayout
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.MutableTransitionState
@@ -186,8 +188,7 @@ fun ReorderPresetsSheet(
                                 Text(
                                     text = stringResource(R.string.equalizer_manage_presets_title),
                                     fontFamily = GoogleSansRounded,
-                                    style = MaterialTheme.typography.titleMedium.copy(
-                                        fontSize = 22.sp,
+                                    style = MaterialTheme.typography.titleLarge.copy(
                                         textGeometricTransform = TextGeometricTransform(scaleX = 1.2f),
                                     ),
                                     color = MaterialTheme.colorScheme.onSurface,
@@ -195,7 +196,7 @@ fun ReorderPresetsSheet(
                             },
                             navigationIcon = {
                                 FilledIconButton(
-                                    modifier = Modifier.padding(start = 6.dp),
+                                    modifier = Modifier.padding(start = MeloLayout.Space2),
                                     onClick = onDismiss,
                                     colors = IconButtonDefaults.filledIconButtonColors(
                                         containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
@@ -210,10 +211,10 @@ fun ReorderPresetsSheet(
                             },
                             actions = {
                                 FilledIconButton(
-                                    modifier = Modifier.padding(end = 6.dp),
+                                    modifier = Modifier.padding(end = MeloLayout.Space2),
                                     onClick = { showResetDialog = true },
                                     colors = IconButtonDefaults.filledIconButtonColors(
-                                        containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.6f),
+                                        containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = MeloAlpha.Scrim),
                                         contentColor = MaterialTheme.colorScheme.error
                                     )
                                 ) {
@@ -245,7 +246,7 @@ fun ReorderPresetsSheet(
                                 contentDescription = stringResource(R.string.common_done),
                                 tint = MaterialTheme.colorScheme.onPrimaryContainer
                             )
-                            Spacer(modifier = Modifier.width(10.dp))
+                            Spacer(modifier = Modifier.width(MeloLayout.Space3))
                             Text(text = stringResource(R.string.common_done))
                         }
                     },
@@ -263,7 +264,7 @@ fun ReorderPresetsSheet(
                                 text = stringResource(R.string.equalizer_presets_drag_hint),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(horizontal = 18.dp)
+                                modifier = Modifier.padding(horizontal = MeloLayout.Space4)
                             )
 
                             // Preset list
@@ -276,7 +277,7 @@ fun ReorderPresetsSheet(
                                     top = 8.dp,
                                     bottom = 100.dp
                                 ),
-                                verticalArrangement = Arrangement.spacedBy(6.dp)
+                                verticalArrangement = Arrangement.spacedBy(MeloLayout.Space2)
                             ) {
                                 items(localItems, key = { it.preset.name }) { item ->
                                     ReorderableItem(reorderableState, key = item.preset.name) { isDragging ->
@@ -319,7 +320,7 @@ fun ReorderPresetsSheet(
                                             shape = itemShape
                                         ) {
                                             Row(
-                                                modifier = Modifier.padding(start = 12.dp, end = 8.dp, top = 14.dp, bottom = 14.dp),
+                                                modifier = Modifier.padding(start = 12.dp, end = 8.dp, top = MeloLayout.Space4, bottom = MeloLayout.Space4),
                                                 verticalAlignment = Alignment.CenterVertically
                                             ) {
                                                 // Drag Handle
@@ -342,11 +343,11 @@ fun ReorderPresetsSheet(
                                                         tint = if (item.isPinned)
                                                             MaterialTheme.colorScheme.onSurfaceVariant
                                                         else
-                                                            MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+                                                            MaterialTheme.colorScheme.outline.copy(alpha = MeloAlpha.Tertiary)
                                                     )
                                                 }
 
-                                                Spacer(modifier = Modifier.width(14.dp))
+                                                Spacer(modifier = Modifier.width(MeloLayout.Space4))
 
                                                 Text(
                                                     text = item.preset.displayName,

@@ -1,5 +1,6 @@
 package `in`.melo.presentation.components.subcomps
 
+import `in`.melo.ui.theme.MeloAlpha
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -227,7 +228,7 @@ private fun IdleContent(
                 Text(
                     text = stringResource(R.string.lyrics_fetch_show_options_subtitle),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.75f)
+                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = MeloAlpha.Secondary)
                 )
             }
             Switch(
@@ -407,7 +408,7 @@ private fun ResultItemCard(
                                 text = stringResource(R.string.lyrics_synced_badge),
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                modifier = Modifier.padding(horizontal = MeloLayout.Space2, vertical = MeloLayout.Space1)
                             )
                         }
                     }
@@ -690,7 +691,7 @@ private fun ErrorContent(
 //                            DialogHeader(currentSong = currentSong)
 //                            Spacer(modifier = Modifier.height(16.dp))
 //                            ResultContextChip(query = uiState.query)
-//                            Spacer(modifier = Modifier.height(10.dp))
+//                            Spacer(modifier = Modifier.height(MeloLayout.Space3))
 //                            Text(
 //                                text = stringResource(R.string.found_n_matches_format).format(uiState.results.size),
 //                                style = MaterialTheme.typography.headlineSmall,
@@ -822,7 +823,7 @@ private fun ErrorContent(
 //        modifier = Modifier
 //            .fillMaxWidth()
 //            .clip(MeloLayout.PanelShape)
-//            .padding(horizontal = 4.dp, vertical = 2.dp)
+//            .padding(horizontal = 4.dp, vertical = MeloLayout.Space1)
 //            .background(MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6f)),
 //        verticalAlignment = Alignment.CenterVertically
 //    ) {
@@ -848,13 +849,13 @@ private fun ErrorContent(
 //                style = MaterialTheme.typography.titleMedium,
 //                color = MaterialTheme.colorScheme.onSurface
 //            )
-//            Spacer(modifier = Modifier.height(2.dp))
+//            Spacer(modifier = Modifier.height(MeloLayout.Space1))
 //            Text(
 //                text = artist,
 //                style = MaterialTheme.typography.bodyMedium,
 //                color = MaterialTheme.colorScheme.onSurfaceVariant
 //            )
-//            Spacer(modifier = Modifier.height(2.dp))
+//            Spacer(modifier = Modifier.height(MeloLayout.Space1))
 //            Text(
 //                text = album,
 //                style = MaterialTheme.typography.bodySmall,

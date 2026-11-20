@@ -1,5 +1,6 @@
 package `in`.melo.presentation.components
 
+import `in`.melo.ui.theme.MeloAlpha
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Folder
@@ -28,7 +29,7 @@ fun listSpacing(): Dp = if (LocalCompactLists.current) 3.dp else 8.dp
 
 /** A small mark of where a track's audio comes from: the service's logo, or a folder for a file on the device. */
 @Composable
-fun SourceBadge(source: MusicSource, modifier: Modifier = Modifier, tint: Color = LocalContentColor.current.copy(alpha = 0.7f)) {
+fun SourceBadge(source: MusicSource, modifier: Modifier = Modifier, tint: Color = LocalContentColor.current.copy(alpha = MeloAlpha.Secondary)) {
     val description = stringResource(when (source) {
         MusicSource.Spotify -> R.string.source_spotify
         MusicSource.YouTubeMusic -> R.string.source_youtube

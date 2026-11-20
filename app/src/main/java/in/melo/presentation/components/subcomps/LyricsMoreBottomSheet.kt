@@ -1,5 +1,6 @@
 package `in`.melo.presentation.components.subcomps
 
+import `in`.melo.ui.theme.MeloAlpha
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.rememberScrollState
@@ -123,20 +124,20 @@ fun LyricsMoreBottomSheet(
                 .padding(horizontal = 16.dp)
                 .padding(bottom = 24.dp + navigationBarsPadding)
                 .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+            verticalArrangement = Arrangement.spacedBy(MeloLayout.Space3)
         ) {
             // No Title - "Expressive" relies on visual grouping
 
-            val itemBackgroundColor = contentColor.copy(alpha = 0.08f)
+            val itemBackgroundColor = contentColor.copy(alpha = MeloAlpha.Divider)
 
             // Lyrics Actions Group
             Column(
-                verticalArrangement = Arrangement.spacedBy(2.dp),
+                verticalArrangement = Arrangement.spacedBy(MeloLayout.Space1),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
                     modifier = Modifier
-                        .padding(start = 6.dp, bottom = 6.dp),
+                        .padding(start = MeloLayout.Space2, bottom = MeloLayout.Space2),
                     text = stringResource(R.string.lyrics_title),
                     color = accentColor,
                     style = MaterialTheme.typography.bodyLargeEmphasized
@@ -233,12 +234,12 @@ fun LyricsMoreBottomSheet(
 
             // Appearance Group
             Column(
-                verticalArrangement = Arrangement.spacedBy(2.dp),
+                verticalArrangement = Arrangement.spacedBy(MeloLayout.Space1),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
                     modifier = Modifier
-                        .padding(start = 6.dp, bottom = 6.dp),
+                        .padding(start = MeloLayout.Space2, bottom = MeloLayout.Space2),
                     text = stringResource(R.string.lyrics_appearance_section),
                     color = accentColor,
                     style = MaterialTheme.typography.bodyLargeEmphasized
@@ -248,7 +249,7 @@ fun LyricsMoreBottomSheet(
                         .fillMaxWidth()
                         .clip(MeloLayout.PanelShape)
                         .background(itemBackgroundColor)
-                        .padding(14.dp),
+                        .padding(MeloLayout.Space4),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Text(
@@ -270,7 +271,7 @@ fun LyricsMoreBottomSheet(
                             activeColor = accentColor,
                             inactiveColor = containerColor,
                             activeContentColor = onAccentColor,
-                            inactiveContentColor = contentColor.copy(alpha = 0.78f),
+                            inactiveContentColor = contentColor.copy(alpha = MeloAlpha.Secondary),
                             activeCornerRadius = 50.dp,
                             onClick = { onLyricsAlignmentChange("left") },
                             imageVector = Icons.AutoMirrored.Rounded.FormatAlignLeft,
@@ -285,7 +286,7 @@ fun LyricsMoreBottomSheet(
                             activeColor = accentColor,
                             inactiveColor = containerColor,
                             activeContentColor = onAccentColor,
-                            inactiveContentColor = contentColor.copy(alpha = 0.78f),
+                            inactiveContentColor = contentColor.copy(alpha = MeloAlpha.Secondary),
                             activeCornerRadius = 50.dp,
                             onClick = { onLyricsAlignmentChange("center") },
                             imageVector = Icons.Rounded.FormatAlignCenter,
@@ -300,7 +301,7 @@ fun LyricsMoreBottomSheet(
                             activeColor = accentColor,
                             inactiveColor = containerColor,
                             activeContentColor = onAccentColor,
-                            inactiveContentColor = contentColor.copy(alpha = 0.78f),
+                            inactiveContentColor = contentColor.copy(alpha = MeloAlpha.Secondary),
                             activeCornerRadius = 50.dp,
                             onClick = { onLyricsAlignmentChange("right") },
                             imageVector = Icons.AutoMirrored.Rounded.FormatAlignRight,
@@ -328,12 +329,12 @@ fun LyricsMoreBottomSheet(
                 val isImmersiveLast = isImmersiveVisible && !isKeepScreenOnVisible
 
                 Column(
-                    verticalArrangement = Arrangement.spacedBy(2.dp),
+                    verticalArrangement = Arrangement.spacedBy(MeloLayout.Space1),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
                         modifier = Modifier
-                            .padding(start = 6.dp, bottom = 6.dp),
+                            .padding(start = MeloLayout.Space2, bottom = MeloLayout.Space2),
                         text = stringResource(R.string.lyrics_controls_section),
                         color = accentColor,
                         style = MaterialTheme.typography.bodyLargeEmphasized
@@ -396,7 +397,7 @@ fun LyricsMoreBottomSheet(
                                         checkedThumbColor = onAccentColor,
                                         checkedTrackColor = accentColor,
                                         uncheckedThumbColor = contentColor,
-                                        uncheckedTrackColor = contentColor.copy(alpha = 0.3f)
+                                        uncheckedTrackColor = contentColor.copy(alpha = MeloAlpha.Disabled)
                                     )
                                 )
                             },
@@ -437,7 +438,7 @@ fun LyricsMoreBottomSheet(
                                         checkedThumbColor = onAccentColor,
                                         checkedTrackColor = accentColor,
                                         uncheckedThumbColor = contentColor,
-                                        uncheckedTrackColor = contentColor.copy(alpha = 0.3f)
+                                        uncheckedTrackColor = contentColor.copy(alpha = MeloAlpha.Disabled)
                                     )
                                 )
                             },
@@ -482,7 +483,7 @@ fun LyricsMoreBottomSheet(
                                         checkedThumbColor = onAccentColor,
                                         checkedTrackColor = accentColor,
                                         uncheckedThumbColor = contentColor,
-                                        uncheckedTrackColor = contentColor.copy(alpha = 0.3f)
+                                        uncheckedTrackColor = contentColor.copy(alpha = MeloAlpha.Disabled)
                                     )
                                 )
                             },
@@ -523,7 +524,7 @@ fun LyricsMoreBottomSheet(
                                         checkedThumbColor = onAccentColor,
                                         checkedTrackColor = accentColor,
                                         uncheckedThumbColor = contentColor,
-                                        uncheckedTrackColor = contentColor.copy(alpha = 0.3f)
+                                        uncheckedTrackColor = contentColor.copy(alpha = MeloAlpha.Disabled)
                                     )
                                 )
                             },

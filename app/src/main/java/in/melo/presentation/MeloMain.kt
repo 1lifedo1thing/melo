@@ -1,5 +1,6 @@
 package `in`.melo.presentation
 
+import `in`.melo.ui.theme.MeloLayout
 import android.graphics.RenderEffect as AndroidRenderEffect
 import android.graphics.Shader as AndroidShader
 import android.os.Build
@@ -377,7 +378,7 @@ fun MeloMain(model: MeloModel) {
                     .padding(horizontal = horizontalPadding)
             ) {
                 DismissUndoBar(
-                    modifier = Modifier.fillMaxWidth().height(MiniPlayerHeight).padding(horizontal = 14.dp),
+                    modifier = Modifier.fillMaxWidth().height(MiniPlayerHeight).padding(horizontal = MeloLayout.Space4),
                     onUndo = playerViewModel::undoDismissPlaylist,
                     onClose = playerViewModel::hideDismissUndoBar,
                     durationMillis = dismissUndoBarSlice.durationMillis

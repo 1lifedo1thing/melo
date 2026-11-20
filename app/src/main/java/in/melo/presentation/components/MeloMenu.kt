@@ -1,5 +1,6 @@
 package `in`.melo.presentation.components
 
+import `in`.melo.ui.theme.MeloAlpha
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -39,7 +40,7 @@ fun MeloMenu(
         Column(
             Modifier.background(Brush.verticalGradient(listOf(
                 colors.onSurface.copy(alpha = if (LocalSurfaceGradients.current) 0.025f else 0f), Color.Transparent,
-            ))).padding(horizontal = 6.dp),
+            ))).padding(horizontal = MeloLayout.Space2),
             content = content,
         )
     }
@@ -52,7 +53,7 @@ fun MeloMenuItem(label: String, icon: @Composable () -> Unit, enabled: Boolean =
         leadingIcon = {
             Box(
                 Modifier.size(34.dp).clip(MeloLayout.CardShape)
-                    .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.055f)),
+                    .background(MaterialTheme.colorScheme.onSurface.copy(alpha = MeloAlpha.Divider)),
                 contentAlignment = Alignment.Center,
             ) {
                 Box(Modifier.size(20.dp)) { icon() }
@@ -74,6 +75,6 @@ fun MeloMenuDivider() {
     HorizontalDivider(
         Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
         thickness = 0.5.dp,
-        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f),
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = MeloAlpha.Divider),
     )
 }

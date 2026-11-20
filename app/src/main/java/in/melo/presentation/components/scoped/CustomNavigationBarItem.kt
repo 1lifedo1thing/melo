@@ -65,7 +65,7 @@ fun RowScope.CustomNavigationBarItem(
                 if (!showLabel && contentDescription != null) this.contentDescription = contentDescription
             },
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(5.dp, Alignment.CenterVertically),
+        verticalArrangement = Arrangement.spacedBy(MeloLayout.Space2, Alignment.CenterVertically),
     ) {
         CompositionLocalProvider(LocalContentColor provides if (selected) selectedIconColor else unselectedIconColor) {
             Box(Modifier.size(24.dp).clearAndSetSemantics {}) {

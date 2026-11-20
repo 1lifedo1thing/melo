@@ -1,5 +1,6 @@
 package `in`.melo.presentation.components.subcomps
 
+import `in`.melo.ui.theme.MeloAlpha
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -184,7 +185,7 @@ fun EnhancedSongListItem(
     val mvContentColor = lerpColor(colors.surfaceContainerHigh, colors.onPrimaryContainer, highlightProgress)
     val selectionOverlayColor = lerpColor(
         Color.Transparent,
-        colors.primary.copy(alpha = 0.7f),
+        colors.primary.copy(alpha = MeloAlpha.Secondary),
         selectionVisualProgress
     )
     val selectionOverlayContentColor = lerpColor(
@@ -206,7 +207,7 @@ fun EnhancedSongListItem(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 13.dp, vertical = rowPadding),
+                    .padding(horizontal = MeloLayout.Space4, vertical = rowPadding),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 if(showAlbumArt) {
@@ -236,7 +237,7 @@ fun EnhancedSongListItem(
                             .height(16.dp)
                             .clip(MeloLayout.ArtworkShape)
                     )
-                    Spacer(modifier = Modifier.height(2.dp))
+                    Spacer(modifier = Modifier.height(MeloLayout.Space1))
                     ShimmerBox(
                         modifier = Modifier
                             .fillMaxWidth(0.3f)
@@ -293,7 +294,7 @@ fun EnhancedSongListItem(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 13.dp, vertical = rowPadding),
+                    .padding(horizontal = MeloLayout.Space4, vertical = rowPadding),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 if (showAlbumArt) {
@@ -368,13 +369,13 @@ fun EnhancedSongListItem(
                     Spacer(modifier = Modifier.height(if (compact) 1.dp else 4.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         if (showSourceBadge && `in`.melo.presentation.components.LocalSourceBadges.current) {
-                            `in`.melo.presentation.components.SourceBadge(song.source, Modifier.padding(end = 6.dp), contentColor.copy(alpha = 0.7f))
+                            `in`.melo.presentation.components.SourceBadge(song.source, Modifier.padding(end = MeloLayout.Space2), contentColor.copy(alpha = MeloAlpha.Secondary))
                         }
                         TrackDownloadIndicator(song.id, song.title)
                         Text(
                             text = supportingText ?: LocalTrackQuality.current(song)?.let { "${song.displayArtist} · $it" } ?: song.displayArtist,
                             style = if (compact) MaterialTheme.typography.bodySmall else MaterialTheme.typography.bodyMedium,
-                            color = contentColor.copy(alpha = 0.7f),
+                            color = contentColor.copy(alpha = MeloAlpha.Secondary),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )

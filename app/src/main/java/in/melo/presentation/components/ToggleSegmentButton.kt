@@ -1,5 +1,7 @@
 package `in`.melo.presentation.components
 
+import `in`.melo.ui.theme.MeloAlpha
+import `in`.melo.ui.theme.MeloLayout
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
@@ -201,7 +203,7 @@ private fun ToggleSegmentButtonContainer(
 ) {
     val targetBgColor = if (active) activeColor else inactiveColor
     val bgColor by animateColorAsState(
-        targetValue = if (enabled) targetBgColor else targetBgColor.copy(alpha = 0.5f),
+        targetValue = if (enabled) targetBgColor else targetBgColor.copy(alpha = MeloAlpha.Tertiary),
         animationSpec = tween(durationMillis = 250),
         label = ""
     )
@@ -222,7 +224,7 @@ private fun ToggleSegmentButtonContainer(
         Box(
             modifier = Modifier
                 .graphicsLayer(alpha = if (enabled) 1f else 0.38f)
-                .padding(horizontal = 10.dp)
+                .padding(horizontal = MeloLayout.Space3)
         ) {
             content()
         }

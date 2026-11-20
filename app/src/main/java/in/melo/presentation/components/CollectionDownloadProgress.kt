@@ -1,5 +1,6 @@
 package `in`.melo.presentation.components
 
+import `in`.melo.ui.theme.MeloLayout
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.DownloadForOffline
@@ -39,7 +40,7 @@ fun CollectionDownloadProgress(ui: PlayerViewModel, item: Music) {
     val collections by ui.downloadCollections.collectAsStateWithLifecycle()
     val preparations by ui.downloadPreparations.collectAsStateWithLifecycle()
     if (item.id in preparations) {
-        Column(Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Column(Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(MeloLayout.Space2)) {
             Text(stringResource(R.string.download_preparing), style = MaterialTheme.typography.labelMedium)
             LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
         }
@@ -48,7 +49,7 @@ fun CollectionDownloadProgress(ui: PlayerViewModel, item: Music) {
     val progress = collections[item.id] ?: return
     if (progress.isComplete) return
     val context = LocalContext.current
-    Column(Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    Column(Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(MeloLayout.Space2)) {
         Text(downloadProgressText(context, progress.percent, progress.completed, progress.total, progress.remainingSeconds),
             style = MaterialTheme.typography.labelMedium)
         LinearProgressIndicator(progress = { progress.percent / 100f }, modifier = Modifier.fillMaxWidth())
