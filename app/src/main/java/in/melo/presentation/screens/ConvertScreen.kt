@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
@@ -26,24 +25,20 @@ import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.LibraryMusic
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Search
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import `in`.melo.presentation.components.MeloBottomSheet as ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -78,10 +73,17 @@ import `in`.melo.data.source
 import `in`.melo.presentation.components.SmartImage
 import `in`.melo.presentation.components.SmartImageCompactListTargetSize
 import `in`.melo.presentation.components.SourceBadge
+import `in`.melo.presentation.components.MeloButton
+import `in`.melo.presentation.components.MeloButtonSize
+import `in`.melo.presentation.components.MeloButtonStyle
+import `in`.melo.presentation.components.MeloCard
+import `in`.melo.presentation.components.MeloIconButton
 import `in`.melo.presentation.navigation.openMusic
 import `in`.melo.utils.formatDuration
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
+import `in`.melo.ui.theme.MeloLayout
+import `in`.melo.ui.theme.MeloAlpha
 
 @Composable
 internal fun playlistKindName(kind: PlaylistKind): String = stringResource(when (kind) {
@@ -105,12 +107,12 @@ internal fun ConvertTargetSheet(model: MeloModel, item: Music, onDismiss: () -> 
     val discovery by model.discovery.collectAsStateWithLifecycle()
     val targets = remember(item.id, google, discovery.spotifyEnabled) { model.conversionTargets(item) }
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
-        Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp).navigationBarsPadding(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Column(Modifier.fillMaxWidth().padding(horizontal = MeloLayout.PageGutter).navigationBarsPadding(), verticalArrangement = Arrangement.spacedBy(MeloLayout.Space2)) {
             Text(stringResource(R.string.convert_to), Modifier.padding(start = 8.dp, bottom = 8.dp),
                 style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             targets.forEach { (kind, available) ->
                 Row(
-                    Modifier.fillMaxWidth().clip18().clickable(enabled = available) { onPick(kind) }.padding(12.dp).alpha(if (available) 1f else 0.5f),
+                    Modifier.fillMaxWidth().clip18().clickable(enabled = available) { onPick(kind) }.padding(MeloLayout.Space3).alpha(if (available) 1f else MeloAlpha.Tertiary),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     PlaylistKindIcon(kind, Modifier.size(28.dp))
@@ -126,12 +128,12 @@ internal fun ConvertTargetSheet(model: MeloModel, item: Music, onDismiss: () -> 
                     }
                 }
             }
-            Spacer(Modifier.size(16.dp))
+            Spacer(Modifier.size(MeloLayout.Space4))
         }
     }
 }
 
-private fun Modifier.clip18() = clip(RoundedCornerShape(18.dp))
+private fun Modifier.clip18() = clip(MeloLayout.PanelShape)
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -157,13 +159,19 @@ fun ConvertScreen(model: MeloModel, navController: NavHostController, playlistId
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(source.title, Modifier.weight(1f, fill = false), style = MaterialTheme.typography.bodySmall,
                                 maxLines = 1, overflow = TextOverflow.Ellipsis)
-                            Icon(Icons.AutoMirrored.Rounded.ArrowForward, null, Modifier.padding(horizontal = 6.dp).size(14.dp))
+                            Icon(Icons.AutoMirrored.Rounded.ArrowForward, null, Modifier.padding(horizontal = MeloLayout.Space2).size(14.dp))
                             PlaylistKindIcon(target, Modifier.size(14.dp))
                             Text(playlistKindName(target), Modifier.padding(start = 4.dp), style = MaterialTheme.typography.bodySmall, maxLines = 1)
                         }
                     }
                 },
-                navigationIcon = { IconButton(onClick = ::leave) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, stringResource(R.string.action_cancel)) } },
+                navigationIcon = {
+                    MeloIconButton(
+                        icon = Icons.AutoMirrored.Rounded.ArrowBack,
+                        contentDescription = stringResource(R.string.action_cancel),
+                        onClick = ::leave,
+                    )
+                },
             )
         },
     ) { inner ->
@@ -194,9 +202,9 @@ private fun ConversionContent(model: MeloModel, navController: NavHostController
     // The mini player floats over the bottom of the screen while something is loaded.
     val hasSong by model.ui.derivedHasSong.collectAsStateWithLifecycle()
     Column(Modifier.padding(inner).fillMaxSize()) {
-        LazyColumn(Modifier.weight(1f).fillMaxWidth(), contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        LazyColumn(Modifier.weight(1f).fillMaxWidth(), contentPadding = PaddingValues(MeloLayout.Space3), verticalArrangement = Arrangement.spacedBy(MeloLayout.Space2)) {
             item(key = "header") {
-                Column(Modifier.fillMaxWidth().padding(bottom = 6.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Column(Modifier.fillMaxWidth().padding(bottom = MeloLayout.Space2), verticalArrangement = Arrangement.spacedBy(MeloLayout.Space3)) {
                     OutlinedTextField(state.name, session::rename, Modifier.fillMaxWidth(), singleLine = true, enabled = !state.creating,
                         label = { Text(stringResource(R.string.playlist_name)) })
                     when {
@@ -225,18 +233,19 @@ private fun ConversionContent(model: MeloModel, navController: NavHostController
                     onRemove = { session.remove(row.position) }, onRestore = { session.restore(row.position) })
             }
         }
-        Surface(tonalElevation = 3.dp, modifier = Modifier.fillMaxWidth()) {
-            Column(Modifier.fillMaxWidth().padding(16.dp).navigationBarsPadding()
+        MeloCard(modifier = Modifier.fillMaxWidth(), shape = MeloLayout.PanelShape) {
+            Column(Modifier.fillMaxWidth().padding(MeloLayout.Space4).navigationBarsPadding()
                 .padding(bottom = if (hasSong) `in`.melo.presentation.components.MiniPlayerHeight else 0.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                verticalArrangement = Arrangement.spacedBy(MeloLayout.Space2)) {
                 state.error?.let { message ->
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(message, Modifier.weight(1f), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
-                        TextButton(onClick = session::dismissError) { Text(stringResource(R.string.action_ok)) }
+                        MeloButton(stringResource(R.string.action_ok), session::dismissError, size = MeloButtonSize.Medium, style = MeloButtonStyle.Text)
                     }
                 }
                 if (state.creating) LinearProgressIndicator(Modifier.fillMaxWidth())
-                Button(
+                MeloButton(
+                    text = stringResource(R.string.convert_create, `in`.melo.utils.formatSongCount(state.tracks.size)),
                     onClick = {
                         session.create(
                             creator = { name, tracks -> model.createConverted(session.target, name, tracks) },
@@ -249,9 +258,7 @@ private fun ConversionContent(model: MeloModel, navController: NavHostController
                     },
                     enabled = state.finished && state.tracks.isNotEmpty() && !state.creating && state.name.isNotBlank(),
                     modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text(stringResource(R.string.convert_create, `in`.melo.utils.formatSongCount(state.tracks.size)))
-                }
+                )
             }
         }
     }
@@ -279,34 +286,34 @@ private fun ConversionRowItem(row: ConversionRow, enabled: Boolean, onOpen: () -
     }
     val strike = if (row.removed) TextDecoration.LineThrough else null
     Surface(
-        color = background, contentColor = content, shape = RoundedCornerShape(18.dp),
+        color = background, contentColor = content, shape = MeloLayout.PanelShape,
         modifier = Modifier.fillMaxWidth().alpha(if (row.removed) 0.6f else 1f),
         onClick = onOpen, enabled = enabled && row.state != MatchState.Searching,
     ) {
-        Row(Modifier.padding(start = 12.dp, top = 10.dp, bottom = 10.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Row(Modifier.padding(start = 12.dp, top = MeloLayout.Space3, bottom = MeloLayout.Space3, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(MeloLayout.Space2)) {
                 if (row.state != MatchState.Same) Row(verticalAlignment = Alignment.CenterVertically) {
-                    SourceBadge(row.original.source, Modifier.padding(end = 6.dp))
+                    SourceBadge(row.original.source, Modifier.padding(end = MeloLayout.Space2))
                     Text("${row.original.title} · ${row.original.subtitle}", style = MaterialTheme.typography.bodySmall,
-                        maxLines = 1, overflow = TextOverflow.Ellipsis, textDecoration = strike, color = content.copy(alpha = 0.75f))
+                        maxLines = 1, overflow = TextOverflow.Ellipsis, textDecoration = strike, color = content.copy(alpha = MeloAlpha.Secondary))
                 }
                 val choice = row.choice
                 when {
                     row.state == MatchState.Searching -> Row(verticalAlignment = Alignment.CenterVertically) {
                         CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
-                        Text(stringResource(R.string.convert_row_searching), Modifier.padding(start = 10.dp), style = MaterialTheme.typography.bodyMedium)
+                        Text(stringResource(R.string.convert_row_searching), Modifier.padding(start = MeloLayout.Space3), style = MaterialTheme.typography.bodyMedium)
                     }
                     choice != null -> Row(verticalAlignment = Alignment.CenterVertically) {
-                        SmartImage(model = choice.imageUrl, contentDescription = null, shape = RoundedCornerShape(10.dp),
+                        SmartImage(model = choice.imageUrl, contentDescription = null, shape = MeloLayout.CardShape,
                             targetSize = SmartImageCompactListTargetSize, modifier = Modifier.size(42.dp))
-                        Column(Modifier.weight(1f).padding(start = 10.dp)) {
+                        Column(Modifier.weight(1f).padding(start = MeloLayout.Space3)) {
                             Text(choice.title, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis, textDecoration = strike)
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                SourceBadge(choice.source, Modifier.padding(end = 6.dp))
+                                SourceBadge(choice.source, Modifier.padding(end = MeloLayout.Space2))
                                 Text(choice.subtitle, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
                             }
                         }
-                        if (row.reviewed && !row.removed) Icon(Icons.Rounded.Check, null, Modifier.padding(start = 6.dp).size(18.dp))
+                        if (row.reviewed && !row.removed) Icon(Icons.Rounded.Check, null, Modifier.padding(start = MeloLayout.Space2).size(18.dp))
                     }
                     else -> Text(stringResource(if (row.failed) R.string.convert_row_failed else R.string.convert_row_missing),
                         style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
@@ -315,8 +322,8 @@ private fun ConversionRowItem(row: ConversionRow, enabled: Boolean, onOpen: () -
                     style = MaterialTheme.typography.labelMedium)
             }
             if (row.state != MatchState.Searching) {
-                if (row.removed) IconButton(onClick = onRestore, enabled = enabled) { Icon(Icons.AutoMirrored.Rounded.Undo, stringResource(R.string.convert_restore)) }
-                else IconButton(onClick = onRemove, enabled = enabled) { Icon(Icons.Rounded.Close, stringResource(R.string.convert_remove)) }
+                if (row.removed) MeloIconButton(Icons.AutoMirrored.Rounded.Undo, stringResource(R.string.convert_restore), onRestore, enabled = enabled)
+                else MeloIconButton(Icons.Rounded.Close, stringResource(R.string.convert_remove), onRemove, enabled = enabled)
             }
         }
     }
@@ -347,11 +354,11 @@ private fun MatchPickerSheet(model: MeloModel, session: PlaylistConversion, row:
     // Lazy list keys must be unique: a search can return the same track twice.
     val shown = (results ?: row.candidates).distinctBy(Music::id)
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
-        Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp).navigationBarsPadding(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp).navigationBarsPadding(), verticalArrangement = Arrangement.spacedBy(MeloLayout.Space3)) {
             Column(Modifier.padding(start = 8.dp)) {
                 Text(row.original.title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    SourceBadge(row.original.source, Modifier.padding(end = 6.dp))
+                    SourceBadge(row.original.source, Modifier.padding(end = MeloLayout.Space2))
                     Text(listOfNotNull(row.original.subtitle.takeIf(String::isNotBlank), row.original.album.takeIf(String::isNotBlank),
                         row.original.durationMs.takeIf { it > 0 }?.let { formatDuration(it.toLong()) }).joinToString(" · "),
                         style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -359,44 +366,40 @@ private fun MatchPickerSheet(model: MeloModel, session: PlaylistConversion, row:
             }
             if (searchSource != null) OutlinedTextField(
                 value = query, onValueChange = { query = it }, singleLine = true, modifier = Modifier.fillMaxWidth(),
-                leadingIcon = { Icon(Icons.Rounded.Search, null) }, shape = RoundedCornerShape(28.dp),
+                leadingIcon = { Icon(Icons.Rounded.Search, null) }, shape = MeloLayout.PillShape,
                 label = { Text(stringResource(R.string.convert_search_on, playlistKindName(session.target))) },
             )
             if (loading) LinearProgressIndicator(Modifier.fillMaxWidth())
-            LazyColumn(Modifier.fillMaxWidth().heightIn(max = 420.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            LazyColumn(Modifier.fillMaxWidth().heightIn(max = 420.dp), verticalArrangement = Arrangement.spacedBy(MeloLayout.Space1)) {
                 if (shown.isEmpty() && !loading && searchSource != null) item {
                     Text(stringResource(R.string.convert_no_candidates), Modifier.padding(12.dp), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 items(shown, key = { it.id }) { candidate ->
                     Row(
-                        Modifier.fillMaxWidth().clip18().clickable { session.choose(row.position, candidate); onDismiss() }.padding(vertical = 6.dp),
+                        Modifier.fillMaxWidth().clip18().clickable { session.choose(row.position, candidate); onDismiss() }.padding(vertical = MeloLayout.Space2),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         RadioButton(selected = candidate.id == row.choice?.id, onClick = { session.choose(row.position, candidate); onDismiss() })
-                        SmartImage(model = candidate.imageUrl, contentDescription = null, shape = RoundedCornerShape(10.dp),
+                        SmartImage(model = candidate.imageUrl, contentDescription = null, shape = MeloLayout.CardShape,
                             targetSize = SmartImageCompactListTargetSize, modifier = Modifier.size(44.dp))
-                        Column(Modifier.weight(1f).padding(horizontal = 10.dp)) {
+                        Column(Modifier.weight(1f).padding(horizontal = MeloLayout.Space3)) {
                             Text(candidate.title, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                SourceBadge(candidate.source, Modifier.padding(end = 6.dp))
+                                SourceBadge(candidate.source, Modifier.padding(end = MeloLayout.Space2))
                                 Text(listOfNotNull(candidate.subtitle.takeIf(String::isNotBlank),
                                     candidate.durationMs.takeIf { it > 0 }?.let { formatDuration(it.toLong()) }).joinToString(" · "),
                                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     maxLines = 1, overflow = TextOverflow.Ellipsis)
                             }
                         }
-                        IconButton(onClick = { model.play(listOf(candidate), 0) }) {
-                            Icon(Icons.Rounded.PlayArrow, stringResource(R.string.convert_listen))
-                        }
+                        MeloIconButton(Icons.Rounded.PlayArrow, stringResource(R.string.convert_listen), onClick = { model.play(listOf(candidate), 0) })
                     }
                 }
             }
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
-                if (row.removed) OutlinedButton(onClick = { session.restore(row.position); onDismiss() }) { Text(stringResource(R.string.convert_restore)) }
-                else OutlinedButton(onClick = { session.remove(row.position); onDismiss() }) { Text(stringResource(R.string.convert_remove)) }
-                if (row.needsReview && row.choice != null) Button(onClick = { session.confirm(row.position); onDismiss() }) {
-                    Text(stringResource(R.string.convert_keep_match))
-                }
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(MeloLayout.Space2, Alignment.End)) {
+                if (row.removed) MeloButton(stringResource(R.string.convert_restore), { session.restore(row.position); onDismiss() }, size = MeloButtonSize.Medium, style = MeloButtonStyle.Outlined)
+                else MeloButton(stringResource(R.string.convert_remove), { session.remove(row.position); onDismiss() }, size = MeloButtonSize.Medium, style = MeloButtonStyle.Outlined)
+                if (row.needsReview && row.choice != null) MeloButton(stringResource(R.string.convert_keep_match), { session.confirm(row.position); onDismiss() }, size = MeloButtonSize.Medium)
             }
             Spacer(Modifier.size(12.dp))
         }

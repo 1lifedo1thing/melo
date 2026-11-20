@@ -1,5 +1,6 @@
 package `in`.melo.presentation.screens
 
+import `in`.melo.ui.theme.MeloAlpha
 import `in`.melo.data.source
 import androidx.compose.material.icons.rounded.Share
 import `in`.melo.presentation.utils.shareMusic
@@ -24,10 +25,8 @@ import androidx.compose.material.icons.rounded.Shuffle
 import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.LargeExtendedFloatingActionButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -71,6 +70,7 @@ import `in`.melo.MeloModel
 import `in`.melo.data.Music
 import `in`.melo.data.model.toSong
 import `in`.melo.presentation.components.SmartImage
+import `in`.melo.presentation.components.MeloIconButton
 import `in`.melo.presentation.components.SongOptionsHost
 import `in`.melo.presentation.components.subcomps.EnhancedSongListItem
 import `in`.melo.presentation.navigation.openMusic
@@ -147,10 +147,11 @@ internal fun CollapsingAlbumTopBar(
     onPlayClick: () -> Unit
 ) {
     val surfaceColor = MaterialTheme.colorScheme.background
-    val statusBarColor =
-        if (LocalMeloDarkTheme.current) Color.Black.copy(alpha = 0.6f) else Color.White.copy(
-            alpha = 0.4f
-        )
+    val statusBarColor = if (LocalMeloDarkTheme.current) {
+        MaterialTheme.colorScheme.background.copy(alpha = MeloAlpha.Scrim)
+    } else {
+        MaterialTheme.colorScheme.surface.copy(alpha = MeloAlpha.Disabled)
+    }
 
     // Animation Values
     val fabScale = 1f - collapseFraction
@@ -243,15 +244,13 @@ internal fun CollapsingAlbumTopBar(
                     .fillMaxSize()
                     .statusBarsPadding()
             ) {
-                FilledIconButton(
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .padding(start = 12.dp, top = 4.dp),
+                MeloIconButton(
+                    icon = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = stringResource(R.string.common_back),
                     onClick = onBackPressed,
-                    colors = IconButtonDefaults.filledIconButtonColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)
-                ) {
-                    Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.common_back))
-                }
+                    modifier = Modifier.align(Alignment.TopStart).padding(start = 12.dp, top = 4.dp),
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                )
 
                 Box(
                     modifier = Modifier
@@ -273,7 +272,6 @@ internal fun CollapsingAlbumTopBar(
                         Text(
                             text = album.title,
                             style = MaterialTheme.typography.headlineMedium.copy(
-                                fontSize = 26.sp,
                                 textGeometricTransform = TextGeometricTransform(scaleX = 1.2f),
                             ),
                             fontWeight = FontWeight.Bold,

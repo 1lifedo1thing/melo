@@ -59,13 +59,13 @@ private fun CardTexts(item: Music, centered: Boolean, modifier: Modifier) {
     Column(modifier) {
         Text(
             item.title, Modifier.fillMaxWidth(),
-            fontFamily = GoogleSansRounded, fontWeight = FontWeight.Medium, fontSize = 16.sp, lineHeight = 19.sp,
+            fontFamily = GoogleSansRounded, fontWeight = FontWeight.Medium,
             color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.titleMedium,
             maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = if (centered) TextAlign.Center else TextAlign.Start,
         )
         Text(
-            item.subtitle.ifBlank { item.kind.label }, Modifier.fillMaxWidth().padding(top = 1.dp),
-            fontFamily = GoogleSansRounded, fontWeight = FontWeight.Normal, fontSize = 13.sp,
+            item.subtitle.ifBlank { item.kind.label }, Modifier.fillMaxWidth().padding(top = MeloLayout.Space1),
+            fontFamily = GoogleSansRounded, fontWeight = FontWeight.Normal,
             color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall,
             maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = if (centered) TextAlign.Center else TextAlign.Start,
         )
@@ -93,10 +93,10 @@ internal fun ShelfCoverCard(item: Music, ui: PlayerViewModel, modifier: Modifier
 internal fun ShelfListRow(item: Music, ui: PlayerViewModel, onClick: () -> Unit, onLongClick: () -> Unit) {
     val shape = MeloLayout.ArtworkShape
     Box(Modifier.fillMaxWidth().padding(horizontal = MeloLayout.PageGutter).clip(shape).combinedClickable(onClick = onClick, onLongClick = onLongClick)) {
-        Row(Modifier.padding(7.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.padding(MeloLayout.Space2), verticalAlignment = Alignment.CenterVertically) {
             Cover(item, ui, MaterialTheme.colorScheme.surfaceContainerHighest,
                 if (item.kind == MusicKind.Artist) CircleShape else MeloLayout.ArtworkShape, Modifier.size(58.dp))
-            CardTexts(item, false, Modifier.weight(1f).padding(horizontal = 14.dp))
+            CardTexts(item, false, Modifier.weight(1f).padding(horizontal = MeloLayout.Space4))
         }
     }
 }

@@ -78,7 +78,7 @@ internal fun HomeDialSettingsMenuContent(
 ) {
     Column(
         Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+        verticalArrangement = Arrangement.spacedBy(MeloLayout.Space3),
     ) {
         Text(stringResource(R.string.home_dial_settings_title), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
         DialSwitchRow(stringResource(R.string.home_dial_speed_dial), settings.homeSpeedDialEnabled) {
@@ -188,23 +188,23 @@ internal fun HomeDialSettingsSheet(
                         onOrderChange(encodeDialOrder(ordered.map(Music::id)))
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(MeloLayout.Space2),
                 ) { _, item, _ ->
                     key(item.id) {
                         ReorderableItem {
                             Surface(
                                 color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                                shape = RoundedCornerShape(18.dp),
+                                shape = MeloLayout.PanelShape,
                             ) {
                                 Row(
                                     Modifier.fillMaxWidth().padding(8.dp),
                                     verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(MeloLayout.Space3),
                                 ) {
                                     SmartImage(
                                         model = item.imageUrl,
                                         contentDescription = null,
-                                        shape = RoundedCornerShape(12.dp),
+                                        shape = MeloLayout.CardShape,
                                         contentScale = ContentScale.Crop,
                                         targetSize = SmartImageCompactListTargetSize,
                                         modifier = Modifier.size(44.dp),

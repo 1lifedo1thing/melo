@@ -290,7 +290,7 @@ private fun PodcastShelfSection(
     onPlayEpisode: (Music) -> Unit,
     onLongPress: (Music) -> Unit,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(MeloLayout.Space3)) {
         Text(
             text = shelf.title,
             modifier = Modifier.padding(horizontal = MeloLayout.PageGutter),
@@ -357,8 +357,8 @@ private fun PodcastCard(
                 }
             }
             Column(
-                Modifier.fillMaxWidth().padding(start = 10.dp, end = 10.dp, bottom = 12.dp),
-                verticalArrangement = Arrangement.spacedBy(3.dp),
+                Modifier.fillMaxWidth().padding(start = MeloLayout.Space3, end = MeloLayout.Space3, bottom = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(MeloLayout.Space1),
             ) {
                 Text(item.title, modifier = Modifier.height(titleBlockHeight), style = MaterialTheme.typography.titleSmall.copy(lineHeight = 22.sp),
                     fontWeight = FontWeight.SemiBold, minLines = 2, maxLines = 2, overflow = TextOverflow.Ellipsis)
@@ -443,11 +443,11 @@ fun PodcastDetailScreen(model: MeloModel, navController: NavHostController, brow
                     top = 12.dp,
                     bottom = 38.dp + MiniPlayerHeight,
                 ),
-                verticalArrangement = Arrangement.spacedBy(14.dp),
+                verticalArrangement = Arrangement.spacedBy(MeloLayout.Space4),
             ) {
                 podcast?.let { show ->
                     item(key = "podcast_info") {
-                        Row(horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(MeloLayout.Space4), verticalAlignment = Alignment.CenterVertically) {
                             SmartImage(
                                 model = show.item.imageUrl,
                                 contentDescription = null,
@@ -455,7 +455,7 @@ fun PodcastDetailScreen(model: MeloModel, navController: NavHostController, brow
                                 shape = MeloLayout.ArtworkShape,
                                 modifier = Modifier.size(108.dp),
                             )
-                            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(MeloLayout.Space2)) {
                                 Text(show.item.title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                                 Text(show.item.subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     maxLines = 3, overflow = TextOverflow.Ellipsis)
@@ -525,7 +525,7 @@ private fun PodcastEpisodeRow(episode: Music, onClick: () -> Unit, onLongPress: 
         color = MaterialTheme.colorScheme.surfaceContainer,
     ) {
         Row(
-            Modifier.padding(10.dp),
+            Modifier.padding(MeloLayout.Space3),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {

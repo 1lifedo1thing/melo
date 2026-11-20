@@ -42,7 +42,6 @@ import androidx.compose.material.icons.rounded.Shuffle
 import androidx.compose.material.icons.rounded.SwapVert
 import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -73,12 +72,15 @@ import `in`.melo.data.HomeRecommendationPick
 import `in`.melo.data.Music
 import `in`.melo.data.YouTubeHomeChip
 import `in`.melo.presentation.components.SmartImage
+import `in`.melo.presentation.components.MeloIconButton
 import `in`.melo.presentation.components.artworkRim
 import `in`.melo.presentation.components.homePress
 import `in`.melo.presentation.components.LocalHomeGradients
 import `in`.melo.presentation.components.MoodArtwork
 import `in`.melo.data.HomeMood
 import `in`.melo.ui.theme.MeloLayout
+import `in`.melo.ui.theme.LocalMeloDarkTheme
+import `in`.melo.ui.theme.MeloAlpha
 import kotlinx.coroutines.launch
 
 internal data class HomeSpeedDialEntry(
@@ -95,7 +97,14 @@ private const val SLOT_LUCKY = -2
 private const val SLOT_HISTORY = -3
 internal const val SPEED_DIAL_MAX_ITEMS = 54
 private val SPEED_DIAL_GAP = 8.dp
-private val SPEED_DIAL_SHAPE = RoundedCornerShape(10.dp)
+private val SPEED_DIAL_SHAPE = MeloLayout.CardShape
+
+@Composable
+private fun artworkForeground(): Color = if (LocalMeloDarkTheme.current) {
+    MaterialTheme.colorScheme.onSurface
+} else {
+    MaterialTheme.colorScheme.onPrimary
+}
 
 private fun speedDialSlots(count: Int, pinned: Int, lucky: Boolean, history: Boolean, rows: Int): IntArray {
     val pageSize = SPEED_DIAL_COLUMNS * rows
@@ -166,7 +175,7 @@ internal fun HomeSpeedDial(
     val columnModifier = modifier.fillMaxWidth().then(
         if (pageHeight != null) Modifier.height(pageHeight) else Modifier.padding(bottom = 24.dp),
     )
-    Column(columnModifier.padding(bottom = footerReserve), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    Column(columnModifier.padding(bottom = footerReserve), verticalArrangement = Arrangement.spacedBy(MeloLayout.Space3)) {
         if (title != null || onReorderPins != null || onCustomize != null) {
             Row(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = MeloLayout.PageGutter),
@@ -184,27 +193,15 @@ internal fun HomeSpeedDial(
                     Spacer(Modifier.weight(1f))
                 }
                 if (onReorderPins != null) {
-                    IconButton(onClick = onReorderPins, modifier = Modifier.size(48.dp)) {
-                        Icon(
-                            imageVector = Icons.Rounded.SwapVert,
-                            contentDescription = stringResource(R.string.pins_reorder),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
+                    MeloIconButton(Icons.Rounded.SwapVert, stringResource(R.string.pins_reorder), onReorderPins)
                 }
                 if (onCustomize != null) {
-                    IconButton(onClick = onCustomize, modifier = Modifier.size(48.dp)) {
-                        Icon(
-                            imageVector = Icons.Rounded.Tune,
-                            contentDescription = stringResource(R.string.home_dial_customize),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
+                    MeloIconButton(Icons.Rounded.Tune, stringResource(R.string.home_dial_customize), onCustomize)
                 }
             }
         } else {
             // Dial leaves a little breathing room above the first row of art.
-            Spacer(Modifier.height(14.dp))
+            Spacer(Modifier.height(MeloLayout.Space4))
         }
 
         if (categoryChips.isNotEmpty()) {
@@ -295,13 +292,13 @@ internal fun HomeSpeedDial(
                 repeat(pageCount) { index ->
                     Box(
                         Modifier
-                            .padding(horizontal = 3.dp)
+                            .padding(horizontal = MeloLayout.Space1)
                             .width(6.dp)
                             .height(6.dp)
                             .clip(CircleShape)
                             .background(
                                 if (index == pagerState.currentPage) MaterialTheme.colorScheme.primary
-                                else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.22f)
+                                else MaterialTheme.colorScheme.onSurface.copy(alpha = MeloAlpha.Divider)
                             )
                     )
                 }
@@ -309,16 +306,12 @@ internal fun HomeSpeedDial(
         }
         if (onScrollToFeed != null) {
             Spacer(Modifier.weight(1f))
-            IconButton(
-                onClick = onScrollToFeed,
-                modifier = Modifier.align(Alignment.CenterHorizontally).size(40.dp),
-            ) {
-                Icon(
-                    Icons.Rounded.KeyboardArrowDown,
-                    contentDescription = stringResource(R.string.home_dial_scroll_to_feed),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
+            MeloIconButton(
+                Icons.Rounded.KeyboardArrowDown,
+                stringResource(R.string.home_dial_scroll_to_feed),
+                onScrollToFeed,
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+            )
         }
     }
 }
@@ -393,13 +386,13 @@ internal fun HomeCategoryChips(
                 contentAlignment = Alignment.Center,
             ) {
                 Box(
-                    Modifier.height(40.dp).clip(RoundedCornerShape(12.dp)).background(background)
-                        .border(0.75.dp, if (isSelected) Color.Transparent else MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp))
+                    Modifier.height(40.dp).clip(MeloLayout.CardShape).background(background)
+                        .border(0.75.dp, if (isSelected) Color.Transparent else MaterialTheme.colorScheme.outlineVariant, MeloLayout.CardShape)
                         .padding(horizontal = 16.dp),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text(chip.title, style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.SemiBold, fontSize = 15.sp,
+                    Text(chip.title, style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold,
                         color = foreground, maxLines = 1)
                 }
             }
@@ -420,6 +413,7 @@ private fun SpeedDialTile(
     onClick: () -> Unit,
     onLongPress: () -> Unit,
 ) {
+    val foreground = artworkForeground()
     val interactions = remember { MutableInteractionSource() }
     Box(
         modifier = modifier
@@ -451,16 +445,15 @@ private fun SpeedDialTile(
             Box(
                 Modifier
                     .fillMaxWidth()
-                    .height(58.dp)
+                    .height(MeloLayout.ArtHero)
                     .align(Alignment.BottomCenter)
                     .background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.78f)))),
             )
             Text(
                 text = entry.title,
-                modifier = Modifier.align(Alignment.BottomStart).padding(horizontal = 6.dp, vertical = 6.dp),
-                style = MaterialTheme.typography.labelLarge,
-                color = Color.White,
-                fontSize = 12.sp,
+                modifier = Modifier.align(Alignment.BottomStart).padding(horizontal = MeloLayout.Space2, vertical = MeloLayout.Space2),
+                style = MaterialTheme.typography.labelSmall,
+                color = foreground,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -469,17 +462,17 @@ private fun SpeedDialTile(
             Box(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(6.dp)
-                    .size(25.dp)
+                    .padding(MeloLayout.Space2)
+                    .size(MeloLayout.IconDefault)
                     .clip(CircleShape)
-                    .background(Color.Black.copy(alpha = 0.5f)),
+                    .background(Color.Black.copy(alpha = MeloAlpha.Tertiary)),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     imageVector = Icons.Outlined.PushPin,
                     contentDescription = null,
-                    modifier = Modifier.size(14.dp),
-                    tint = Color.White,
+                    modifier = Modifier.size(MeloLayout.IconSmall),
+                    tint = foreground,
                 )
             }
         }
@@ -488,12 +481,12 @@ private fun SpeedDialTile(
                 text = stringResource(R.string.home_new_music_tag),
                 modifier = Modifier
                     .align(Alignment.TopStart)
-                    .padding(6.dp)
+                    .padding(MeloLayout.Space2)
                     .clip(CircleShape)
-                    .background(Color.Black.copy(alpha = 0.58f))
-                    .padding(horizontal = 7.dp, vertical = 4.dp),
+                    .background(Color.Black.copy(alpha = MeloAlpha.Scrim))
+                    .padding(horizontal = MeloLayout.Space2, vertical = 4.dp),
                 style = MaterialTheme.typography.labelSmall,
-                color = Color.White,
+                color = foreground,
                 maxLines = 1,
             )
         }
@@ -520,6 +513,7 @@ private fun SpeedDialActionTile(
     modifier: Modifier,
     onClick: () -> Unit,
 ) {
+    val foreground = artworkForeground()
     val interactions = remember { MutableInteractionSource() }
     Box(
         modifier = modifier
@@ -537,13 +531,13 @@ private fun SpeedDialActionTile(
         Column(
             modifier = Modifier.fillMaxWidth().padding(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+            verticalArrangement = Arrangement.spacedBy(MeloLayout.Space3),
         ) {
-            Icon(icon, contentDescription = null, modifier = Modifier.size(30.dp), tint = Color.White)
+            Icon(icon, contentDescription = null, modifier = Modifier.size(30.dp), tint = foreground)
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelLarge,
-                color = Color.White,
+                color = foreground,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )

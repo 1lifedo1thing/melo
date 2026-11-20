@@ -48,7 +48,7 @@ internal fun CompactTrackShelf(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             itemsIndexed(pages, key = { index, page -> "$index:${page.first().id}" }) { _, page ->
-                Column(Modifier.width(width), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Column(Modifier.width(width), verticalArrangement = Arrangement.spacedBy(MeloLayout.Space1)) {
                     page.forEach { track ->
                         CompactTrackRow(track, { onClick(track) }, { onOptions(track) })
                     }
@@ -63,18 +63,18 @@ internal fun CompactTrackShelf(
 private fun CompactTrackRow(track: Music, onClick: () -> Unit, onOptions: () -> Unit) {
     Row(
         Modifier.fillMaxWidth().heightIn(min = 64.dp)
-            .clip(RoundedCornerShape(8.dp))
+            .clip(MeloLayout.ArtworkShape)
             .combinedClickable(role = Role.Button, onClick = onClick, onLongClick = onOptions)
             .padding(vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        val shape = RoundedCornerShape(8.dp)
+        val shape = MeloLayout.ArtworkShape
         SmartImage(
             model = track.imageUrl, contentDescription = null,
             modifier = Modifier.size(56.dp).artworkRim(shape), shape = shape,
             targetSize = SmartImageListTargetSize,
         )
-        Column(Modifier.weight(1f).padding(start = 12.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Column(Modifier.weight(1f).padding(start = 12.dp), verticalArrangement = Arrangement.spacedBy(MeloLayout.Space1)) {
             Text(track.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold,
                 maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(track.subtitle, style = MaterialTheme.typography.bodyMedium,

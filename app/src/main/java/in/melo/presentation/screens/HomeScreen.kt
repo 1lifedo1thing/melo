@@ -1,5 +1,6 @@
 package `in`.melo.presentation.screens
 
+import `in`.melo.ui.theme.MeloAlpha
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -917,7 +918,7 @@ private fun PinnedPill(
 ) {
     val container = MaterialTheme.colorScheme.surfaceContainer
     val title = MaterialTheme.colorScheme.onSurface
-    val shape = RoundedCornerShape(12.dp)
+    val shape = MeloLayout.CardShape
     val artPadding = (PinPillHeight - PinPillArtSize) / 2
     Card(
         shape = shape,
@@ -931,7 +932,7 @@ private fun PinnedPill(
         Row(
             modifier = Modifier.fillMaxSize().padding(start = artPadding, end = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
+            horizontalArrangement = Arrangement.spacedBy(MeloLayout.Space3)
         ) {
             if (item.id == ui.likedSongs.id) {
                 Box(
@@ -963,7 +964,7 @@ private fun PinnedPill(
                     style = MaterialTheme.typography.bodySmall,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    color = title.copy(alpha = 0.8f)
+                    color = title.copy(alpha = MeloAlpha.Secondary)
                 )
             }
         }
@@ -1001,10 +1002,10 @@ private fun LikedSongsCard(
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize(),
                 )
-                Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.primary.copy(alpha = 0.55f)))
+                Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.primary.copy(alpha = MeloAlpha.Tertiary)))
                 Icon(Icons.Rounded.Favorite, null, Modifier.size(32.dp), tint = MaterialTheme.colorScheme.onPrimary)
             }
-            Column(Modifier.weight(1f).padding(horizontal = 14.dp)) {
+            Column(Modifier.weight(1f).padding(horizontal = MeloLayout.Space4)) {
                 Text(stringResource(R.string.liked_title), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
                 Text(
                     formatSongCount(count),
@@ -1044,19 +1045,19 @@ private fun PinsReorderSheet(pins: List<Music>, ui: PlayerViewModel, model: Melo
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp)
                 .padding(bottom = 32.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp),
+            verticalArrangement = Arrangement.spacedBy(MeloLayout.Space2),
         ) { _, item, _ ->
             key(item.id) {
             ReorderableItem {
                 Surface(
                     color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    shape = RoundedCornerShape(18.dp),
+                    shape = MeloLayout.PanelShape,
                 ) {
                     Row(Modifier.fillMaxWidth().padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
                         SmartImage(
                             model = item.imageUrl,
                             contentDescription = null,
-                            shape = RoundedCornerShape(12.dp),
+                            shape = MeloLayout.CardShape,
                             contentScale = ContentScale.Crop,
                             targetSize = SmartImageCompactListTargetSize,
                             modifier = Modifier.size(44.dp),

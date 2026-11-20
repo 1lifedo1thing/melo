@@ -1,7 +1,9 @@
 package `in`.melo.presentation.screens
 
+import `in`.melo.ui.theme.MeloAlpha
 import `in`.melo.data.source
 import `in`.melo.presentation.components.MusicOptionsHost
+import `in`.melo.presentation.components.MeloIconButton
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -114,6 +116,7 @@ import androidx.compose.runtime.LaunchedEffect
 import `in`.melo.presentation.components.AlbumListItem
 import `in`.melo.presentation.components.ArtistListItem
 import androidx.compose.material3.ContainedLoadingIndicator
+import `in`.melo.ui.theme.MeloLayout
 
 
 
@@ -421,7 +424,7 @@ private fun ArtistAbout(biography: String?, listeners: String?, rank: Int?, imag
     var open by remember { mutableStateOf(false) }
     Column(Modifier.fillMaxWidth().padding(top = 8.dp)) {
         ArtistSectionTitle(stringResource(R.string.artist_about))
-        Surface(shape = RoundedCornerShape(24.dp), color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        Surface(shape = MeloLayout.PanelShape, color = MaterialTheme.colorScheme.surfaceContainerHigh,
             modifier = Modifier.fillMaxWidth().clickable(enabled = biography != null) { open = !open }) {
             Column {
                 if (image != null) `in`.melo.presentation.components.SmartImage(
@@ -457,7 +460,7 @@ private fun ArtistAlbumSectionSongItem(
     val isLastSong = songIndex == songCount - 1
 
     val songItemShape = when {
-        songCount == 1 -> RoundedCornerShape(16.dp)
+        songCount == 1 -> MeloLayout.PanelShape
         songIndex == 0 -> RoundedCornerShape(
             topStart = 16.dp,
             topEnd = 16.dp,
@@ -470,7 +473,7 @@ private fun ArtistAlbumSectionSongItem(
             bottomStart = 16.dp,
             bottomEnd = 16.dp
         )
-        else -> RoundedCornerShape(4.dp)
+        else -> MeloLayout.ArtworkShape
     }
 
     val containerShape = if (isLastSong) {
@@ -487,12 +490,12 @@ private fun ArtistAlbumSectionSongItem(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.5f), containerShape)
+            .background(MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = MeloAlpha.Tertiary), containerShape)
             .padding(horizontal = 8.dp)
     ) {
         Column {
             if (songIndex > 0) {
-                Spacer(modifier = Modifier.height(2.dp))
+                Spacer(modifier = Modifier.height(MeloLayout.Space1))
             }
 
             EnhancedSongListItem(
@@ -527,7 +530,11 @@ private fun CustomCollapsingTopBar(
     onPlayClick: () -> Unit,
 ) {
     val surfaceColor = MaterialTheme.colorScheme.surface
-    val statusBarColor = if (LocalMeloDarkTheme.current) Color.Black.copy(alpha = 0.6f) else Color.White.copy(alpha = 0.4f)
+    val statusBarColor = if (LocalMeloDarkTheme.current) {
+        MaterialTheme.colorScheme.background.copy(alpha = MeloAlpha.Scrim)
+    } else {
+        MaterialTheme.colorScheme.surface.copy(alpha = MeloAlpha.Disabled)
+    }
 
     // --- Animation Values ---
     val fabScale = 1f - collapseFraction
@@ -624,13 +631,13 @@ private fun CustomCollapsingTopBar(
                     .fillMaxSize()
                     .statusBarsPadding()
             ) {
-                FilledIconButton(
-                    modifier = Modifier.align(Alignment.TopStart).padding(start = 12.dp, top = 4.dp),
+                MeloIconButton(
+                    icon = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = stringResource(R.string.common_back),
                     onClick = onBackPressed,
-                    colors = IconButtonDefaults.filledIconButtonColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)
-                ) {
-                    Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.common_back))
-                }
+                    modifier = Modifier.align(Alignment.TopStart).padding(start = 12.dp, top = 4.dp),
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                )
 
 
 
@@ -655,7 +662,6 @@ private fun CustomCollapsingTopBar(
                         Text(
                             text = artist.name,
                             style = MaterialTheme.typography.headlineMedium.copy(
-                                fontSize = 26.sp,
                                 textGeometricTransform = TextGeometricTransform(scaleX = 1.2f),
                             ),
                             fontWeight = FontWeight.Bold,
@@ -699,8 +705,8 @@ private fun CustomCollapsingTopBar(
 
 @Composable
 private fun MusicIconPattern(modifier: Modifier = Modifier) {
-    val color1 = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.1f)
-    val color2 = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+    val color1 = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = MeloAlpha.Divider)
+    val color2 = MaterialTheme.colorScheme.primary.copy(alpha = MeloAlpha.Divider)
 
     Box(modifier = modifier.background(MaterialTheme.colorScheme.primaryContainer)) {
         Icon(

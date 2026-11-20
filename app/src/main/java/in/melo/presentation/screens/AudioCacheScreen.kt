@@ -60,6 +60,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
+import `in`.melo.ui.theme.MeloLayout
 
 private enum class CacheSort { RECENT, SIZE, TITLE }
 
@@ -102,7 +103,7 @@ internal fun AudioCacheScreen(model: MeloModel, navController: NavHostController
                 title = { Text(stringResource(R.string.audio_cache_title), fontFamily = GoogleSansRounded, modifier = Modifier.padding(start = 8.dp)) },
                 navigationIcon = {
                     FilledTonalIconButton(
-                        modifier = Modifier.padding(start = 10.dp),
+                        modifier = Modifier.padding(start = MeloLayout.Space3),
                         colors = IconButtonDefaults.filledIconButtonColors(
                             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                             contentColor = MaterialTheme.colorScheme.onSurface,
@@ -116,7 +117,7 @@ internal fun AudioCacheScreen(model: MeloModel, navController: NavHostController
         LazyColumn(
             Modifier.fillMaxSize().padding(inner),
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 48.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp),
+            verticalArrangement = Arrangement.spacedBy(MeloLayout.Space2),
         ) {
             item {
                 UsageCard(used, settings.audioCacheLimitMb * MB, free, entries)
@@ -210,7 +211,7 @@ internal fun AudioCacheScreen(model: MeloModel, navController: NavHostController
 
 @Composable
 private fun UsageCard(used: Long, limit: Long, free: Long, entries: List<CachedAudio>) {
-    Surface(color = MaterialTheme.colorScheme.surfaceContainer, shape = RoundedCornerShape(20.dp), modifier = Modifier.fillMaxWidth()) {
+    Surface(color = MaterialTheme.colorScheme.surfaceContainer, shape = MeloLayout.PanelShape, modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
                 stringResource(R.string.audio_cache_usage, formatSize(used), formatSize(limit)),
@@ -234,11 +235,11 @@ private fun UsageCard(used: Long, limit: Long, free: Long, entries: List<CachedA
 private fun CachedTrackRow(entry: CachedAudio, selected: Boolean, onToggle: () -> Unit) {
     Surface(
         color = if (selected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainer,
-        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).clickable(onClick = onToggle),
+        modifier = Modifier.fillMaxWidth().clip(MeloLayout.CardShape).clickable(onClick = onToggle),
     ) {
-        Row(Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.padding(MeloLayout.Space3), verticalAlignment = Alignment.CenterVertically) {
             Box(
-                Modifier.size(48.dp).clip(RoundedCornerShape(8.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh),
+                Modifier.size(48.dp).clip(MeloLayout.ArtworkShape).background(MaterialTheme.colorScheme.surfaceContainerHigh),
                 contentAlignment = Alignment.Center,
             ) {
                 when {

@@ -34,7 +34,6 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Radio
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -62,16 +61,26 @@ import `in`.melo.data.HomeRecommendationType
 import `in`.melo.data.Music
 import `in`.melo.data.MusicKind
 import `in`.melo.presentation.components.SmartImage
+import `in`.melo.presentation.components.MeloIconButton
 import `in`.melo.presentation.components.MoodArtwork
 import `in`.melo.presentation.components.LocalHomeGradients
 import `in`.melo.presentation.components.artworkRim
 import `in`.melo.presentation.components.homePress
 import `in`.melo.ui.theme.MeloLayout
+import `in`.melo.ui.theme.LocalMeloDarkTheme
+import `in`.melo.ui.theme.MeloAlpha
 
 /* Full-art recommendation cards and a scannable Recents feed using Melo data and actions. */
 
 private const val TOP_PICK_RATIO = 0.75f
-private val TOP_PICK_SHAPE = RoundedCornerShape(12.dp)
+private val TOP_PICK_SHAPE = MeloLayout.CardShape
+
+@Composable
+private fun artworkForeground(): Color = if (LocalMeloDarkTheme.current) {
+    MaterialTheme.colorScheme.onSurface
+} else {
+    MaterialTheme.colorScheme.onPrimary
+}
 
 @Composable
 internal fun ForYouShelf(
@@ -107,7 +116,7 @@ internal fun ForYouShelf(
                         state = shelfState,
                         flingBehavior = rememberSnapFlingBehavior(shelfState),
                         contentPadding = PaddingValues(horizontal = MeloLayout.PageGutter),
-                        horizontalArrangement = Arrangement.spacedBy(14.dp),
+                        horizontalArrangement = Arrangement.spacedBy(MeloLayout.Space4),
                     ) {
                         items(picks, key = { "${it.type}:${it.item.id}" }, contentType = { it.type }) { pick ->
                             when (pick.type) {
@@ -182,6 +191,7 @@ private fun ForYouPlaylistCard(
     onClick: () -> Unit,
     onLongPress: (() -> Unit)?,
 ) {
+    val foreground = artworkForeground()
     val interactions = remember { MutableInteractionSource() }
     Box(
         modifier = modifier
@@ -213,12 +223,12 @@ private fun ForYouPlaylistCard(
         )
         Column(
             Modifier.align(Alignment.BottomStart).fillMaxWidth().padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(3.dp),
+            verticalArrangement = Arrangement.spacedBy(MeloLayout.Space1),
         ) {
             Text(
                 text = eyebrow,
                 style = MaterialTheme.typography.labelMedium,
-                color = Color.White.copy(alpha = 0.84f),
+                color = foreground.copy(alpha = MeloAlpha.Secondary),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -226,7 +236,7 @@ private fun ForYouPlaylistCard(
                 text = title,
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
-                color = Color.White,
+                color = foreground,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -234,7 +244,7 @@ private fun ForYouPlaylistCard(
                 Text(
                     text = subtitle,
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color.White.copy(alpha = 0.82f),
+                    color = foreground.copy(alpha = MeloAlpha.Secondary),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -254,6 +264,7 @@ private fun ForYouRadioCard(
     modifier: Modifier,
     onClick: () -> Unit,
 ) {
+    val foreground = artworkForeground()
     val interactions = remember { MutableInteractionSource() }
     val gradients = LocalHomeGradients.current
     Box(
@@ -279,9 +290,9 @@ private fun ForYouRadioCard(
             Modifier.align(Alignment.BottomStart).fillMaxWidth().padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            Text(eyebrow, style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.8f), maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(title, style = MaterialTheme.typography.headlineSmall, color = Color.White, maxLines = 2, overflow = TextOverflow.Ellipsis)
-            if (subtitle.isNotBlank()) Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = 0.8f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(eyebrow, style = MaterialTheme.typography.bodySmall, color = foreground.copy(alpha = MeloAlpha.Secondary), maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(title, style = MaterialTheme.typography.headlineSmall, color = foreground, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            if (subtitle.isNotBlank()) Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = foreground.copy(alpha = MeloAlpha.Secondary), maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
 }
@@ -289,6 +300,7 @@ private fun ForYouRadioCard(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun ForYouMoodCard(mood: HomeMood, modifier: Modifier, onClick: () -> Unit) {
+    val foreground = artworkForeground()
     val interactions = remember { MutableInteractionSource() }
     Box(
         modifier.aspectRatio(TOP_PICK_RATIO).homePress(interactions).clip(TOP_PICK_SHAPE)
@@ -300,8 +312,8 @@ private fun ForYouMoodCard(mood: HomeMood, modifier: Modifier, onClick: () -> Un
             Modifier.align(Alignment.BottomStart).fillMaxWidth().padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            Text(stringResource(R.string.home_mood_for_you_tag), style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.8f))
-            Text(stringResource(moodLabel(mood)), style = MaterialTheme.typography.headlineSmall, color = Color.White, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Text(stringResource(R.string.home_mood_for_you_tag), style = MaterialTheme.typography.bodySmall, color = foreground.copy(alpha = MeloAlpha.Secondary))
+            Text(stringResource(moodLabel(mood)), style = MaterialTheme.typography.headlineSmall, color = foreground, maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
     }
 }
@@ -309,6 +321,7 @@ private fun ForYouMoodCard(mood: HomeMood, modifier: Modifier, onClick: () -> Un
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun FindYourMood(moods: List<HomeMood>, onMoodClick: (HomeMood) -> Unit, onShowAllMoods: () -> Unit) {
+    val foreground = artworkForeground()
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(
             Modifier.fillMaxWidth().padding(start = MeloLayout.PageGutter, end = 8.dp),
@@ -319,7 +332,7 @@ private fun FindYourMood(moods: List<HomeMood>, onMoodClick: (HomeMood) -> Unit,
         }
         LazyRow(
             contentPadding = PaddingValues(horizontal = MeloLayout.PageGutter),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalArrangement = Arrangement.spacedBy(MeloLayout.Space3),
         ) {
             items(moods, key = { it.name }) { mood ->
                 val interactions = remember { MutableInteractionSource() }
@@ -333,7 +346,7 @@ private fun FindYourMood(moods: List<HomeMood>, onMoodClick: (HomeMood) -> Unit,
                     Text(
                         stringResource(moodLabel(mood)), Modifier.align(Alignment.BottomStart).padding(12.dp),
                         style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold,
-                        color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                        color = foreground, maxLines = 1, overflow = TextOverflow.Ellipsis,
                     )
                 }
             }
@@ -411,7 +424,7 @@ private fun RecentlyPlayedFeed(
     onOpenAll: () -> Unit,
 ) {
     val openAllDescription = stringResource(R.string.home_recent_feed_open_all)
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(MeloLayout.Space3)) {
         Row(
             Modifier.fillMaxWidth().padding(start = MeloLayout.PageGutter, end = MeloLayout.PageGutter / 2),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -423,18 +436,11 @@ private fun RecentlyPlayedFeed(
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface,
             )
-            IconButton(
+            MeloIconButton(
+                icon = Icons.AutoMirrored.Rounded.ArrowForward,
+                contentDescription = openAllDescription,
                 onClick = onOpenAll,
-                modifier = Modifier.size(48.dp).semantics {
-                    contentDescription = openAllDescription
-                },
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
+            )
         }
         CompactTrackShelf(tracks, onClick, onLongPress)
     }

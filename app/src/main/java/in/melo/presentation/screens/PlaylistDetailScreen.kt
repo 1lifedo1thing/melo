@@ -63,6 +63,7 @@ import `in`.melo.R
 import `in`.melo.MeloModel
 import `in`.melo.data.LOCAL_PLAYLIST_PREFIX
 import `in`.melo.presentation.components.PlaylistNameDialog
+import `in`.melo.presentation.components.MeloIconButton
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 import `in`.melo.data.model.Song
@@ -80,6 +81,7 @@ import `in`.melo.data.Music
 import `in`.melo.data.SpotifyAccount
 import `in`.melo.presentation.components.SpotifyPlaylistEditor
 import `in`.melo.utils.parseSongCount
+import `in`.melo.ui.theme.MeloLayout
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -331,13 +333,13 @@ fun PlaylistDetailScreen(model: MeloModel, navController: NavHostController, pla
                         if (suggestionsLoading) item { androidx.compose.material3.LinearProgressIndicator(Modifier.fillMaxWidth().padding(12.dp)) }
                         if (suggestionError != null) item { Text(suggestionError.orEmpty(), Modifier.padding(12.dp), color = MaterialTheme.colorScheme.error) }
                         itemsIndexed(suggestions.take(5), key = { _, track -> "suggestion:${track.id}" }) { _, track ->
-                            Row(Modifier.fillMaxWidth().padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Row(Modifier.fillMaxWidth().padding(MeloLayout.Space3), verticalAlignment = Alignment.CenterVertically) {
                                 coil.compose.AsyncImage(track.imageUrl, null, Modifier.size(48.dp))
                                 Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
                                     Text(track.title, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                     Text(track.subtitle, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                 }
-                                IconButton(enabled = online && addingSuggestion == null, onClick = {
+                                MeloIconButton(Icons.Rounded.Add, stringResource(R.string.spotify_playlist_add_suggestion), onClick = {
                                     addingSuggestion = track.id
                                     scope.launch {
                                         try {
@@ -347,7 +349,7 @@ fun PlaylistDetailScreen(model: MeloModel, navController: NavHostController, pla
                                         catch (failure: Exception) { model.showMessage(failure.message.orEmpty()) }
                                         finally { addingSuggestion = null }
                                     }
-                                }) { Icon(Icons.Rounded.Add, stringResource(R.string.spotify_playlist_add_suggestion)) }
+                                }, enabled = online && addingSuggestion == null)
                             }
                         }
                     }
@@ -403,9 +405,9 @@ private fun PlaylistFilterField(value: String, enabled: Boolean, onChange: (Stri
         placeholder = { Text(stringResource(R.string.playlist_filter_hint)) },
         leadingIcon = { Icon(Icons.Rounded.Search, null) },
         trailingIcon = if (value.isNotEmpty()) ({
-            IconButton(onClick = { onChange("") }) { Icon(Icons.Rounded.Close, stringResource(R.string.playlist_filter_clear)) }
+            MeloIconButton(Icons.Rounded.Close, stringResource(R.string.playlist_filter_clear), onClick = { onChange("") })
         }) else null,
-        shape = androidx.compose.foundation.shape.RoundedCornerShape(50),
+        shape = MeloLayout.PillShape,
         keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Search),
     )
 }

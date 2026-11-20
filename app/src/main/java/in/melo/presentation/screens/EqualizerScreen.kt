@@ -40,8 +40,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.PowerSettingsNew
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -97,7 +95,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import `in`.melo.presentation.components.meloPanel
+import `in`.melo.presentation.components.MeloCard
 import `in`.melo.R
 import `in`.melo.data.equalizer.EqualizerPreset
 import `in`.melo.presentation.components.CollapsibleCommonTopBar
@@ -151,6 +149,8 @@ import androidx.compose.material.icons.automirrored.rounded.VolumeUp
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
+import `in`.melo.ui.theme.MeloLayout
+import `in`.melo.ui.theme.MeloAlpha
 
 @androidx.annotation.OptIn(UnstableApi::class)
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -300,7 +300,7 @@ fun EqualizerScreen(
                 bottom = MiniPlayerHeight + WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 20.dp
             ),
             modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
+            verticalArrangement = Arrangement.spacedBy(MeloLayout.Space2)
         ) {
             // Preset Tabs
             item(key = "preset_tabs") {
@@ -473,7 +473,7 @@ private fun PresetTabsRow(
                     width = 20.dp, // Fixed width for expressive dot? Or default width? Library used default.
                     // Library code: Modifier.tabIndicatorOffset(selectedTabIndex = pagerState.currentPage), height = 3.dp
                     // Let's stick to default width (match content) but custom height/color.
-                    shape = RoundedCornerShape(3.dp),
+                    shape = MeloLayout.PillShape,
                     color = MaterialTheme.colorScheme.primary
                  )
             }
@@ -547,14 +547,11 @@ private fun BandSlidersSection(
 ) {
     val frequencies = EqualizerPreset.BAND_FREQUENCIES
     
-    Card(
+    MeloCard(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp).meloPanel(RoundedCornerShape(24.dp)),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.Transparent
-        ),
-        shape = RoundedCornerShape(24.dp)
+            .padding(horizontal = 16.dp),
+        shape = MeloLayout.PanelShape
     ) {
         Column(
             modifier = Modifier.padding(vertical = 16.dp),
@@ -614,7 +611,7 @@ private fun BandSlidersSection(
                                  modifier = Modifier.size(20.dp),
                                  tint = MaterialTheme.colorScheme.onTertiaryContainer
                              )
-                             Spacer(modifier = Modifier.width(6.dp))
+                             Spacer(modifier = Modifier.width(MeloLayout.Space2))
                              Text(
                                  text = stringResource(R.string.common_save),
                                  color = MaterialTheme.colorScheme.onTertiaryContainer,
@@ -641,7 +638,7 @@ private fun BandSlidersSection(
                                 modifier = Modifier.size(20.dp),
                                 tint = MaterialTheme.colorScheme.onPrimaryContainer
                             )
-                            Spacer(modifier = Modifier.width(6.dp))
+                            Spacer(modifier = Modifier.width(MeloLayout.Space2))
                             Text(
                                 text = stringResource(R.string.equalizer_action_update),
                                 color = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -666,7 +663,7 @@ private fun BandSlidersSection(
                                 modifier = Modifier.size(20.dp),
                                 tint = MaterialTheme.colorScheme.onTertiaryContainer
                             )
-                            Spacer(modifier = Modifier.width(6.dp))
+                            Spacer(modifier = Modifier.width(MeloLayout.Space2))
                             Text(
                                 text = stringResource(R.string.equalizer_action_save_new),
                                 color = MaterialTheme.colorScheme.onTertiaryContainer,
@@ -677,7 +674,7 @@ private fun BandSlidersSection(
                 }
             }
             
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(MeloLayout.Space3))
 
             when (viewMode) {
                 EqualizerViewMode.GRAPH -> {
@@ -782,7 +779,6 @@ private fun GraphBandSliders(
                     Text(
                         text = if (level > 0) "+$level" else "$level",
                         style = MaterialTheme.typography.labelSmall,
-                        fontSize = 10.sp,
                         color = if (isEnabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.height(20.dp)
                     )
@@ -797,7 +793,7 @@ private fun GraphBandSliders(
                             .weight(1f)
                             .fillMaxWidth(),
                         activeTrackColor = Color.Transparent, 
-                        inactiveTrackColor = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.5f),
+                        inactiveTrackColor = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = MeloAlpha.Tertiary),
                         thumbColor = if (isEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                         trackThickness = 4.dp, 
                         thumbSize = 16.dp,
@@ -810,7 +806,6 @@ private fun GraphBandSliders(
                     Text(
                         text = frequencies.getOrElse(index) { "" }.replace("Hz", "").replace("k", "k"),
                         style = MaterialTheme.typography.labelSmall,
-                        fontSize = 10.sp,
                         maxLines = 1,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -922,7 +917,6 @@ private fun VerticalBandSlider(
                 style = MaterialTheme.typography.labelSmall,
                 color = if (isEnabled) MaterialTheme.colorScheme.onPrimaryContainer
                 else MaterialTheme.colorScheme.onSurfaceVariant,
-                fontSize = 11.sp
             )
         }
         
@@ -1018,7 +1012,7 @@ private fun CustomVerticalSlider(
     }
 
     // Colors for "inside" look
-    val actualActiveTrackColor = if (enabled) activeTrackColor else activeTrackColor.copy(alpha = 0.3f)
+    val actualActiveTrackColor = if (enabled) activeTrackColor else activeTrackColor.copy(alpha = MeloAlpha.Disabled)
     val actualInactiveTrackColor = inactiveTrackColor
     val actualThumbColor = if (enabled) thumbColor else MaterialTheme.colorScheme.onSurfaceVariant
 
@@ -1039,7 +1033,7 @@ private fun CustomVerticalSlider(
         androidx.compose.foundation.Canvas(
             modifier = Modifier
                 .fillMaxSize()
-                .clip(RoundedCornerShape(50))
+                .clip(MeloLayout.PillShape)
                 .pointerInput(enabled, valueRange.start, valueRange.endInclusive, safeTrackHeight, heightPx) {
                     if (!enabled) return@pointerInput
                     fun dispatchValue(touchY: Float, forceHaptic: Boolean = false) {
@@ -1260,12 +1254,9 @@ private fun EffectCard(
     onValueChange: (Float) -> Unit,
     onEnabledChange: (Boolean) -> Unit
 ) {
-    Card(
-        modifier = Modifier.width(150.dp).fillMaxHeight().meloPanel(RoundedCornerShape(24.dp)), // Match parent intrinsic height
-        colors = CardDefaults.cardColors(
-            containerColor = Color.Transparent
-        ),
-        shape = RoundedCornerShape(24.dp)
+    MeloCard(
+        modifier = Modifier.width(150.dp).fillMaxHeight(), // Match parent intrinsic height
+        shape = MeloLayout.PanelShape
     ) {
         Column(
             modifier = Modifier.padding(12.dp),
@@ -1291,7 +1282,7 @@ private fun EffectCard(
                         modifier = Modifier.fillMaxSize(),
                         enabled = isEnabled,
                         valueRange = valueRange,
-                        activeTrackColor = if (isEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f),
+                        activeTrackColor = if (isEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = MeloAlpha.Disabled),
                         thumbColor = if (isEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                         waveAmplitude = 3.dp
                     )
@@ -1327,12 +1318,10 @@ private fun UnsupportedEffectCard(
     title: String,
     onDismiss: () -> Unit
 ) {
-     Card(
-        modifier = Modifier.width(150.dp).fillMaxHeight().meloPanel(RoundedCornerShape(24.dp)), // Match parent intrinsic height
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
-        ),
-        shape = RoundedCornerShape(24.dp)
+     MeloCard(
+        modifier = Modifier.width(150.dp).fillMaxHeight(), // Match parent intrinsic height
+        color = MaterialTheme.colorScheme.errorContainer.copy(alpha = MeloAlpha.Disabled),
+        shape = MeloLayout.PanelShape
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             IconButton(
@@ -1367,7 +1356,7 @@ private fun UnsupportedEffectCard(
                 Text(
                     text = stringResource(R.string.equalizer_effect_not_supported),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.8f),
+                    color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = MeloAlpha.Secondary),
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                 )
             }
@@ -1381,12 +1370,10 @@ private fun UnsupportedEffectRow(
     message: String = "",
     onDismiss: () -> Unit
 ) {
-    Card(
+    MeloCard(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f) // Subtle warning
-        ),
-        shape = RoundedCornerShape(12.dp)
+        color = MaterialTheme.colorScheme.errorContainer.copy(alpha = MeloAlpha.Tertiary),
+        shape = MeloLayout.CardShape
     ) {
         val resolvedMessage = if (message.isNotEmpty()) {
             message
@@ -1415,7 +1402,7 @@ private fun UnsupportedEffectRow(
                 Text(
                     text = resolvedMessage,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.8f)
+                    color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = MeloAlpha.Secondary)
                 )
             }
             IconButton(onClick = onDismiss) {
@@ -1496,14 +1483,11 @@ private fun VolumeControlCard(
     val haptic = LocalHapticFeedback.current
     var lastHapticValue by remember { mutableStateOf(volume) }
     
-    Card(
+    MeloCard(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp).meloPanel(RoundedCornerShape(24.dp)),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.Transparent
-        ),
-        shape = RoundedCornerShape(24.dp)
+            .padding(horizontal = 16.dp),
+        shape = MeloLayout.PanelShape
     ) {
         Column(
             modifier = Modifier.padding(24.dp),
@@ -1578,7 +1562,7 @@ private fun HybridBandSliders(
                 .fillMaxWidth()
                 .height(220.dp) // Enlarged from 140.dp
                 .padding(horizontal = 4.dp) // Reduced outer padding
-                .clip(RoundedCornerShape(24.dp))
+                .clip(MeloLayout.PanelShape)
                 .background(MaterialTheme.colorScheme.surfaceContainerLow)
                 .padding(16.dp)
         ) {
@@ -1603,7 +1587,7 @@ private fun HybridBandSliders(
                          listOf("60", "230", "910", "4k", "14k")
                     }
                     labels.forEach { 
-                        Text(it, style = MaterialTheme.typography.labelSmall, fontSize = 9.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha=0.5f))
+                        Text(it, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = MeloAlpha.Tertiary))
                     }
                 }
              }
@@ -1647,7 +1631,7 @@ private fun HybridBandSliders(
                             modifier = Modifier.tabIndicatorOffset(selectedTabIndex = selectedTabIndex),
                             height = 3.dp,
                             width = 20.dp,
-                            shape = RoundedCornerShape(3.dp),
+                            shape = MeloLayout.PillShape,
                             color = MaterialTheme.colorScheme.primary
                         )
                     }
@@ -1778,7 +1762,8 @@ private fun HybridFrequencyResponseGraph(
     frequencies: List<String>? = null
 ) {
      val primaryColor = MaterialTheme.colorScheme.primary
-     val gridColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f)
+     val gridColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = MeloAlpha.Divider)
+     val pointColor = MaterialTheme.colorScheme.onSurface
      
      androidx.compose.foundation.Canvas(modifier = Modifier.fillMaxSize()) {
         val widthPerBand = size.width / bandLevels.size
@@ -1834,14 +1819,14 @@ private fun HybridFrequencyResponseGraph(
             // Draw Line
             drawPath(
                 path = path,
-                color = if (isEnabled) primaryColor else primaryColor.copy(alpha=0.5f),
+                color = if (isEnabled) primaryColor else primaryColor.copy(alpha=MeloAlpha.Tertiary),
                 style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round)
             )
             
             // Draw Dots
             points.forEach { point ->
                 drawCircle(
-                    color = Color.White,
+                    color = pointColor,
                     radius = 3.dp.toPx(),
                     center = point
                 )

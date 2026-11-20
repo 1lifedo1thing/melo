@@ -1,5 +1,6 @@
 package `in`.melo.presentation.screens
 
+import `in`.melo.ui.theme.MeloAlpha
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
@@ -81,6 +82,7 @@ import `in`.melo.presentation.navigation.navigateSafely
 import `in`.melo.presentation.navigation.openMusic
 import `in`.melo.presentation.utils.rememberReducedMotion
 import `in`.melo.ui.theme.MeloLayout
+import `in`.melo.ui.theme.LocalMeloDarkTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -183,7 +185,7 @@ private fun ExploreCategoryGrid(
                 top = topPadding + 8.dp,
                 bottom = bottomPadding + 28.dp,
             ),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+            verticalArrangement = Arrangement.spacedBy(MeloLayout.Space3),
         ) {
             item(key = "explore_title") {
                 Column(
@@ -223,7 +225,7 @@ private fun ExploreCategoryGrid(
                     if (section.title.isNotBlank()) item(key = "explore_section_title_$sectionIndex") {
                         Text(
                             section.title,
-                            modifier = Modifier.padding(horizontal = MeloLayout.PageGutter).padding(top = 6.dp),
+                            modifier = Modifier.padding(horizontal = MeloLayout.PageGutter).padding(top = MeloLayout.Space2),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.SemiBold,
                         )
@@ -260,13 +262,14 @@ private fun ExploreCategoryCard(
     modifier: Modifier = Modifier,
 ) {
     LaunchedEffect(category.key, category.imageUrl) { if (category.imageUrl == null) onVisible() }
+    val foreground = if (LocalMeloDarkTheme.current) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onPrimary
     val base = remember(category.stripeColor, category.title) {
         category.stripeColor?.let { Color(it) } ?: exploreFallbackColor(category.title)
     }
     Box(
         modifier = modifier
             .aspectRatio(1.72f)
-            .clip(RoundedCornerShape(18.dp))
+            .clip(MeloLayout.PanelShape)
             .background(base)
             .combinedClickable(onClick = onClick, role = androidx.compose.ui.semantics.Role.Button)
             .semantics(mergeDescendants = true) {},
@@ -283,11 +286,11 @@ private fun ExploreCategoryCard(
         Box(Modifier.fillMaxSize().background(Brush.verticalGradient(0f to Color.Black.copy(alpha = .28f), .65f to Color.Transparent)))
         Text(
             category.title,
-            modifier = Modifier.align(Alignment.TopStart).padding(horizontal = 13.dp, vertical = 11.dp),
+            modifier = Modifier.align(Alignment.TopStart).padding(horizontal = MeloLayout.Space4, vertical = MeloLayout.Space3),
             style = MaterialTheme.typography.titleMedium.copy(
-                shadow = Shadow(Color.Black.copy(alpha = .4f), Offset(0f, 1f), 5f),
+                shadow = Shadow(Color.Black.copy(alpha = MeloAlpha.Disabled), Offset(0f, 1f), 5f),
             ),
-            color = Color.White,
+            color = foreground,
             fontWeight = FontWeight.Bold,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
@@ -350,7 +353,7 @@ private fun ExploreCategoryPage(
         }
         shelves.forEachIndexed { index, shelf ->
             item(key = "explore_shelf_${shelf.title}_$index") {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(MeloLayout.Space3)) {
                     Text(
                         shelf.title,
                         modifier = Modifier.padding(horizontal = MeloLayout.PageGutter),
@@ -385,7 +388,7 @@ private fun ExplorePlaylistTile(item: Music, onClick: () -> Unit, onLongClick: (
         Modifier.width(148.dp)
             .combinedClickable(onClick = onClick, onLongClick = onLongClick)
             .padding(bottom = 4.dp),
-        verticalArrangement = Arrangement.spacedBy(7.dp),
+        verticalArrangement = Arrangement.spacedBy(MeloLayout.Space2),
     ) {
         Card(
             shape = MeloLayout.ArtworkShape,

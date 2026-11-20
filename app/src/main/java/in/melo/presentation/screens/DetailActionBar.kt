@@ -12,9 +12,7 @@ import androidx.compose.material.icons.rounded.DownloadForOffline
 import androidx.compose.material.icons.outlined.DownloadForOffline
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.Text
@@ -36,7 +34,8 @@ import `in`.melo.data.preferences.DetailPage
 import `in`.melo.presentation.viewmodel.PlayerViewModel
 import `in`.melo.presentation.components.MeloMenu
 import `in`.melo.presentation.components.MeloMenuItem
-import `in`.melo.presentation.components.meloPanel
+import `in`.melo.presentation.components.MeloIconButton
+import `in`.melo.ui.theme.MeloLayout
 
 /** One button a page can offer: in the bar when the layout shows it, in the ⋮ menu otherwise. */
 internal data class ActionSpec(
@@ -64,23 +63,29 @@ internal fun DetailActionBar(page: DetailPage, actions: List<ActionSpec>, ui: Pl
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         bar.forEach { spec ->
-            FilledTonalIconButton(
-                onClick = spec.onClick, enabled = spec.enabled,
-                modifier = Modifier.size(48.dp).meloPanel(RoundedCornerShape(16.dp)),
-                shape = RoundedCornerShape(16.dp),
-                colors = when {
-                    spec.selected -> IconButtonDefaults.filledTonalIconButtonColors(
-                        containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary)
-                    spec.destructive -> IconButtonDefaults.filledTonalIconButtonColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer, contentColor = MaterialTheme.colorScheme.onErrorContainer)
-                    else -> IconButtonDefaults.filledTonalIconButtonColors()
+            MeloIconButton(
+                icon = spec.icon,
+                contentDescription = spec.label,
+                onClick = spec.onClick,
+                enabled = spec.enabled,
+                containerColor = when {
+                    spec.selected -> MaterialTheme.colorScheme.primary
+                    spec.destructive -> MaterialTheme.colorScheme.errorContainer
+                    else -> MaterialTheme.colorScheme.surfaceContainer
                 },
-            ) { Icon(spec.icon, spec.label) }
+                contentColor = when {
+                    spec.selected -> MaterialTheme.colorScheme.onPrimary
+                    spec.destructive -> MaterialTheme.colorScheme.onErrorContainer
+                    else -> MaterialTheme.colorScheme.onSurface
+                },
+            )
         }
         if (menu.isNotEmpty()) Box {
-            FilledTonalIconButton(onClick = { expanded = true }) {
-                Icon(Icons.Rounded.MoreVert, stringResource(R.string.detail_more_actions))
-            }
+            MeloIconButton(
+                icon = Icons.Rounded.MoreVert,
+                contentDescription = stringResource(R.string.detail_more_actions),
+                onClick = { expanded = true },
+            )
             MeloMenu(expanded = expanded, onDismiss = { expanded = false }) {
                 menu.forEach { spec ->
                     MeloMenuItem(

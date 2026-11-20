@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
+import `in`.melo.ui.theme.MeloLayout
 
 /** Shared category control: a quiet outline and a clear filled selection. */
 @Composable
@@ -38,7 +39,7 @@ fun TabAnimation(
     val haptics = LocalHapticFeedback.current
     val background by animateColorAsState(if (selected) selectedColor else unselectedColor, tween(200), label = "tabFill")
     val ink by animateColorAsState(if (selected) onSelectedColor else onUnselectedColor, tween(200), label = "tabInk")
-    val shape = RoundedCornerShape(12.dp)
+    val shape = MeloLayout.CardShape
     Tab(
         modifier = modifier.padding(horizontal = 4.dp, vertical = 4.dp).heightIn(min = 48.dp)
             .clip(shape).background(background)

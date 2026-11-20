@@ -1,6 +1,8 @@
 package `in`.melo.presentation.screens
 
+import `in`.melo.ui.theme.MeloAlpha
 import androidx.compose.material.icons.rounded.History
+import androidx.compose.material.icons.rounded.Settings
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -29,7 +31,6 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.Scaffold
@@ -53,7 +54,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
@@ -61,7 +61,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
-import `in`.melo.presentation.components.meloPanel
+import `in`.melo.presentation.components.MeloIconButton
 import `in`.melo.R
 import `in`.melo.MeloModel
 import `in`.melo.data.HomeLibrary
@@ -98,6 +98,7 @@ import `in`.melo.utils.formatSongCount
 import `in`.melo.presentation.viewmodel.PlayerViewModel
 import `in`.melo.ui.theme.GoogleSansRounded
 import `in`.melo.ui.theme.LocalMeloDarkTheme
+import `in`.melo.ui.theme.MeloLayout
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import racra.compose.smooth_corner_rect_library.AbsoluteSmoothCornerShape
@@ -185,12 +186,12 @@ fun LibraryScreen(model: MeloModel, navController: NavHostController, paddingVal
 
     val dark = LocalMeloDarkTheme.current
     val gradientColors = if (dark) {
-        listOf(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f), Color.Transparent)
+        listOf(MaterialTheme.colorScheme.primaryContainer.copy(alpha = MeloAlpha.Tertiary), Color.Transparent)
     } else {
-        listOf(MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.2f), Color.Transparent)
+        listOf(MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = MeloAlpha.Divider), Color.Transparent)
     }
     val gradientBrush = remember(gradientColors) { Brush.verticalGradient(colors = gradientColors) }
-    val headerContainerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
+    val headerContainerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = MeloAlpha.Disabled)
 
     Scaffold(
         modifier = Modifier.background(brush = gradientBrush),
@@ -204,34 +205,23 @@ fun LibraryScreen(model: MeloModel, navController: NavHostController, paddingVal
                             fontFamily = GoogleSansRounded,
                             fontWeight = FontWeight.ExtraBold,
                             color = MaterialTheme.colorScheme.primary,
-                            fontSize = 32.sp,
+                            style = MaterialTheme.typography.headlineLarge,
                             letterSpacing = (-0.8).sp
                         )
                     },
                     actions = {
-                        IconButton(
-                            modifier = Modifier.padding(end = 4.dp).meloPanel(androidx.compose.foundation.shape.CircleShape),
-                            colors = IconButtonDefaults.iconButtonColors(
-                                containerColor = Color.Transparent,
-                                contentColor = MaterialTheme.colorScheme.onSurface
-                            ),
-                            onClick = { navController.navigateSafely(Screen.History.route) }
-                        ) {
-                            Icon(androidx.compose.material.icons.Icons.Rounded.History, stringResource(R.string.history_title))
-                        }
-                        IconButton(
-                            modifier = Modifier.padding(end = 14.dp).meloPanel(androidx.compose.foundation.shape.CircleShape),
-                            colors = IconButtonDefaults.iconButtonColors(
-                                containerColor = Color.Transparent,
-                                contentColor = MaterialTheme.colorScheme.onSurface
-                            ),
-                            onClick = { navController.navigateSafely(Screen.Settings.route) }
-                        ) {
-                            Icon(
-                                painter = painterResource(R.drawable.rounded_settings_24),
-                                contentDescription = stringResource(R.string.library_cd_open_settings)
-                            )
-                        }
+                        MeloIconButton(
+                            icon = androidx.compose.material.icons.Icons.Rounded.History,
+                            contentDescription = stringResource(R.string.history_title),
+                            onClick = { navController.navigateSafely(Screen.History.route) },
+                            modifier = Modifier.padding(end = MeloLayout.Space1),
+                        )
+                        MeloIconButton(
+                            icon = androidx.compose.material.icons.Icons.Rounded.Settings,
+                            contentDescription = stringResource(R.string.library_cd_open_settings),
+                            onClick = { navController.navigateSafely(Screen.Settings.route) },
+                            modifier = Modifier.padding(end = MeloLayout.Space3),
+                        )
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = Color.Transparent,
@@ -428,7 +418,7 @@ private fun AlbumsTab(
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 4.dp, bottom = bottom),
+            contentPadding = PaddingValues(start = MeloLayout.Space4, end = MeloLayout.Space4, top = 4.dp, bottom = bottom),
             verticalArrangement = Arrangement.spacedBy(if (`in`.melo.presentation.components.LocalCompactLists.current) 8.dp else 14.dp),
             horizontalArrangement = Arrangement.spacedBy(if (`in`.melo.presentation.components.LocalCompactLists.current) 8.dp else 14.dp),
         ) {
