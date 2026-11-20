@@ -130,11 +130,17 @@ import `in`.melo.presentation.viewmodel.PlayerViewModel
 import `in`.melo.presentation.components.SmartImage
 import `in`.melo.presentation.components.ShimmerBox
 import `in`.melo.presentation.components.AutoScrollingTextOnDemand
+import `in`.melo.presentation.components.MeloButton
+import `in`.melo.presentation.components.MeloButtonSize
+import `in`.melo.presentation.components.MeloButtonStyle
+import `in`.melo.presentation.components.MeloListRow
 import `in`.melo.presentation.components.subcomps.AutoSizingTextToFill
 import `in`.melo.presentation.components.subcomps.TightWrapText
 import `in`.melo.presentation.components.MiniPlayerHeight
 import `in`.melo.utils.formatDuration
 import `in`.melo.ui.theme.ExpTitleTypography
+import `in`.melo.ui.theme.MeloAlpha
+import `in`.melo.ui.theme.MeloLayout
 
 @Composable
 fun SearchResultSectionHeader(title: String) {
@@ -161,7 +167,7 @@ fun EmptySearchResults(searchQuery: String, colorScheme: ColorScheme) {
             modifier = Modifier
                 .size(80.dp)
                 .padding(bottom = 16.dp),
-            tint = colorScheme.primary.copy(alpha = 0.6f)
+            tint = colorScheme.primary.copy(alpha = MeloAlpha.Tertiary)
         )
 
         Text(
@@ -180,13 +186,12 @@ fun EmptySearchResults(searchQuery: String, colorScheme: ColorScheme) {
         Text(
             text = stringResource(R.string.search_try_different_or_filters),
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = MeloAlpha.Secondary),
             textAlign = TextAlign.Center
         )
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchResultAlbumItem(
     album: Album,
@@ -196,124 +201,26 @@ fun SearchResultAlbumItem(
     selectionIndex: Int? = null,
     isSelectionMode: Boolean = false,
     onLongPress: () -> Unit = {},
-    onSelectionToggle: () -> Unit = {}
+    onSelectionToggle: () -> Unit = {},
 ) {
-    val itemShape = RoundedCornerShape(12.dp)
-
-    val selectionScale by animateFloatAsState(
-        targetValue = if (isSelected) 0.98f else 1f,
-        animationSpec = tween(durationMillis = 200),
-        label = "albumSelectionScale"
+    MeloListRow(
+        title = album.title,
+        subtitle = album.artist,
+        imageModel = album.albumArtUriString,
+        artContentDescription = stringResource(R.string.common_album_art_for_title, album.title),
+        playContentDescription = stringResource(R.string.common_play_album),
+        onClick = onOpenClick,
+        onPlayClick = onPlayClick,
+        playContainerColor = MaterialTheme.colorScheme.secondary.copy(alpha = MeloAlpha.Secondary),
+        playContentColor = MaterialTheme.colorScheme.onSecondary,
+        isSelected = isSelected,
+        selectionIndex = selectionIndex,
+        isSelectionMode = isSelectionMode,
+        onLongClick = onLongPress,
+        onSelectionToggle = onSelectionToggle,
     )
-    val selectionBorderWidth by animateDpAsState(
-        targetValue = if (isSelected) 2.dp else 0.dp,
-        animationSpec = tween(durationMillis = 200),
-        label = "albumSelectionBorder"
-    )
-
-    Card(
-        shape = itemShape,
-        colors = CardDefaults.cardColors(
-            containerColor = Color.Transparent
-        ),
-        modifier = Modifier
-            .fillMaxWidth()
-            .scale(selectionScale)
-            .then(
-                if (isSelected) {
-                    Modifier.border(
-                        width = selectionBorderWidth,
-                        color = MaterialTheme.colorScheme.primary,
-                        shape = itemShape
-                    )
-                } else {
-                    Modifier
-                }
-            )
-            .clip(itemShape)
-            .combinedClickable(
-                onClick = {
-                    if (isSelectionMode) {
-                        onSelectionToggle()
-                    } else {
-                        onOpenClick()
-                    }
-                },
-                onLongClick = onLongPress
-            )
-    ) {
-        Box(modifier = Modifier.fillMaxWidth()) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                SmartImage(
-                    model = album.albumArtUriString,
-                    contentDescription = "Album Art: ${album.title}",
-                    targetSize = SmartImageListTargetSize,
-                    modifier = Modifier
-                        .size(56.dp)
-                        .clip(itemShape)
-                )
-                Spacer(Modifier.width(12.dp))
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Text(
-                        text = album.title,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Text(
-                        text = album.artist,
-                        style = MaterialTheme.typography.bodySmall,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                FilledIconButton(
-                    onClick = onPlayClick,
-                    modifier = Modifier.size(40.dp),
-                    shape = CircleShape,
-                    colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.8f),
-                        contentColor = MaterialTheme.colorScheme.onSecondary
-                    )
-                ) {
-                    Icon(Icons.Rounded.PlayArrow, contentDescription = stringResource(R.string.common_play_album), modifier = Modifier.size(24.dp))
-                }
-            }
-            if (isSelectionMode && isSelected) {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(8.dp)
-                        .size(24.dp)
-                        .background(
-                            color = MaterialTheme.colorScheme.primary,
-                            shape = CircleShape
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = selectionIndex?.toString() ?: "✓",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-        }
-    }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchResultArtistItem(
     artist: Artist,
@@ -321,75 +228,29 @@ fun SearchResultArtistItem(
     onPlayClick: () -> Unit,
     onLongPress: () -> Unit = {},
 ) {
-    val itemShape = RoundedCornerShape(12.dp)
-
-    Card(
-        shape = itemShape,
-        colors = CardDefaults.cardColors(
-            containerColor = Color.Transparent
-        ),
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(itemShape)
-            .combinedClickable(onClick = onOpenClick, onLongClick = onLongPress)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            if (!artist.effectiveImageUrl.isNullOrBlank()) {
-                SmartImage(
-                    model = artist.effectiveImageUrl,
-                    contentDescription = "Artist: ${artist.name}",
-                    targetSize = SmartImageListTargetSize,
-                    modifier = Modifier
-                        .size(56.dp)
-                        .clip(CircleShape)
-                )
-            } else {
-                Icon(
-                    painter = painterResource(id = R.drawable.rounded_artist_24),
-                    contentDescription = "Artist",
-                    modifier = Modifier
-                        .size(56.dp)
-                        .background(MaterialTheme.colorScheme.tertiaryContainer, CircleShape)
-                        .padding(horizontal = 8.dp, vertical = 8.dp),
-                    tint = MaterialTheme.colorScheme.onTertiaryContainer
-                )
-            }
-            Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f)) {
-                Text(
-                    text = artist.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Text(
-                    text = "Artiste",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            FilledIconButton(
-                onClick = onPlayClick,
-                modifier = Modifier.size(40.dp),
-                shape = CircleShape,
-                colors = IconButtonDefaults.filledIconButtonColors(
-                    containerColor = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.8f),
-                    contentColor = MaterialTheme.colorScheme.onTertiary
-                )
-            ) {
-                Icon(Icons.Rounded.PlayArrow, contentDescription = "Play Artist", modifier = Modifier.size(24.dp))
-            }
-        }
+    val imageUrl = artist.effectiveImageUrl.takeUnless { it.isNullOrBlank() }
+    val imageDescription = if (imageUrl != null) {
+        stringResource(R.string.search_cd_artist_image_for_name, artist.name)
+    } else {
+        null
     }
+    MeloListRow(
+        title = artist.name,
+        subtitle = stringResource(R.string.search_artist_kind),
+        imageModel = imageUrl,
+        artContentDescription = imageDescription,
+        playContentDescription = stringResource(R.string.search_cd_play_artist),
+        onClick = onOpenClick,
+        onPlayClick = onPlayClick,
+        artist = true,
+        fallbackPainter = if (imageUrl == null) painterResource(R.drawable.rounded_artist_24) else null,
+        fallbackContentDescription = if (imageUrl == null) stringResource(R.string.common_artist) else null,
+        playContainerColor = MaterialTheme.colorScheme.tertiary.copy(alpha = MeloAlpha.Secondary),
+        playContentColor = MaterialTheme.colorScheme.onTertiary,
+        onLongClick = onLongPress,
+    )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchResultPlaylistItem(
     playlist: Playlist,
@@ -399,117 +260,22 @@ fun SearchResultPlaylistItem(
     selectionIndex: Int? = null,
     isSelectionMode: Boolean = false,
     onLongPress: () -> Unit = {},
-    onSelectionToggle: () -> Unit = {}
+    onSelectionToggle: () -> Unit = {},
 ) {
-    val itemShape = RoundedCornerShape(12.dp)
-
-    val selectionScale by animateFloatAsState(
-        targetValue = if (isSelected) 0.98f else 1f,
-        animationSpec = tween(durationMillis = 200),
-        label = "playlistSelectionScale"
+    MeloListRow(
+        title = playlist.name,
+        subtitle = playlist.description.ifBlank { stringResource(R.string.search_playlist_kind) },
+        imageModel = playlist.coverImageUri,
+        artContentDescription = stringResource(R.string.search_cd_playlist_art_for_name, playlist.name),
+        playContentDescription = stringResource(R.string.search_cd_play_playlist),
+        onClick = onOpenClick,
+        onPlayClick = onPlayClick,
+        isSelected = isSelected,
+        selectionIndex = selectionIndex,
+        isSelectionMode = isSelectionMode,
+        onLongClick = onLongPress,
+        onSelectionToggle = onSelectionToggle,
     )
-    val selectionBorderWidth by animateDpAsState(
-        targetValue = if (isSelected) 2.dp else 0.dp,
-        animationSpec = tween(durationMillis = 200),
-        label = "playlistSelectionBorder"
-    )
-
-    Card(
-        shape = itemShape,
-        colors = CardDefaults.cardColors(
-            containerColor = Color.Transparent
-        ),
-        modifier = Modifier
-            .fillMaxWidth()
-            .scale(selectionScale)
-            .then(
-                if (isSelected) {
-                    Modifier.border(
-                        width = selectionBorderWidth,
-                        color = MaterialTheme.colorScheme.primary,
-                        shape = itemShape
-                    )
-                } else {
-                    Modifier
-                }
-            )
-            .clip(itemShape)
-            .combinedClickable(
-                onClick = {
-                    if (isSelectionMode) {
-                        onSelectionToggle()
-                    } else {
-                        onOpenClick()
-                    }
-                },
-                onLongClick = onLongPress
-            )
-    ) {
-        Box(modifier = Modifier.fillMaxWidth()) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                SmartImage(
-                    model = playlist.coverImageUri,
-                    contentDescription = null,
-                    shape = RoundedCornerShape(16.dp),
-                    contentScale = androidx.compose.ui.layout.ContentScale.Crop,
-                    modifier = Modifier.size(56.dp)
-                )
-                Spacer(Modifier.width(12.dp))
-                Column(Modifier.weight(1f)) {
-                    Text(
-                        text = playlist.name,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Text(
-                        text = playlist.description.ifBlank { "Playlist" },
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                FilledIconButton(
-                    onClick = onPlayClick,
-                    modifier = Modifier.size(40.dp),
-                    shape = CircleShape,
-                    colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
-                        contentColor = MaterialTheme.colorScheme.onPrimary
-                    )
-                ) {
-                    Icon(Icons.Rounded.PlayArrow, contentDescription = "Play Playlist", modifier = Modifier.size(24.dp))
-                }
-            }
-            if (isSelectionMode && isSelected) {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(8.dp)
-                        .size(24.dp)
-                        .background(
-                            color = MaterialTheme.colorScheme.primary,
-                            shape = CircleShape
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = selectionIndex?.toString() ?: "✓",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-        }
-    }
 }
 
 @androidx.annotation.OptIn(UnstableApi::class)
@@ -535,7 +301,7 @@ fun SearchFilterChip(
         onClick = { onSelect(filterType) },
         label = { Text(stringResource(labelResId)) },
         modifier = modifier,
-        shape = RoundedCornerShape(12.dp),
+        shape = MeloLayout.PillShape,
         border = BorderStroke(
             width = 0.75.dp,
             color = if (selected) Color.Transparent else MaterialTheme.colorScheme.outlineVariant
@@ -551,7 +317,7 @@ fun SearchFilterChip(
              {
                  Icon(
                      painter = painterResource(R.drawable.rounded_check_circle_24),
-                     contentDescription = "Selected",
+                     contentDescription = stringResource(R.string.common_selected),
                      tint = MaterialTheme.colorScheme.onPrimary,
                      modifier = Modifier.size(FilterChipDefaults.IconSize)
                  )
@@ -578,9 +344,12 @@ fun SearchResultHistoryList(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(stringResource(R.string.search_recent_searches), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-            TextButton(onClick = onClearAll) {
-                Text(stringResource(R.string.search_action_clear_all), maxLines = 1, overflow = TextOverflow.Ellipsis)
-            }
+            MeloButton(
+                text = stringResource(R.string.search_action_clear_all),
+                onClick = onClearAll,
+                size = MeloButtonSize.Medium,
+                style = MeloButtonStyle.Text,
+            )
         }
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -589,14 +358,14 @@ fun SearchResultHistoryList(
         ) {
             items(items, key = { "history_${it.kind}_${it.id}" }, contentType = { "search_history" }) { item ->
                 Row(
-                    modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
+                modifier = Modifier.fillMaxWidth().clip(MeloLayout.CardShape)
                         .clickable { onOpen(item) }.padding(horizontal = 8.dp, vertical = 6.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     `in`.melo.presentation.components.SmartImage(
                         model = item.imageUrl, contentDescription = null,
-                        shape = if (item.kind == MusicKind.Artist) CircleShape else RoundedCornerShape(8.dp),
-                        modifier = Modifier.size(52.dp),
+                        shape = if (item.kind == MusicKind.Artist) MeloLayout.ArtistShape else MeloLayout.ArtworkShape,
+                        modifier = Modifier.size(MeloLayout.ArtList),
                     )
                     Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
                         Text(item.title, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -624,7 +393,7 @@ fun SearchResultHistoryList(
                     }
                     IconButton(onClick = { onDelete(item) }) {
                         Icon(Icons.Rounded.Close, stringResource(R.string.search_cd_delete_search_history_item),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = MeloAlpha.Secondary))
                     }
                 }
             }

@@ -252,13 +252,19 @@
         <item quantity="other">%d pistes en attente.</item>
     </plurals>
     <string name="search_action_clear_all">Tout effacer</string>
+    <string name="search_artist_kind">Artiste</string>
     <string name="search_cd_clear_search_query">Effacer la recherche</string>
+    <string name="search_cd_artist_image_for_name">Image de l’artiste %1$s</string>
     <string name="search_cd_delete_search_history_item">Supprimer l\'élément de l\'historique de recherche</string>
     <string name="search_cd_no_results">Aucun résultat</string>
+    <string name="search_cd_play_artist">Lire l’artiste</string>
+    <string name="search_cd_play_playlist">Lire la playlist</string>
+    <string name="search_cd_playlist_art_for_name">Illustration de la playlist %1$s</string>
     <string name="search_cd_search_history_icon">Historique</string>
     <string name="search_cd_search_icon">Rechercher</string>
     <string name="search_no_results_for_query">Aucun résultat pour « %1$s »</string>
     <string name="search_nothing_found">Rien trouvé</string>
+    <string name="search_playlist_kind">Playlist</string>
     <string name="search_placeholder">Rechercher…</string>
     <string name="search_recent_searches">Recherches récentes</string>
     <string name="search_try_different_or_filters">Essayez un autre terme ou vérifiez vos filtres.</string>
