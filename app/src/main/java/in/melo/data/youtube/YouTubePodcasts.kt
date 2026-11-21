@@ -161,7 +161,7 @@ object YouTubePodcasts {
         val id = browseId.removePrefix(YTM_PODCAST_PREFIX)
         val response = request("browse", JSONObject().put("browseId", id))
         val title = playlistTitle(response) ?: throw YouTubeFailure("This podcast is unavailable.")
-        val image = playlistImage(response)
+        val image = playlistImage(response)?.let { largestYouTubeImage(it, "") }
         val description = showDescription(response)
         val show = Music(YTM_PODCAST_PREFIX + id, title, description, MusicKind.Playlist, imageUrl = image)
         return YouTubePodcastShow(show, collectEpisodes(response, title))
@@ -211,7 +211,9 @@ object YouTubePodcasts {
     private fun collectEpisodes(response: JSONObject, fallbackShow: String? = null): List<Music> {
         val items = LinkedHashMap<String, Music>()
         walkJson(response) { node ->
-            node.optJSONObject("musicMultiRowListItemRenderer")?.let(::parseMultiRowEpisode)?.let { items.putIfAbsent(it.id, it) }
+            node.optJSONObject("musicMultiRowListItemRenderer")?.let(::parseMultiRowEpisode)
+                ?.let { episode -> if (episode.subtitle.isBlank()) episode.copy(subtitle = fallbackShow.orEmpty()) else episode }
+                ?.let { items.putIfAbsent(it.id, it) }
             node.optJSONObject("musicResponsiveListItemRenderer")?.let { parseResponsiveEpisode(it, fallbackShow) }
                 ?.let { items.putIfAbsent(it.id, it) }
         }
@@ -234,6 +236,7 @@ object YouTubePodcasts {
             ?: renderer.optJSONObject("subtitle")
         val subtitle = text(subtitleHolder).orEmpty()
         val image = thumbnail(renderer.optJSONObject("thumbnailRenderer") ?: renderer.optJSONObject("thumbnail"))
+            ?.let { largestYouTubeImage(it, "") }
         return Music(YTM_PODCAST_PREFIX + browseId, title, subtitle, MusicKind.Playlist, imageUrl = image)
     }
 

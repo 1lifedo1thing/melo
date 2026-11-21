@@ -107,12 +107,12 @@ object YouTubeMusic {
     /** The songs shelf alone, with its continuation: what the mixed search adds to for paging. */
     fun searchSongsPage(query: String): YouTubePage {
         val songs = musicRequest("search", JSONObject().put("query", query).put("params", SONGS_FILTER))
-        return YouTubePage(parseTrackRows(songs).distinctBy(Music::id), findContinuation(songs, preferShelf = false))
+        return YouTubePage(parseSearchTrackRows(songs).distinctBy(Music::id), findContinuation(songs, preferShelf = false))
     }
 
     fun searchMore(token: String): YouTubePage {
         val response = musicRequest("search", JSONObject().put("continuation", token))
-        return YouTubePage(parseTrackRows(response).distinctBy(Music::id), findContinuation(response, preferShelf = false))
+        return YouTubePage(parseSearchTrackRows(response).distinctBy(Music::id), findContinuation(response, preferShelf = false))
     }
 
     internal fun searchVideos(query: String): List<Music> =
@@ -396,6 +396,17 @@ internal fun walkJson(node: Any?, visit: (JSONObject) -> Unit) {
 internal fun parseTrackRows(response: JSONObject): List<Music> {
     val rows = ArrayList<Music>()
     walkJson(response) { node -> node.optJSONObject("musicResponsiveListItemRenderer")?.let { parseTrackRow(it) }?.let(rows::add) }
+    return rows
+}
+
+/** Search keeps normal songs and music videos, excluding rows YouTube identifies as podcast episodes. */
+private fun parseSearchTrackRows(response: JSONObject): List<Music> {
+    val rows = ArrayList<Music>()
+    walkJson(response) { node ->
+        val renderer = node.optJSONObject("musicResponsiveListItemRenderer") ?: return@walkJson
+        if (YouTubePages.isPodcastRow(renderer)) return@walkJson
+        parseTrackRow(renderer)?.let(rows::add)
+    }
     return rows
 }
 

@@ -5,7 +5,9 @@
     <string name="update_available">Update available</string>
     <string name="update_installed">Installed version: %1$s</string>
     <string name="update_action">Update</string>
+    <string name="update_download_now">Download now</string>
     <string name="update_later">Later</string>
+    <string name="update_dont_remind_today">Don’t remind today</string>
     <string name="update_close">Close</string>
     <string name="update_cancel">Cancel</string>
     <string name="update_retry">Retry</string>

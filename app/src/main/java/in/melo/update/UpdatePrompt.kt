@@ -8,21 +8,29 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -87,12 +95,18 @@ internal fun UpdatePrompt() {
         title = { Text(stringResource(title)) },
         text = {
             Column(Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                if (release != null) Text("Melo ${release.tag}", style = MaterialTheme.typography.titleMedium)
                 when (val current = state) {
-                    is UpdateState.Available, is UpdateState.Notes -> {
-                        if (state is UpdateState.Available) Text(stringResource(R.string.update_installed, BuildConfig.VERSION_NAME))
-                        if (release?.notes?.isNotBlank() == true) ReleaseNotes(release.notes)
-                        if (state is UpdateState.Available && release?.apk == null) Text(stringResource(R.string.update_no_apk))
+                    is UpdateState.Available -> {
+                        ReleaseSummary(current.release.tag, BuildConfig.VERSION_NAME)
+                        Text(stringResource(R.string.update_notes_title), style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
+                        if (current.release.notes.isNotBlank()) ReleaseNotes(current.release.notes)
+                        if (current.release.apk == null) Text(stringResource(R.string.update_no_apk),
+                            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    is UpdateState.Notes -> {
+                        release?.let { ReleaseSummary(it.tag, null) }
+                        if (current.release.notes.isNotBlank()) ReleaseNotes(current.release.notes)
                     }
                     is UpdateState.Downloading -> {
                         if (current.total > 0) {
@@ -113,8 +127,17 @@ internal fun UpdatePrompt() {
         },
         confirmButton = {
             when (val current = state) {
-                is UpdateState.Available -> TextButton(onClick = { if (current.release.apk != null) updater.download(current.release) else openRelease() }) {
-                    Text(stringResource(if (current.release.apk != null) R.string.update_action else R.string.update_release_page))
+                is UpdateState.Available -> Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.End) {
+                    Button(
+                        onClick = { if (current.release.apk != null) updater.download(current.release) else openRelease() },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(stringResource(if (current.release.apk != null) R.string.update_download_now else R.string.update_release_page))
+                    }
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        TextButton(onClick = updater::dismiss) { Text(stringResource(R.string.update_later)) }
+                        TextButton(onClick = updater::dontRemindToday) { Text(stringResource(R.string.update_dont_remind_today)) }
+                    }
                 }
                 is UpdateState.Ready -> TextButton(onClick = {
                     try {
@@ -133,22 +156,65 @@ internal fun UpdatePrompt() {
             }
         },
         dismissButton = {
-            if (state !is UpdateState.Current && state !is UpdateState.Notes) TextButton(onClick = updater::dismiss) {
-                Text(stringResource(if (state is UpdateState.Downloading || state == UpdateState.Checking) R.string.update_cancel else R.string.update_later))
+            when (state) {
+                is UpdateState.Downloading, UpdateState.Checking -> TextButton(onClick = updater::dismiss) {
+                    Text(stringResource(R.string.update_cancel))
+                }
+                is UpdateState.Failed -> Row {
+                    TextButton(onClick = updater::dismiss) { Text(stringResource(R.string.update_close)) }
+                    TextButton(onClick = ::openRelease) { Text(stringResource(R.string.update_release_page)) }
+                }
+                else -> Unit
             }
-            if (state is UpdateState.Failed) TextButton(onClick = ::openRelease) { Text(stringResource(R.string.update_release_page)) }
         },
     )
 }
 
 @Composable
+private fun ReleaseSummary(version: String, installedVersion: String?) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        shape = RoundedCornerShape(14.dp),
+    ) {
+        Column(Modifier.padding(horizontal = 16.dp, vertical = 14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text("Melo $version", style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1, overflow = TextOverflow.Ellipsis)
+            if (installedVersion != null) Text(stringResource(R.string.update_installed, installedVersion),
+                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+}
+
+@Composable
 private fun ReleaseNotes(markdown: String) {
-    markdown.lineSequence().take(160).map(String::trim).filter { it.isNotBlank() && it != "---" }.forEach { raw ->
-        val heading = raw.startsWith('#')
-        val text = raw.trimStart('#').trim().replace("**", "").replace("`", "")
-            .replace(Regex("\\[([^]]+)]\\([^)]+\\)"), "$1")
-            .replace(Regex("^[-*] "), "• ")
-        Text(text, style = if (heading) MaterialTheme.typography.titleSmall else MaterialTheme.typography.bodyMedium)
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        markdown.lineSequence().take(160).map(String::trim).filter { it.isNotBlank() && it != "---" }.forEach { raw ->
+            val heading = raw.startsWith('#')
+            val bullet = raw.matches(Regex("^[-*+]\\s+.*"))
+            val text = raw.trimStart('#').trim().removePrefix("- ").removePrefix("* ").removePrefix("+ ")
+                .replace("**", "").replace("`", "")
+                .replace(Regex("\\[([^]]+)]\\([^)]+\\)"), "$1")
+            if (heading) {
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                    shape = RoundedCornerShape(9.dp),
+                ) {
+                    Text(text, modifier = Modifier.padding(horizontal = 12.dp, vertical = 9.dp),
+                        style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface)
+                }
+            } else if (bullet) {
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.Top) {
+                    Text("•", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.secondary)
+                    Text(text, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            } else {
+                Text(text, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
     }
 }
 

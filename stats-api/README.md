@@ -1,22 +1,24 @@
-# Melo public stats API
+# Melo live playback API
 
-This is a standalone Vercel Functions project. Create a Vercel project from this repository with the project root set to `stats-api`, then add an Upstash Redis integration and the environment variables shown in `.env.example`.
+This is a standalone Vercel Functions project. Set the Vercel project root to `stats-api`, connect Upstash Redis, and add the environment variables listed in `.env.example`.
 
 ## Endpoints
 
-- `POST /api/presence` receives an installation UUID, `android` platform, app-open and active-playback booleans, app version, and an allowlisted list of aggregate metric deltas.
-- `GET /api/stats` returns public counts and aggregate metrics for today, the last 7 days, and the last 30 days.
-- `GET /api/stats/live/badge.svg` returns the GitHub README badge for recent active playback sessions.
+- `POST /api/presence` records an opted-in Android installation while its player is actively playing. A heartbeat updates one sorted-set entry; inactive payloads are accepted without a Redis request.
+- `GET /api/stats` returns the current active playback count.
+- `GET /api/stats/live/badge.svg` returns the GitHub README badge for active playback.
 
-The server HMACs installation UUIDs before storage. It stores no account identifiers, track identifiers, titles, artists, search text, or request bodies. Source categories distinguish Spotify catalog provenance from YouTube Music streams and local files; they do not claim the audio provider for Spotify catalog tracks. Presence expires 90 seconds after a missed five-minute heartbeat. Distinct-install rolling windows retain pseudonymous IDs for at most 30 days; daily aggregate counters expire after 400 days. All telemetry is sent only while the user has **Share usage analytics** enabled in Melo.
+Presence expires after 390 seconds without a five-minute heartbeat. Installation UUIDs are HMACed before storage. The count endpoint removes expired entries as it reads. The API stores no account identifiers, track IDs, titles, artists, search text, or event metrics.
+
+Detailed playback summaries (play starts, elapsed time while the player reports playing, buffering duration, and playback errors grouped by catalog source) go to Firebase Analytics. Elapsed player time is an estimate; it cannot prove that audio was audible to a person. Search and Radio usage are not collected. The same **Share usage analytics** setting controls Firebase collection and live-presence heartbeats.
+
+To display summed durations in Google Analytics reports, register the event parameters `playing_ms` and `buffering_ms` as event-scoped custom metrics for `melo_player_playing_time` and `melo_buffering`. Firebase's Events report shows event counts by default; parameter reports need custom definitions and may take time to populate.
 
 ## Required Vercel environment variables
 
-- Upstash REST URL and write token. The API accepts `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN`, Vercel Marketplace's `KV_REST_API_URL` / `KV_REST_API_TOKEN`, or the custom-prefix `STORAGE_URL` / `STORAGE_TOKEN` names. Do not use the read-only token because the API writes counters.
-- `MELO_STATS_HASH_SECRET` — a randomly generated secret of at least 32 characters. Keep it in Vercel environment variables; never place it in Android code or commit it.
+- Upstash REST URL and write token. The API accepts `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN`, Vercel Marketplace's `KV_REST_API_URL` / `KV_REST_API_TOKEN`, or the custom-prefix `STORAGE_URL` / `STORAGE_TOKEN` names. Do not use the read-only token because the API writes presence.
+- `MELO_STATS_HASH_SECRET` — a random secret of at least 32 characters. Keep it in Vercel environment variables; never place it in Android code or commit it.
 
 The Android build defaults to `https://api.melo.aarushsagar.com/api/presence`; override it with `-PmeloStatsEndpoint=...` when building for another deployment.
 
-After the first deployment, attach `api.melo.aarushsagar.com` to this Vercel project and add the DNS record Vercel requests. The live badge uses one Redis script call and has a 30-second CDN cache. The app sends a heartbeat every five minutes while it is open or playback is active, and batches aggregate metric deltas into that request.
-
-Vercel Hobby currently includes 1 million Function invocations per month. Upstash Redis Free currently includes 500,000 commands, 250 MB, and 10 GB of monthly bandwidth. These limits fit a small project; monitor usage as the install base grows. The free database limit is one per Upstash account.
+Each active heartbeat uses one Redis command. Each uncached count read uses two (remove expired members, then count live scores). A continuously active installation sends about 8,640 writes in a 30-day month, plus one immediate write when playback starts. Actual usage is lower when playback is intermittent. Stats responses are CDN cached for 15 seconds and badge responses for 30 seconds. These numbers reduce normal command use, but they cannot guarantee staying below Upstash's monthly quota for every traffic pattern.

@@ -1,11 +1,20 @@
 package `in`.melo.presentation.screens
 
+import `in`.melo.SearchSource
 import `in`.melo.ui.theme.MeloAlpha
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.core.tween
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -67,6 +76,7 @@ import `in`.melo.R
 import `in`.melo.MeloModel
 import `in`.melo.data.Music
 import `in`.melo.data.MusicKind
+import `in`.melo.data.isPodcastSearchContainer
 import `in`.melo.data.model.SearchFilterType
 import `in`.melo.data.model.Song
 import `in`.melo.data.model.toAlbum
@@ -78,8 +88,6 @@ import `in`.melo.presentation.components.MusicOptionsHost
 import `in`.melo.presentation.components.SongOptionsHost
 import `in`.melo.presentation.components.resolveMainScreenBottomGradientHeight
 import `in`.melo.presentation.components.subcomps.EnhancedSongListItem
-import `in`.melo.presentation.navigation.Screen
-import `in`.melo.presentation.navigation.navigateSafely
 import `in`.melo.presentation.navigation.openMusic
 import kotlinx.coroutines.flow.distinctUntilChanged
 
@@ -102,6 +110,7 @@ fun SearchScreen(
     val ui = model.ui
     val discovery by model.discovery.collectAsStateWithLifecycle()
     val history by ui.searchHistory.collectAsStateWithLifecycle()
+    val visibleHistory = remember(history) { history.filterNot { it.isPodcastSearchContainer() } }
     val stable by ui.stablePlayerState.collectAsStateWithLifecycle()
     val navBarCompactMode by ui.navBarCompactMode.collectAsStateWithLifecycle()
     val saved by model.favorites.collectAsStateWithLifecycle()
@@ -113,10 +122,12 @@ fun SearchScreen(
     val colorScheme = MaterialTheme.colorScheme
     val appSettings by ui.settings.collectAsStateWithLifecycle()
     val showSources = appSettings.showSearchSources
-    // With the choice hidden, every search reads all sources.
-    LaunchedEffect(showSources) {
-        if (!showSources && discovery.source != `in`.melo.SearchSource.All) model.setSearchSource(`in`.melo.SearchSource.All)
+    val searchSources = remember(discovery.spotifyEnabled) {
+        SearchSource.entries.filter { it != SearchSource.Spotify || discovery.spotifyEnabled }
     }
+    val activeSourceIndex = searchSources.indexOf(discovery.activeSource).coerceAtLeast(0)
+    val nextSource = searchSources[(activeSourceIndex + 1) % searchSources.size]
+    val activeSourceLabel = stringResource(discovery.activeSource.labelRes())
     val results = remember(discovery.results, filter) {
         val kind = filter.kind()
         discovery.results.filter { kind == null || it.kind == kind }
@@ -228,20 +239,36 @@ fun SearchScreen(
                         containerColor = Color.Transparent,
                         contentColor = MaterialTheme.colorScheme.onSurface
                     ),
-                    onClick = { navController.navigateSafely(Screen.Settings.route) }
+                    onClick = {
+                        keyboard?.hide()
+                        model.setSearchSource(nextSource)
+                    }
                 ) {
-                    Icon(
-                        painter = painterResource(R.drawable.rounded_settings_24),
-                        contentDescription = stringResource(R.string.library_cd_open_settings)
-                    )
+                    AnimatedContent(
+                        targetState = discovery.activeSource,
+                        transitionSpec = {
+                            (fadeIn(animationSpec = tween(180)) +
+                                scaleIn(initialScale = 0.76f, animationSpec = tween(240))) togetherWith
+                                (fadeOut(animationSpec = tween(100)) +
+                                    scaleOut(targetScale = 0.76f, animationSpec = tween(100)))
+                        },
+                        label = "Search source logo",
+                    ) { source ->
+                        Icon(
+                            painter = painterResource(source.iconRes()),
+                            contentDescription = stringResource(R.string.search_source_picker_cd, activeSourceLabel),
+                            tint = source.tint(),
+                            modifier = Modifier.size(28.dp),
+                        )
+                    }
                 }
             }
 
             Column(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
                 if (searchQuery.isBlank()) {
-                    if (history.isNotEmpty()) {
+                    if (visibleHistory.isNotEmpty()) {
                         SearchResultHistoryList(
-                            items = history,
+                            items = visibleHistory,
                             onOpen = playFromHistory,
                             onDelete = ui::forgetSearch,
                             onClearAll = ui::clearSearchHistory,
@@ -249,22 +276,28 @@ fun SearchScreen(
                         )
                     }
                 } else {
-                    // Everything at once by default; one catalogue, or the device, when the choice is shown (Settings → Behavior).
-                    val sources = `in`.melo.SearchSource.entries.filter { it != `in`.melo.SearchSource.Spotify || discovery.spotifyEnabled }
-                    if (showSources) SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(top = 8.dp, start = 8.dp, end = 8.dp)) {
-                        sources.forEachIndexed { index, source ->
-                            SegmentedButton(
-                                selected = discovery.activeSource == source,
-                                onClick = { model.setSearchSource(source) },
-                                shape = SegmentedButtonDefaults.itemShape(index, sources.size),
-                                icon = {},
-                            ) {
-                                Text(stringResource(when (source) {
-                                    `in`.melo.SearchSource.All -> R.string.search_source_all
-                                    `in`.melo.SearchSource.Spotify -> R.string.search_source_spotify
-                                    `in`.melo.SearchSource.YouTubeMusic -> R.string.search_source_youtube_short
-                                    `in`.melo.SearchSource.Local -> R.string.search_source_device
-                                }), maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                    // All is the default; this optional row offers quick source switching.
+                    if (showSources) androidx.compose.foundation.layout.BoxWithConstraints(
+                        Modifier.fillMaxWidth().padding(top = 8.dp, start = 8.dp, end = 8.dp)
+                    ) {
+                        val fits = maxWidth >= SOURCE_SEGMENT_MIN_WIDTH * searchSources.size
+                        SingleChoiceSegmentedButtonRow(
+                            if (fits) Modifier.fillMaxWidth()
+                            else Modifier.horizontalScroll(androidx.compose.foundation.rememberScrollState())
+                        ) {
+                            searchSources.forEachIndexed { index, source ->
+                                SegmentedButton(
+                                    selected = discovery.activeSource == source,
+                                    onClick = { model.setSearchSource(source) },
+                                    shape = SegmentedButtonDefaults.itemShape(index, searchSources.size),
+                                    icon = {},
+                                ) {
+                                    Text(
+                                        stringResource(source.labelRes()),
+                                        maxLines = 1,
+                                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                                    )
+                                }
                             }
                         }
                     }
@@ -362,4 +395,28 @@ fun SearchScreen(
     }
     SongOptionsHost(ui, navController, selected, emptyList(), searchQuery) { selected = null }
     MusicOptionsHost(ui, navController, optionsFor) { optionsFor = null }
+}
+
+private val SOURCE_SEGMENT_MIN_WIDTH = 92.dp
+
+private fun SearchSource.labelRes(): Int = when (this) {
+    SearchSource.All -> R.string.search_source_all
+    SearchSource.Spotify -> R.string.search_source_spotify
+    SearchSource.YouTubeMusic -> R.string.search_source_youtube_short
+    SearchSource.Local -> R.string.search_source_device
+}
+
+private fun SearchSource.iconRes(): Int = when (this) {
+    SearchSource.All -> R.drawable.ic_melo_mark
+    SearchSource.Spotify -> R.drawable.ic_source_spotify
+    SearchSource.YouTubeMusic -> R.drawable.ic_source_youtube_music
+    SearchSource.Local -> R.drawable.rounded_library_music_24
+}
+
+@Composable
+private fun SearchSource.tint(): Color = when (this) {
+    SearchSource.All -> MaterialTheme.colorScheme.primary
+    SearchSource.Spotify -> Color(0xFF1DB954)
+    SearchSource.YouTubeMusic -> Color(0xFFFF0033)
+    SearchSource.Local -> MaterialTheme.colorScheme.onSurfaceVariant
 }

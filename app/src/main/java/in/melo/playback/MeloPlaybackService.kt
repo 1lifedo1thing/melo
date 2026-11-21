@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import android.app.PendingIntent
 import android.content.Intent
+import android.os.SystemClock
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.PlaybackException
@@ -29,6 +30,7 @@ import `in`.melo.MainActivity
 import `in`.melo.data.MeloTelemetry
 import `in`.melo.data.MusicSource
 import `in`.melo.data.musicSourceOf
+import `in`.melo.data.UsageAnalytics
 import `in`.melo.data.preferences.SettingsStore
 import `in`.melo.data.SpotifyHlsDataSource
 
@@ -98,10 +100,14 @@ class MeloPlaybackService : MediaSessionService() {
                 ProgressiveMediaSource.Factory(youtube.kept).setLoadErrorHandlingPolicy(ResilientLoadPolicy())))
             .setAudioAttributes(AudioAttributes.Builder().setUsage(C.USAGE_MEDIA).setContentType(C.AUDIO_CONTENT_TYPE_MUSIC).build(), true)
             .setHandleAudioBecomingNoisy(true).setWakeMode(C.WAKE_MODE_NETWORK).build()
+        fun updatePlaybackPresence() {
+            MeloTelemetry.setPlaybackActive(player.isPlaying)
+        }
         var lastTelemetryTrack: String? = null
         var bufferingStartedAt: Long? = null
-        fun telemetrySource(): String = when (musicSourceOf(player.currentMediaItem?.mediaId.orEmpty())) {
-            // Spotify IDs describe catalog provenance; they do not identify the audio provider.
+        var listeningStartedAt: Long? = null
+        var listeningCatalog = "other"
+        fun telemetryCatalog(): String = when (musicSourceOf(player.currentMediaItem?.mediaId.orEmpty())) {
             MusicSource.Spotify -> "spotify_catalog"
             MusicSource.YouTubeMusic -> "youtube_music"
             MusicSource.Local -> "local"
@@ -110,76 +116,74 @@ class MeloPlaybackService : MediaSessionService() {
             val id = player.currentMediaItem?.mediaId ?: return
             if (lastTelemetryTrack != id) {
                 lastTelemetryTrack = id
-                MeloTelemetry.recordPlaybackStart(telemetrySource())
+                UsageAnalytics.playbackStarted(this, telemetryCatalog())
             }
         }
-        fun updatePlaybackPresence() {
-            MeloTelemetry.setPlaybackActive(player.isPlaying, telemetrySource())
+        fun finishListeningSegment(restart: Boolean = false) {
+            val startedAt = listeningStartedAt
+            val now = SystemClock.elapsedRealtime()
+            if (startedAt != null) UsageAnalytics.playerPlayingTime(this, now - startedAt, listeningCatalog)
+            listeningStartedAt = if (restart && player.isPlaying) now else null
+            if (listeningStartedAt != null) listeningCatalog = telemetryCatalog()
+        }
+        fun finishBuffering() {
+            val startedAt = bufferingStartedAt ?: return
+            bufferingStartedAt = null
+            UsageAnalytics.buffering(this, SystemClock.elapsedRealtime() - startedAt, telemetryCatalog())
+        }
+        fun errorCategory(error: PlaybackException): String = when (error.errorCode) {
+            PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED,
+            PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT,
+            PlaybackException.ERROR_CODE_TIMEOUT -> "network"
+            PlaybackException.ERROR_CODE_DRM_LICENSE_ACQUISITION_FAILED,
+            PlaybackException.ERROR_CODE_DRM_PROVISIONING_FAILED,
+            PlaybackException.ERROR_CODE_DRM_DISALLOWED_OPERATION -> "authorization"
+            PlaybackException.ERROR_CODE_DECODING_FAILED,
+            PlaybackException.ERROR_CODE_AUDIO_TRACK_INIT_FAILED,
+            PlaybackException.ERROR_CODE_AUDIO_TRACK_WRITE_FAILED -> "decoder"
+            PlaybackException.ERROR_CODE_IO_BAD_HTTP_STATUS -> "unavailable"
+            else -> "other"
         }
         player.addListener(object : androidx.media3.common.Player.Listener {
             override fun onIsPlayingChanged(isPlaying: Boolean) {
+                if (isPlaying) {
+                    recordTrackStart()
+                    if (listeningStartedAt == null) {
+                        listeningCatalog = telemetryCatalog()
+                        listeningStartedAt = SystemClock.elapsedRealtime()
+                    }
+                } else {
+                    finishListeningSegment()
+                }
                 updatePlaybackPresence()
-                if (isPlaying) recordTrackStart()
-            }
-            override fun onMediaItemTransition(mediaItem: androidx.media3.common.MediaItem?, reason: Int) {
-                lastTelemetryTrack = null
-                if (player.isPlaying) recordTrackStart()
             }
             override fun onPlaybackStateChanged(playbackState: Int) {
                 if (playbackState == androidx.media3.common.Player.STATE_BUFFERING) {
-                    if (bufferingStartedAt == null) bufferingStartedAt = android.os.SystemClock.elapsedRealtime()
+                    if (bufferingStartedAt == null) bufferingStartedAt = SystemClock.elapsedRealtime()
                 } else {
-                    bufferingStartedAt?.let { started ->
-                        MeloTelemetry.recordBufferingMs(android.os.SystemClock.elapsedRealtime() - started, telemetrySource())
-                    }
-                    bufferingStartedAt = null
+                    finishBuffering()
                 }
                 updatePlaybackPresence()
             }
-            override fun onPlayerError(error: PlaybackException) {
-                val category = when (error.errorCode) {
-                    PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED,
-                    PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT,
-                    PlaybackException.ERROR_CODE_TIMEOUT -> "network"
-                    PlaybackException.ERROR_CODE_DRM_LICENSE_ACQUISITION_FAILED,
-                    PlaybackException.ERROR_CODE_DRM_PROVISIONING_FAILED,
-                    PlaybackException.ERROR_CODE_DRM_DISALLOWED_OPERATION -> "authorization"
-                    PlaybackException.ERROR_CODE_DECODING_FAILED,
-                    PlaybackException.ERROR_CODE_AUDIO_TRACK_INIT_FAILED,
-                    PlaybackException.ERROR_CODE_AUDIO_TRACK_WRITE_FAILED -> "decoder"
-                    PlaybackException.ERROR_CODE_IO_BAD_HTTP_STATUS -> "unavailable"
-                    else -> "other"
+            override fun onMediaItemTransition(mediaItem: androidx.media3.common.MediaItem?, reason: Int) {
+                finishBuffering()
+                lastTelemetryTrack = null
+                if (player.isPlaying) {
+                    finishListeningSegment(restart = true)
+                    recordTrackStart()
                 }
-                MeloTelemetry.recordPlaybackError(telemetrySource(), category)
+            }
+            override fun onPlayerError(error: PlaybackException) {
+                finishBuffering()
+                UsageAnalytics.playbackError(this@MeloPlaybackService, telemetryCatalog(), errorCategory(error))
+                finishListeningSegment()
                 updatePlaybackPresence()
             }
         })
         effectsScope.launch {
-            var previousPosition: Long? = null
-            var previousTrack: String? = null
-            var previousSampleAt: Long? = null
             while (kotlinx.coroutines.currentCoroutineContext().isActive) {
                 kotlinx.coroutines.delay(60_000)
-                if (player.isPlaying) {
-                    val position = player.currentPosition
-                    val trackId = player.currentMediaItem?.mediaId
-                    val sampleAt = android.os.SystemClock.elapsedRealtime()
-                    previousPosition?.let { previous ->
-                        val elapsed = (sampleAt - (previousSampleAt ?: sampleAt)).coerceAtLeast(0)
-                        val progress = position - previous
-                        val expectedMax = (elapsed * player.playbackParameters.speed).toLong() + 3_000
-                        if (trackId != null && trackId == previousTrack && progress in 1..expectedMax) {
-                            MeloTelemetry.recordListeningMs(progress, telemetrySource())
-                        }
-                    }
-                    previousPosition = position
-                    previousTrack = trackId
-                    previousSampleAt = sampleAt
-                } else {
-                    previousPosition = null
-                    previousTrack = null
-                    previousSampleAt = null
-                }
+                if (player.isPlaying && listeningStartedAt != null) finishListeningSegment(restart = true)
             }
         }
         player.preloadConfiguration = if (SettingsStore.get(this).settings.value.preloadUpcomingTracks) {
@@ -231,7 +235,7 @@ class MeloPlaybackService : MediaSessionService() {
         if (!keepPlaying || mediaSession?.player?.playWhenReady != true) stopSelf()
     }
     override fun onDestroy() {
-        MeloTelemetry.setPlaybackActive(false, "other")
+        MeloTelemetry.setPlaybackActive(false)
         behavior?.close(); behavior = null
         preloader?.close(); preloader = null
         recovery?.close(); recovery = null

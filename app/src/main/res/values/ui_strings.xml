@@ -148,6 +148,11 @@
     <string name="library_cd_import_m3u_playlist">Import a playlist</string>
     <string name="library_cd_locate_current_song">Locate current song</string>
     <string name="library_cd_open_settings">Settings</string>
+    <string name="library_search_open">Search this section</string>
+    <string name="library_search_close">Close search</string>
+    <string name="library_search_hint">Search in %1$s</string>
+    <string name="library_search_no_results">No results for “%1$s”</string>
+    <string name="library_search_no_results_body">Try another title, artist, or album.</string>
     <string name="library_cd_sort_options">Sort options</string>
     <string name="library_screen_title">Library</string>
     <string name="library_sort_ascending">Ascending</string>

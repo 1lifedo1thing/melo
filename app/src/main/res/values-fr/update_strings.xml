@@ -5,7 +5,9 @@
     <string name="update_available">Mise à jour disponible</string>
     <string name="update_installed">Version installée : %1$s</string>
     <string name="update_action">Mettre à jour</string>
+    <string name="update_download_now">Télécharger maintenant</string>
     <string name="update_later">Plus tard</string>
+    <string name="update_dont_remind_today">Ne plus me le rappeler aujourd’hui</string>
     <string name="update_close">Fermer</string>
     <string name="update_cancel">Annuler</string>
     <string name="update_retry">Réessayer</string>

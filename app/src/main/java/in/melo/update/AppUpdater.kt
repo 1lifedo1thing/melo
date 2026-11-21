@@ -23,6 +23,7 @@ import okhttp3.Request
 import java.io.File
 import java.io.IOException
 import java.security.MessageDigest
+import java.time.LocalDate
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.coroutineContext
@@ -69,8 +70,8 @@ internal class AppUpdater private constructor(context: Context) {
                 val release = withContext(Dispatchers.IO) { fetch("${GitHubRelease.API}/latest") }
                 val installed = Version.parse(BuildConfig.VERSION_NAME)
                 if (release != null && installed != null && Version.parse(release.tag)!! > installed) {
-                    val due = UpdateReminder.isDue(release.tag, preferences.getString("dismissed_version", null),
-                        preferences.getLong("dismissed_at", 0), System.currentTimeMillis())
+                    val due = UpdateReminder.isDue(release.tag, preferences.getString("hidden_version", null),
+                        preferences.getString("hidden_date", null))
                     if (manual || due) mutable.value = UpdateState.Available(release)
                     else showNotesAfterUpgrade()
                 } else if (manual) {
@@ -200,18 +201,25 @@ internal class AppUpdater private constructor(context: Context) {
     }
 
     fun dismiss() {
+        job?.cancel()
+        activeCall.getAndSet(null)?.cancel()
+        mutable.value = UpdateState.Idle
+    }
+
+    fun dontRemindToday() {
         val release = when (val current = mutable.value) {
             is UpdateState.Available -> current.release
             is UpdateState.Downloading -> current.release
             is UpdateState.Ready -> current.release
             is UpdateState.Failed -> current.release
+            is UpdateState.Notes -> current.release
             else -> null
         }
-        if (release != null) preferences.edit().putString("dismissed_version", release.tag)
-            .putLong("dismissed_at", System.currentTimeMillis()).apply()
-        job?.cancel()
-        activeCall.getAndSet(null)?.cancel()
-        mutable.value = UpdateState.Idle
+        if (release != null) preferences.edit()
+            .putString("hidden_version", release.tag)
+            .putString("hidden_date", LocalDate.now().toString())
+            .apply()
+        dismiss()
     }
 
     private fun request(url: String) = Request.Builder().url(url)

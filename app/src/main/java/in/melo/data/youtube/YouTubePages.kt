@@ -15,6 +15,7 @@ import `in`.melo.data.YouTubeExploreSection
 import `in`.melo.data.YouTubeWatchTarget
 import `in`.melo.data.Music
 import `in`.melo.data.MusicKind
+import `in`.melo.data.isPodcastSearchContainer
 import org.json.JSONArray
 import org.json.JSONObject
 import java.util.concurrent.ConcurrentHashMap
@@ -211,7 +212,7 @@ object YouTubePages {
         return podcast || subtitle.any { it.equals("Podcast", true) || it.equals("Episode", true) }
     }
 
-    private fun isPodcastRow(renderer: JSONObject): Boolean {
+    internal fun isPodcastRow(renderer: JSONObject): Boolean {
         var podcast = renderer.optString("musicVideoType").contains("PODCAST", true) ||
             renderer.optString("musicVideoType").contains("EPISODE", true)
         walkJson(renderer) { node ->
@@ -307,7 +308,8 @@ object YouTubePages {
 
     /**
      * The unfiltered search: the top result card, then songs, videos, albums, artists and playlists
-     * mixed in YouTube Music's own order. Episodes, podcasts and user profiles are left out.
+     * mixed in YouTube Music's own order. Podcast/show containers, explicitly marked episode rows
+     * and user profiles are left out. Track titles and artist names are never used as filter terms.
      */
     fun searchAll(query: String): List<Music> {
         val response = YouTubeMusic.browseRequest("search", JSONObject().put("query", query))
@@ -318,22 +320,30 @@ object YouTubePages {
                 val run = card.optJSONObject("title")?.runs()?.optJSONObject(0) ?: return@let
                 val entity = entityOf(run, card.optJSONObject("subtitle")?.optJSONArray("runs")?.texts().orEmpty().filter { it != " • " },
                     thumbnailOf(card.optJSONObject("thumbnail")))
-                if (entity != null) { found += entity; if (entity.kind == MusicKind.Artist) cardArtist = entity.title }
+                if (entity != null && !entity.isPodcastSearchContainer()) { found += entity; if (entity.kind == MusicKind.Artist) cardArtist = entity.title }
             }
             val row = node.optJSONObject("musicResponsiveListItemRenderer") ?: return@walkJson
             searchRow(row, cardArtist)?.let(found::add)
         }
-        return found.distinctBy(Music::id)
+        return found.filterNot { it.isPodcastSearchContainer() }.distinctBy(Music::id)
     }
 
     private fun searchRow(row: JSONObject, cardArtist: String): Music? {
+        parseTrackRow(row)?.let { track ->
+            // Use YouTube's row media type, never words from the song title or artist.
+            if (isPodcastRow(row)) return null
+            return if (track.subtitle.isBlank()) track.copy(subtitle = cardArtist) else track
+        }
+        if (isPodcastRow(row)) return null
         val flex = row.optJSONArray("flexColumns") ?: return null
         val second = flex.optJSONObject(1)?.optJSONObject("musicResponsiveListItemFlexColumnRenderer")
             ?.optJSONObject("text")?.optJSONArray("runs")?.texts().orEmpty().filter { it != " • " }
         val label = second.firstOrNull().orEmpty()
         if (label == "Episode" || label == "Podcast" || label == "Profile") return null
         val browse = row.optJSONObject("navigationEndpoint")?.optJSONObject("browseEndpoint")
-        if (browse == null) return parseTrackRow(row)?.let { if (it.subtitle.isBlank()) it.copy(subtitle = cardArtist) else it }
+        if (browse == null) return null
+        val browseId = browse.optString("browseId")
+        if (browseId.startsWith("MPSP") || browseId.startsWith("MPED")) return null
         val titleRun = flex.optJSONObject(0)?.optJSONObject("musicResponsiveListItemFlexColumnRenderer")
             ?.optJSONObject("text")?.optJSONArray("runs")?.optJSONObject(0) ?: return null
         val image = row.optJSONObject("thumbnail")?.let(::thumbnailOf)

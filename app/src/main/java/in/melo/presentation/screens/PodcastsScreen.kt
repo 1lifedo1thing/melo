@@ -345,7 +345,7 @@ private fun PodcastCard(
                     model = item.imageUrl,
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxWidth().aspectRatio(1f),
+                    modifier = Modifier.fillMaxWidth().aspectRatio(if (episode) 16f / 9f else 1f),
                 )
                 if (episode) {
                     FilledIconButton(
@@ -405,9 +405,19 @@ fun PodcastDetailScreen(model: MeloModel, navController: NavHostController, brow
             }
         }
     }
-    val visibleEpisodes = remember(podcast?.episodes, episodeQuery) {
+    val visibleEpisodes = remember(podcast?.episodes, podcast?.item?.title, podcast?.item?.imageUrl, episodeQuery) {
         val term = episodeQuery.trim().lowercase(Locale.ROOT)
-        podcast?.episodes.orEmpty().filter { episode ->
+        val show = podcast?.item
+        podcast?.episodes.orEmpty().map { episode ->
+            val episodeArtist = episode.subtitle.takeUnless {
+                it.isBlank() || it.equals("Unknown Artist", ignoreCase = true) ||
+                    it.equals("Episode", ignoreCase = true) || it.equals("Podcast", ignoreCase = true)
+            } ?: show?.title.orEmpty()
+            episode.copy(
+                subtitle = episodeArtist,
+                album = episode.album.ifBlank { show?.title.orEmpty() },
+            )
+        }.filter { episode ->
             term.isEmpty() || episode.title.lowercase(Locale.ROOT).contains(term)
         }
     }
@@ -534,7 +544,7 @@ private fun PodcastEpisodeRow(episode: Music, onClick: () -> Unit, onLongPress: 
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 shape = MeloLayout.ArtworkShape,
-                modifier = Modifier.size(72.dp),
+                modifier = Modifier.width(112.dp).aspectRatio(16f / 9f),
             )
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(episode.title, style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)

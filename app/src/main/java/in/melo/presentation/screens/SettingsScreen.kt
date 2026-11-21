@@ -52,6 +52,7 @@ import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.rounded.Logout
 import androidx.compose.material.icons.rounded.Backup
 import androidx.compose.material.icons.rounded.BugReport
+import androidx.compose.material.icons.rounded.Forum
 import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material.icons.rounded.MusicNote
 import androidx.compose.material.icons.rounded.Palette
@@ -197,6 +198,13 @@ fun SettingsScreen(model: MeloModel, navController: NavHostController) {
         CategoryRow(stringResource(R.string.update_settings_title),
             stringResource(R.string.update_installed, `in`.melo.BuildConfig.VERSION_NAME),
             Icons.Rounded.Download) { `in`.melo.update.AppUpdater.get(context).check(manual = true) }
+        CategoryRow(stringResource(R.string.settings_discord_title), stringResource(R.string.settings_discord_subtitle),
+            Icons.Rounded.Forum) {
+            runCatching {
+                context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW,
+                    android.net.Uri.parse("https://discord.gg/h3Hzk4seXj")))
+            }
+        }
         CategoryRow(stringResource(R.string.diagnostics_title), stringResource(R.string.diagnostics_subtitle),
             Icons.Rounded.BugReport) { open("diagnostics") }
         CategoryRow(stringResource(R.string.settings_privacy_title), stringResource(R.string.settings_privacy_subtitle),

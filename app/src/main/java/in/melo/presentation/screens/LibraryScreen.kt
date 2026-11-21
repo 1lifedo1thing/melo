@@ -1,8 +1,15 @@
 package `in`.melo.presentation.screens
 
 import `in`.melo.ui.theme.MeloAlpha
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.History
+import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material.icons.Icons
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -12,9 +19,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -26,12 +35,14 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Button
 import androidx.compose.material3.ContainedLoadingIndicator
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -52,16 +63,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.layout.ime
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
-import `in`.melo.presentation.components.MeloIconButton
 import `in`.melo.R
 import `in`.melo.MeloModel
 import `in`.melo.data.HomeLibrary
@@ -82,6 +96,7 @@ import `in`.melo.presentation.components.ListeningStatusCard
 import `in`.melo.presentation.components.ListeningShelfPlaceholder
 import `in`.melo.presentation.navigation.navigateToTopLevelSafely
 import `in`.melo.presentation.components.MiniPlayerHeight
+import `in`.melo.presentation.components.MeloIconButton
 import `in`.melo.presentation.components.MusicOptionsHost
 import `in`.melo.presentation.components.PlaylistItem
 import `in`.melo.presentation.components.PlaylistNameDialog
@@ -95,6 +110,7 @@ import `in`.melo.playback.DownloadedTrack
 import `in`.melo.playback.CollectionProgress
 import `in`.melo.data.MusicKind
 import `in`.melo.utils.formatSongCount
+import `in`.melo.utils.matchesWords
 import `in`.melo.presentation.viewmodel.PlayerViewModel
 import `in`.melo.ui.theme.GoogleSansRounded
 import `in`.melo.ui.theme.LocalMeloDarkTheme
@@ -138,6 +154,12 @@ private fun List<Music>.sortedFor(option: SortOption): List<Music> = when (optio
     else -> this
 }
 
+private fun Music.matchesLibrarySearch(query: String): Boolean =
+    query.isBlank() || matchesWords(query, title, subtitle, album)
+
+private fun List<Music>.matchingLibrarySearch(query: String): List<Music> =
+    if (query.isBlank()) this else filter { it.matchesLibrarySearch(query) }
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun LibraryScreen(model: MeloModel, navController: NavHostController, paddingValues: PaddingValues) {
@@ -148,13 +170,28 @@ fun LibraryScreen(model: MeloModel, navController: NavHostController, paddingVal
     val libraryTabs = if (discovery.spotifyEnabled) accountTabs else guestTabs
     var savedTab by rememberSaveable { mutableStateOf(0) }
     val pagerState = rememberPagerState(initialPage = savedTab.coerceIn(0, libraryTabs.lastIndex)) { libraryTabs.size }
+    val scope = rememberCoroutineScope()
     val requestedTab by ui.requestedLibraryTab.collectAsStateWithLifecycle()
     LaunchedEffect(requestedTab) {
         val requested = libraryTabs.indexOfFirst { it.storageKey == requestedTab }
         if (requested >= 0) { pagerState.scrollToPage(requested); ui.requestedLibraryTab.value = null }
     }
-    val scope = rememberCoroutineScope()
     val currentTab = libraryTabs[pagerState.currentPage.coerceIn(0, libraryTabs.lastIndex)]
+    var librarySearchOpen by rememberSaveable { mutableStateOf(false) }
+    var librarySearchQuery by rememberSaveable { mutableStateOf("") }
+    val searchKeyboard = LocalSoftwareKeyboardController.current
+    val searchFocusRequester = remember { FocusRequester() }
+    LaunchedEffect(librarySearchOpen) {
+        if (librarySearchOpen) {
+            runCatching { searchFocusRequester.requestFocus(); searchKeyboard?.show() }
+        } else searchKeyboard?.hide()
+    }
+    LaunchedEffect(currentTab) { librarySearchQuery = "" }
+    BackHandler(enabled = librarySearchOpen) {
+        librarySearchOpen = false
+        librarySearchQuery = ""
+        searchKeyboard?.hide()
+    }
     var importing by remember { mutableStateOf(false) }
     var sortKeys by rememberSaveable { mutableStateOf(mapOf<String, String>()) }
     var albumsAsList by rememberSaveable { mutableStateOf(false) }
@@ -166,7 +203,10 @@ fun LibraryScreen(model: MeloModel, navController: NavHostController, paddingVal
     val localTracks by model.localTracks.collectAsStateWithLifecycle()
     val localTitle = stringResource(R.string.library_tab_local)
     val downloads by ui.downloads.collectAsStateWithLifecycle()
+    val downloadCollections by ui.downloadCollections.collectAsStateWithLifecycle()
     val downloadsTitle = stringResource(R.string.library_tab_downloads)
+    val searchQuery = librarySearchQuery.trim()
+    val content = library.content
 
     LaunchedEffect(pagerState) {
         snapshotFlow { pagerState.currentPage }.distinctUntilChanged().collect { savedTab = it }
@@ -177,6 +217,34 @@ fun LibraryScreen(model: MeloModel, navController: NavHostController, paddingVal
     fun sortOf(tab: LibraryTabId): SortOption =
         sortOptions(tab).firstOrNull { it.storageKey == sortKeys[tab.storageKey] } ?: SortOption.SongDefaultOrder
 
+    val filteredPlaylists = remember(localPlaylists, youTubePlaylists, content?.playlists, searchQuery, sortKeys) {
+        (localPlaylists.map { it.asMusic() } + youTubePlaylists + content?.playlists.orEmpty())
+            .sortedFor(sortOf(LibraryTabId.PLAYLISTS)).matchingLibrarySearch(searchQuery)
+    }
+    val filteredAlbums = remember(content?.albums, searchQuery, sortKeys) {
+        content?.albums.orEmpty().sortedFor(sortOf(LibraryTabId.ALBUMS)).matchingLibrarySearch(searchQuery)
+    }
+    val filteredArtists = remember(content?.artists, searchQuery, sortKeys) {
+        content?.artists.orEmpty().sortedFor(sortOf(LibraryTabId.ARTISTS)).matchingLibrarySearch(searchQuery)
+    }
+    val filteredLocalTracks = remember(localTracks, searchQuery, sortKeys) {
+        localTracks.sortedFor(sortOf(LibraryTabId.LOCAL)).matchingLibrarySearch(searchQuery)
+    }
+    val filteredLikedTracks = remember(content?.savedTracks, searchQuery) {
+        content?.savedTracks.orEmpty().matchingLibrarySearch(searchQuery)
+    }
+    LaunchedEffect(searchQuery, content?.savedTracksLoaded, content?.savedTrackUris?.size) {
+        if (searchQuery.isNotBlank() && content != null && content.savedTracksLoaded < content.savedTrackUris.size) {
+            model.loadMoreSavedTracks()
+        }
+    }
+    val filteredDownloadCollections = remember(downloadCollections, searchQuery) {
+        downloadCollections.values.sortedBy { it.collection.item.title.lowercase() }.filter { entry ->
+            entry.collection.item.matchesLibrarySearch(searchQuery) ||
+                (searchQuery.isNotBlank() && entry.collection.tracks.any { it.matchesLibrarySearch(searchQuery) })
+        }
+    }
+
     val open: (Music) -> Unit = { navController.openMusic(ui, it) }
     var optionsFor by remember { mutableStateOf<Music?>(null) }
     val pin: (Music) -> Unit = {
@@ -184,8 +252,7 @@ fun LibraryScreen(model: MeloModel, navController: NavHostController, paddingVal
         optionsFor = it
     }
 
-    val dark = LocalMeloDarkTheme.current
-    val gradientColors = if (dark) {
+    val gradientColors = if (LocalMeloDarkTheme.current) {
         listOf(MaterialTheme.colorScheme.primaryContainer.copy(alpha = MeloAlpha.Tertiary), Color.Transparent)
     } else {
         listOf(MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = MeloAlpha.Divider), Color.Transparent)
@@ -211,13 +278,25 @@ fun LibraryScreen(model: MeloModel, navController: NavHostController, paddingVal
                     },
                     actions = {
                         MeloIconButton(
-                            icon = androidx.compose.material.icons.Icons.Rounded.History,
+                            icon = if (librarySearchOpen) Icons.Rounded.Close else Icons.Rounded.Search,
+                            contentDescription = stringResource(if (librarySearchOpen) R.string.library_search_close else R.string.library_search_open),
+                            onClick = {
+                                if (librarySearchOpen) {
+                                    librarySearchOpen = false
+                                    librarySearchQuery = ""
+                                    searchKeyboard?.hide()
+                                } else librarySearchOpen = true
+                            },
+                            modifier = Modifier.padding(end = MeloLayout.Space1),
+                        )
+                        MeloIconButton(
+                            icon = Icons.Rounded.History,
                             contentDescription = stringResource(R.string.history_title),
                             onClick = { navController.navigateSafely(Screen.History.route) },
                             modifier = Modifier.padding(end = MeloLayout.Space1),
                         )
                         MeloIconButton(
-                            icon = androidx.compose.material.icons.Icons.Rounded.Settings,
+                            icon = Icons.Rounded.Settings,
                             contentDescription = stringResource(R.string.library_cd_open_settings),
                             onClick = { navController.navigateSafely(Screen.Settings.route) },
                             modifier = Modifier.padding(end = MeloLayout.Space3),
@@ -233,19 +312,19 @@ fun LibraryScreen(model: MeloModel, navController: NavHostController, paddingVal
                     containerColor = Color.Transparent,
                     edgePadding = 12.dp,
                     indicator = {},
-                    divider = {}
+                    divider = {},
                 ) {
                     libraryTabs.forEachIndexed { index, tab ->
                         TabAnimation(
                             index = index,
                             title = tab.storageKey,
                             selectedIndex = pagerState.currentPage,
-                            onClick = { scope.launch { pagerState.animateScrollToPage(index) } }
+                            onClick = { scope.launch { pagerState.animateScrollToPage(index) } },
                         ) {
                             Text(
                                 text = stringResource(tab.titleRes),
                                 style = MaterialTheme.typography.labelLarge,
-                                fontWeight = if (pagerState.currentPage == index) FontWeight.Bold else FontWeight.Medium
+                                fontWeight = if (pagerState.currentPage == index) FontWeight.Bold else FontWeight.Medium,
                             )
                         }
                     }
@@ -270,18 +349,18 @@ fun LibraryScreen(model: MeloModel, navController: NavHostController, paddingVal
                                 onMainActionClick = {
                                     if (currentTab == LibraryTabId.PLAYLISTS) { creatingPlaylist = true; return@LibraryActionRow }
                                     if (currentTab == LibraryTabId.DOWNLOADS) {
-                                        ui.playSongsShuffled(downloads.values.filter { it.isComplete }.map { it.track.toSong() }, downloadsTitle)
+                                        ui.playSongsShuffled(downloads.values.filter { it.isComplete && it.track.matchesLibrarySearch(searchQuery) }.map { it.track.toSong() }, downloadsTitle)
                                         return@LibraryActionRow
                                     }
                                     if (currentTab == LibraryTabId.LOCAL) {
-                                        ui.playSongsShuffled(localTracks.map { it.toSong() }, localTitle)
+                                        ui.playSongsShuffled(filteredLocalTracks.map { it.toSong() }, localTitle)
                                         return@LibraryActionRow
                                     }
-                                    val content = library.content ?: return@LibraryActionRow
+                                    val content = content ?: return@LibraryActionRow
                                     when (currentTab) {
-                                        LibraryTabId.LIKED -> ui.playSongsShuffled(content.savedTracks.map { it.toSong() }, ui.likedSongs.title)
-                                        LibraryTabId.ALBUMS -> content.albums.randomOrNull()?.let(ui::shuffleItem)
-                                        LibraryTabId.ARTISTS -> content.artists.randomOrNull()?.let(ui::shuffleItem)
+                                        LibraryTabId.LIKED -> ui.playSongsShuffled(filteredLikedTracks.map { it.toSong() }, ui.likedSongs.title)
+                                        LibraryTabId.ALBUMS -> filteredAlbums.randomOrNull()?.let(ui::shuffleItem)
+                                        LibraryTabId.ARTISTS -> filteredArtists.randomOrNull()?.let(ui::shuffleItem)
                                         else -> Unit
                                     }
                                 },
@@ -294,7 +373,37 @@ fun LibraryScreen(model: MeloModel, navController: NavHostController, paddingVal
                                 isShuffleEnabled = stable.isShuffleEnabled,
                             )
                         }
-                        val content = library.content
+                        if (librarySearchOpen) {
+                            OutlinedTextField(
+                                value = librarySearchQuery,
+                                onValueChange = { librarySearchQuery = it },
+                                modifier = Modifier.fillMaxWidth()
+                                    .padding(start = 12.dp, end = 12.dp, bottom = 8.dp)
+                                    .focusRequester(searchFocusRequester),
+                                singleLine = true,
+                                label = {
+                                    Text(
+                                        stringResource(R.string.library_search_hint, stringResource(currentTab.titleRes)),
+                                        maxLines = 1,
+                                    )
+                                },
+                                leadingIcon = { Icon(Icons.Rounded.Search, contentDescription = null) },
+                                trailingIcon = if (librarySearchQuery.isNotEmpty()) ({
+                                    Box(
+                                        modifier = Modifier.size(48.dp).clickable(role = Role.Button) { librarySearchQuery = "" },
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        Icon(
+                                            Icons.Rounded.Close,
+                                            contentDescription = stringResource(R.string.playlist_filter_clear),
+                                        )
+                                    }
+                                }) else null,
+                                shape = MeloLayout.PillShape,
+                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                                keyboardActions = KeyboardActions(onSearch = { searchKeyboard?.hide() }),
+                            )
+                        }
                         val bottomPadding = paddingValues.calculateBottomPadding() + MiniPlayerHeight + 24.dp
                         PullToRefreshBox(
                             isRefreshing = (library.loading || youTubeLoading) && content != null,
@@ -302,7 +411,7 @@ fun LibraryScreen(model: MeloModel, navController: NavHostController, paddingVal
                             modifier = Modifier.fillMaxSize(),
                         ) {
                             if (currentTab == LibraryTabId.DOWNLOADS && content == null) {
-                                DownloadsTab(ui, navController, downloadsTitle, bottomPadding)
+                                DownloadsTab(ui, navController, downloadsTitle, bottomPadding, filteredDownloadCollections, searchQuery)
                             } else if (content == null) {
                                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                                     if (library.loading) ListeningShelfPlaceholder()
@@ -323,7 +432,18 @@ fun LibraryScreen(model: MeloModel, navController: NavHostController, paddingVal
                                         LibraryTabId.ARTISTS -> content.artists.isEmpty()
                                         else -> false
                                     }
-                                    if (isEmpty) {
+                                    val hasSearchResults = when (tab) {
+                                        LibraryTabId.PLAYLISTS -> filteredPlaylists.isNotEmpty()
+                                        LibraryTabId.LIKED -> filteredLikedTracks.isNotEmpty() ||
+                                            content.savedTracksLoaded < content.savedTrackUris.size
+                                        LibraryTabId.ALBUMS -> filteredAlbums.isNotEmpty()
+                                        LibraryTabId.ARTISTS -> filteredArtists.isNotEmpty()
+                                        LibraryTabId.DOWNLOADS -> filteredDownloadCollections.isNotEmpty()
+                                        LibraryTabId.LOCAL -> !model.localLibrary.hasPermission() || filteredLocalTracks.isNotEmpty()
+                                    }
+                                    if (searchQuery.isNotBlank() && !hasSearchResults) {
+                                        LibrarySearchEmptyState(searchQuery, Modifier.fillMaxSize())
+                                    } else if (isEmpty) {
                                         ListeningStatusCard(
                                             stringResource(R.string.melo_empty_library_title),
                                             stringResource(if (tab == LibraryTabId.PLAYLISTS) R.string.melo_empty_playlists_body else R.string.melo_empty_library_body),
@@ -333,12 +453,12 @@ fun LibraryScreen(model: MeloModel, navController: NavHostController, paddingVal
                                             Modifier.padding(horizontal = 24.dp, vertical = 16.dp)
                                         )
                                     } else when (tab) {
-                                        LibraryTabId.PLAYLISTS -> PlaylistsTab((localPlaylists.map { it.asMusic() } + youTubePlaylists + content.playlists).sortedFor(sortOf(LibraryTabId.PLAYLISTS)), bottomPadding, open, pin)
-                                        LibraryTabId.LIKED -> LikedTab(model, ui, navController, content, bottomPadding)
-                                        LibraryTabId.ALBUMS -> AlbumsTab(content.albums.sortedFor(sortOf(LibraryTabId.ALBUMS)), albumsAsList, ui, bottomPadding, open, pin)
-                                        LibraryTabId.ARTISTS -> ArtistsTab(content.artists.sortedFor(sortOf(LibraryTabId.ARTISTS)), bottomPadding, open, pin)
-                                        LibraryTabId.DOWNLOADS -> DownloadsTab(ui, navController, downloadsTitle, bottomPadding)
-                                        LibraryTabId.LOCAL -> LocalTab(model, ui, navController, localTracks.sortedFor(sortOf(LibraryTabId.LOCAL)), localTitle, bottomPadding)
+                                        LibraryTabId.PLAYLISTS -> PlaylistsTab(filteredPlaylists, bottomPadding, open, pin)
+                                        LibraryTabId.LIKED -> LikedTab(model, ui, navController, content, bottomPadding, searchQuery)
+                                        LibraryTabId.ALBUMS -> AlbumsTab(filteredAlbums, albumsAsList, ui, bottomPadding, open, pin)
+                                        LibraryTabId.ARTISTS -> ArtistsTab(filteredArtists, bottomPadding, open, pin)
+                                        LibraryTabId.DOWNLOADS -> DownloadsTab(ui, navController, downloadsTitle, bottomPadding, filteredDownloadCollections, searchQuery)
+                                        LibraryTabId.LOCAL -> LocalTab(model, ui, navController, filteredLocalTracks, localTitle, bottomPadding, searchQuery)
                                     }
                                 }
                             }
@@ -454,35 +574,41 @@ private fun LikedTab(
     navController: NavHostController,
     content: HomeLibrary,
     bottom: Dp,
+    searchQuery: String,
 ) {
     val stable by ui.stablePlayerState.collectAsStateWithLifecycle()
     val saved by model.favorites.collectAsStateWithLifecycle()
-    val songs = remember(content.savedTracks, saved) { content.savedTracks.map { it.toSong(it.id in saved) } }
+    val matchingTracks = remember(content.savedTracks, searchQuery) { content.savedTracks.matchingLibrarySearch(searchQuery) }
+    val songs = remember(matchingTracks, saved) { matchingTracks.map { it.toSong(it.id in saved) } }
     var selected by remember { mutableStateOf<Song?>(null) }
     val listState = rememberLazyListState()
     LaunchedEffect(listState, content.savedTracksLoaded, content.savedTrackUris.size) {
         snapshotFlow { listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0 }
             .distinctUntilChanged()
             .collect { last ->
-                if (last >= songs.size - 12 && content.savedTracksLoaded < content.savedTrackUris.size) model.loadMoreSavedTracks()
+                if (searchQuery.isBlank() && last >= songs.size - 12 && content.savedTracksLoaded < content.savedTrackUris.size) model.loadMoreSavedTracks()
             }
     }
-    LazyColumn(
-        state = listState,
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(start = 12.dp, end = 12.dp, top = 4.dp, bottom = bottom),
-        verticalArrangement = Arrangement.spacedBy(`in`.melo.presentation.components.listSpacing()),
-    ) {
-        itemsIndexed(songs, key = { index, song -> "$index-${song.id}" }) { _, song ->
-            val current = stable.currentSong?.id == song.id
-            EnhancedSongListItem(
-                song = song,
-                isPlaying = current && stable.isPlaying,
-                isCurrentSong = current,
-                onMoreOptionsClick = { selected = it },
-                onLongPress = { selected = song },
-                onClick = { ui.playSongs(songs, song, ui.likedSongs.title) },
-            )
+    if (searchQuery.isNotBlank() && songs.isEmpty() && content.savedTracksLoaded < content.savedTrackUris.size) {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+    } else {
+        LazyColumn(
+            state = listState,
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(start = 12.dp, end = 12.dp, top = 4.dp, bottom = bottom),
+            verticalArrangement = Arrangement.spacedBy(`in`.melo.presentation.components.listSpacing()),
+        ) {
+            itemsIndexed(songs, key = { index, song -> "$index-${song.id}" }) { _, song ->
+                val current = stable.currentSong?.id == song.id
+                EnhancedSongListItem(
+                    song = song,
+                    isPlaying = current && stable.isPlaying,
+                    isCurrentSong = current,
+                    onMoreOptionsClick = { selected = it },
+                    onLongPress = { selected = song },
+                    onClick = { ui.playSongs(songs, song, ui.likedSongs.title) },
+                )
+            }
         }
     }
     SongOptionsHost(ui, navController, selected, songs, ui.likedSongs.title) { selected = null }
@@ -496,6 +622,7 @@ private fun LocalTab(
     tracks: List<Music>,
     title: String,
     bottom: Dp,
+    searchQuery: String,
 ) {
     val stable by ui.stablePlayerState.collectAsStateWithLifecycle()
     var allowed by remember { mutableStateOf(model.localLibrary.hasPermission()) }
@@ -516,8 +643,11 @@ private fun LocalTab(
                 Text(stringResource(R.string.local_permission_action))
             }
         }
-        songs.isEmpty() -> Box(Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
-            Text(stringResource(R.string.local_empty))
+        songs.isEmpty() -> {
+            if (searchQuery.isNotBlank()) LibrarySearchEmptyState(searchQuery, Modifier.fillMaxSize())
+            else Box(Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
+                Text(stringResource(R.string.local_empty))
+            }
         }
         else -> LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -546,16 +676,17 @@ private fun DownloadsTab(
     navController: NavHostController,
     title: String,
     bottom: Dp,
+    entries: List<CollectionProgress>,
+    searchQuery: String,
 ) {
     val stable by ui.stablePlayerState.collectAsStateWithLifecycle()
-    val requests by ui.downloadCollections.collectAsStateWithLifecycle()
-    val entries = requests.values.sortedBy { it.collection.item.title.lowercase() }
     val singles = entries.filter { it.collection.item.kind == MusicKind.Track }
     val songs = singles.filter { it.isComplete }.map { it.collection.item.toSong() }
     var selected by remember { mutableStateOf<Song?>(null) }
     var options by remember { mutableStateOf<Music?>(null) }
     if (entries.isEmpty()) {
-        Box(Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) { Text(stringResource(R.string.downloads_empty)) }
+        if (searchQuery.isNotBlank()) LibrarySearchEmptyState(searchQuery, Modifier.fillMaxSize())
+        else Box(Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) { Text(stringResource(R.string.downloads_empty)) }
         return
     }
     LazyColumn(
@@ -600,4 +731,39 @@ private fun DownloadsTab(
     }
     SongOptionsHost(ui, navController, selected, songs, title) { selected = null }
     MusicOptionsHost(ui, navController, options) { options = null }
+}
+
+@Composable
+private fun LibrarySearchEmptyState(query: String, modifier: Modifier = Modifier) {
+    val imeVisible = WindowInsets.ime.getBottom(androidx.compose.ui.platform.LocalDensity.current) > 0
+    Box(
+        modifier.padding(24.dp),
+        contentAlignment = if (imeVisible) Alignment.TopCenter else Alignment.Center,
+    ) {
+        Column(
+            modifier = Modifier.padding(top = if (imeVisible) 16.dp else 0.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Icon(
+                Icons.Rounded.Search,
+                contentDescription = null,
+                modifier = Modifier.size(48.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(
+                stringResource(R.string.library_search_no_results, query),
+                modifier = Modifier.padding(top = 16.dp),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.SemiBold,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            )
+            Text(
+                stringResource(R.string.library_search_no_results_body),
+                modifier = Modifier.padding(top = 8.dp),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            )
+        }
+    }
 }

@@ -34,6 +34,7 @@ import `in`.melo.data.MusicKind
 import `in`.melo.data.isLocalPlaylist
 import `in`.melo.data.isLocalTrack
 import `in`.melo.data.source
+import `in`.melo.data.isPodcastSearchContainer
 import `in`.melo.data.PinnedStore
 import `in`.melo.data.SpotifyAccount
 import `in`.melo.data.spotifyAttribute
@@ -1640,7 +1641,6 @@ class MeloModel(private val app: Application) : AndroidViewModel(app) {
      * loaded is not worth a message, the track simply plays alone.
      */
     fun playWithRadio(track: Music) {
-        `in`.melo.data.MeloTelemetry.recordFeature("radio")
         play(listOf(track), 0)
         if (track.isLocalTrack || !online.value) return
         upNextJob = viewModelScope.launch {
@@ -1670,7 +1670,6 @@ class MeloModel(private val app: Application) : AndroidViewModel(app) {
     }
 
     fun loadRadio(seed: Music, open: (Music) -> Unit) {
-        `in`.melo.data.MeloTelemetry.recordFeature("radio")
         if (seed.source == `in`.melo.data.MusicSource.YouTubeMusic ||
             (seed.source == `in`.melo.data.MusicSource.Spotify && catalog == null)) {
             if (!online.value || seed.source == `in`.melo.data.MusicSource.Local) return
@@ -1884,8 +1883,8 @@ class MeloModel(private val app: Application) : AndroidViewModel(app) {
                 nextPage = null, youTubeNext = null, error = null, loading = trimmed.length >= 2)
         }
         if (trimmed.length < 2) return
-        `in`.melo.data.MeloTelemetry.recordFeature("search")
-        if (!online.value || discovery.value.activeSource == SearchSource.Local) { showLocalResults(trimmed, null); return }
+        if (discovery.value.activeSource == SearchSource.Local) { showDeviceResults(trimmed); return }
+        if (!online.value) { showLocalResults(trimmed, null); return }
         loadResults(trimmed, debounce)
     }
 
@@ -1919,12 +1918,12 @@ class MeloModel(private val app: Application) : AndroidViewModel(app) {
             var pending = (if (spotify != null) 1 else 0) + (if (withYouTube) 2 else 0)
             fun publish() {
                 val youTube = (youTubeMixed.orEmpty() + youTubeSongs.orEmpty()).distinctBy(Music::id)
-                val results = if (choice == SearchSource.Spotify) spotifyItems.orEmpty()
+                val results = (if (choice == SearchSource.Spotify) spotifyItems.orEmpty()
                     else `in`.melo.data.SearchRanking.merge(query, listOfNotNull(
                         spotifyItems?.let { `in`.melo.data.SearchRanking.Source(it, 1.0) },
                         `in`.melo.data.SearchRanking.Source(youTube, if (spotify != null) 0.97 else 1.0),
                         `in`.melo.data.SearchRanking.Source(device, 1.02, deduplicated = false),
-                    ))
+                    ))).filterNot { it.isPodcastSearchContainer() }
                 val finished = pending == 0
                 if (finished && results.isEmpty() && failures.isNotEmpty()) { showLocalResults(query, readableSearchFailure(failures.first())); return }
                 if (!finished && results.isEmpty()) return
@@ -1977,7 +1976,7 @@ class MeloModel(private val app: Application) : AndroidViewModel(app) {
             val added = `in`.melo.data.SearchRanking.merge(query, listOfNotNull(
                 spotifyPage?.getOrNull()?.items?.let { `in`.melo.data.SearchRanking.Source(it) },
                 youTubePage?.getOrNull()?.tracks?.let { `in`.melo.data.SearchRanking.Source(it, 0.97) },
-            ))
+            )).filterNot { it.isPodcastSearchContainer() }
             val failed = listOfNotNull(spotifyPage?.exceptionOrNull(), youTubePage?.exceptionOrNull()).firstOrNull()
             mutableDiscovery.update {
                 it.copy(loading = false, results = (it.results + added).distinctBy(Music::id),
@@ -2003,6 +2002,16 @@ class MeloModel(private val app: Application) : AndroidViewModel(app) {
             }
             mutableDiscovery.update {
                 it.copy(loading = false, results = found, nextPage = null, error = failure.takeIf { found.isEmpty() })
+            }
+        }
+    }
+
+    /** The explicit Device source must only return files indexed on this device. */
+    private fun showDeviceResults(query: String) {
+        searchJob = viewModelScope.launch {
+            val found = withContext(Dispatchers.Default) { matchingDeviceFiles(query) }
+            mutableDiscovery.update {
+                it.copy(loading = false, results = found, nextPage = null, youTubeNext = null, error = null)
             }
         }
     }
