@@ -61,7 +61,7 @@ Service access and playback features depend on the source, account, region, and 
 ## Download
 
 <p align="center">
-  <a href="https://github.com/aarush-io/melo/releases/latest"><img alt="Download the latest Melo Android APK" src="https://img.shields.io/badge/GET_MELO-ANDROID_APK-f1f0ec?style=for-the-badge&logo=android&logoColor=171717&labelColor=171717" /></a>
+  <a href="https://github.com/aarush-io/melo/releases/latest"><img alt="Available on Android — download the latest Melo APK" src="https://img.shields.io/badge/AVAILABLE_ON-ANDROID-111214?style=for-the-badge&logo=android&logoColor=3DDC84&labelColor=111214" /></a>
 </p>
 
 <p align="center"><strong>Android 8.0 or later · ARM64</strong></p>
