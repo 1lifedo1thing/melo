@@ -10,7 +10,7 @@ No. Melo does not use the installed app. Spotify's audio engine, taken unchanged
 
 ## Where do I get the APK?
 
-From the [latest release](https://github.com/aarush-io/melo/releases/latest). Each release lists the SHA-256 of the APK and a signing-certificate report. You can also build it yourself from the source and your own copy of the official APKM: see [Build from source](../README.md#build-from-source). A build you made yourself is signed with a different key, so uninstall the other one first (this erases the session and downloads).
+From the [latest release](https://github.com/aarush-io/melo/releases/latest). Each release lists the SHA-256 of the APK and a signing-certificate report. You can also build it yourself from the source and your own copy of the official APKM: see [Build from source](BUILDING.md). A build you made yourself is signed with a different key, so uninstall the other one first (this erases the session and downloads).
 
 ## How do application updates work?
 

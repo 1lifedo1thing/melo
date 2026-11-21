@@ -12,29 +12,43 @@
   <img alt="Android 8+" src="https://img.shields.io/badge/ANDROID-8.0%2B-f1f0ec?style=for-the-badge&labelColor=171717" />
   <a href="https://github.com/aarush-io/melo/releases"><img alt="Total GitHub release downloads" src="https://img.shields.io/github/downloads/aarush-io/melo/total?style=for-the-badge&label=DOWNLOADS&color=f1f0ec&labelColor=171717" /></a>
   <a href="https://github.com/aarush-io/melo/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/aarush-io/melo?style=for-the-badge&label=STARS&color=f1f0ec&labelColor=171717" /></a>
-</p>
-
-<p align="center">
   <a href="https://api.melo.aarushsagar.com/api/stats"><img alt="Active playback sessions" src="https://api.melo.aarushsagar.com/api/stats/live/badge.svg" /></a>
   <a href="LICENSE"><img alt="GPL v3" src="https://img.shields.io/badge/LICENSE-GPL_3.0-f1f0ec?style=for-the-badge&labelColor=171717" /></a>
 </p>
 
+<p align="center">
+  <a href="#download">Download</a> ·
+  <a href="#features">Features</a> ·
+  <a href="#screenshots">Screenshots</a> ·
+  <a href="#support">Support</a> ·
+  <a href="#contribute">Contribute</a> ·
+  <a href="PRIVACY.md">Privacy</a>
+</p>
+
 ---
 
-## One listening space
+Melo is a native Android music player for Spotify, YouTube Music, and music stored on your device. Find something to play, keep your library together, and make the listening experience your own.
 
-Melo is a native Android music player built with Kotlin and Jetpack Compose. Bring your listening together, find something for the moment, and keep your favorite music close.
+> **Independent project:** Melo is not affiliated with or endorsed by Spotify, YouTube, Google, or their parent companies. The app ID is `in.melo`.
 
-The app ID is **in.melo**. Melo is independent of Spotify, YouTube, and Google.
+## Features
 
-## Take a look
+- **Your music together.** Browse Spotify, YouTube Music, and local audio in one app.
+- **Find something for the moment.** Explore recommendations, Speed Dials, mixes, and podcasts.
+- **A full music player.** Keep the queue, lyrics, downloads, listening history, and playback controls close at hand.
+- **Make it yours.** Personalize the appearance, playback, navigation, and equalizer settings.
+- **Artwork in full colour.** Album covers and artist photography bring warmth to a restrained interface.
+
+Service access and playback features depend on the source, account, region, and current service behavior. See the [FAQ](docs/FAQ.md) for account, device, and playback details.
+
+## Screenshots
 
 <p align="center">
   <img src="docs/assets/img/readme/melo-product-showcase.png" alt="Melo Speed Dial, Home feed, Podcasts, and Now Playing screens" width="100%" />
 </p>
 
 <details>
-  <summary>View the full-size screenshots</summary>
+  <summary>View individual screens</summary>
 
   <p align="center">
     <img src="docs/assets/img/readme/screens/speed-dial.png" alt="Melo Speed Dial with mood controls and favorite music" width="49%" />
@@ -46,85 +60,36 @@ The app ID is **in.melo**. Melo is independent of Spotify, YouTube, and Google.
   </p>
 </details>
 
-## Made for listening
-
-- **Your music together.** Browse Spotify, YouTube Music, and audio stored on your device from one app.
-- **Artwork stays colourful.** Album covers, playlists, and artist photography keep their original colour against a restrained interface.
-- **A player that gets out of the way.** Queue, lyrics, playback controls, and song details are close at hand.
-- **A library that feels like yours.** Organize music, playlists, downloads, history, and local files.
-- **Tuned to your taste.** Personalize appearance, playback, navigation, and equalizer settings.
-
-Service access and available playback features depend on the source, account, region, and current service behavior.
-
-## Get Melo
-
-Download **Melo 1.2.0** from the [latest GitHub release](https://github.com/aarush-io/melo/releases/latest), then open the APK on an ARM64 Android device running Android 8.0 or later. Android will ask you to allow installation from the app you used to open the download.
-
-Melo uses its own application ID and keeps its settings, sign-in, and downloads separate from other apps.
-
-## Support Melo
-
-If Melo is useful to you, you can support its development with a voluntary UPI contribution. Scan the QR code with any UPI app and choose an amount.
+## Download
 
 <p align="center">
-  <img src="docs/assets/img/readme/support-melo.svg" alt="Melo-branded UPI donation QR code for aarushhh@fam" width="420" />
+  <a href="https://github.com/aarush-io/melo/releases/latest"><img alt="Download the latest Melo Android APK" src="https://img.shields.io/badge/GET_MELO-ANDROID_APK-f1f0ec?style=for-the-badge&logo=android&logoColor=171717&labelColor=171717" /></a>
+</p>
+
+<p align="center"><strong>Android 8.0 or later · ARM64</strong></p>
+
+Download the latest signed APK from [GitHub Releases](https://github.com/aarush-io/melo/releases/latest), open it on your device, and approve installation. If Android asks, allow the app you used to download Melo to install unknown apps. Melo installs separately from other music apps and keeps its own settings, sign-in, and downloads.
+
+Melo can check for updates and guide you through installing a newer release. See [how updates work](docs/FAQ.md#how-do-application-updates-work).
+
+## Support
+
+Melo is free to use. If it has earned a place in your rotation, you can support its development with a voluntary UPI contribution. Scan with any UPI app and choose an amount.
+
+<p align="center">
+  <img src="docs/assets/img/readme/support-melo.svg" alt="Melo-branded UPI donation QR code for aarushhh@fam" width="380" />
 </p>
 
 UPI ID: `aarushhh@fam`
 
-## Updates
-
-Melo checks the public GitHub Releases feed for a newer stable version and can notify you in the app. When you choose to update, Melo downloads the release APK, checks the published SHA-256 digest when available, and confirms the package, version, and signing certificate before opening Android's installer. Android asks you to approve installation.
-
-For an update to install over an existing Melo build, publish a higher version code and sign it with the same Melo release key. Attach the APK with this exact name:
-
-    Melo-vVERSION.apk
-
-For example, version 1.2.0 uses the tag v1.2.0 and the asset Melo-v1.2.0.apk.
-
-## Build from source
-
-### Requirements
-
-- JDK 21
-- Android SDK Platform 37 and Build Tools 36.0.0 or newer
-- The unmodified Spotify 9.2.0.26 ARM64 APKM (build 148373686) to build the complete Spotify engine path
-
-The Spotify APKM and generated engine binaries are not stored in this repository. Provide a local copy that you are entitled to use. Gradle checks the pinned APK and native library hashes before preparing the runtime.
-
-### Windows
-
-Clone the repository, configure the Android SDK using ANDROID_HOME or an ignored local.properties file, and place the APKM at:
-
-    native-runtime/artifacts/spotify-9.2.0.26.apkm
-
-Then build and package the signed release:
-
-~~~powershell
-.\gradlew.bat :app:assembleRelease -PmeloUpdateRepository=aarush-io/melo
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts/package-release.ps1
-~~~
-
-The APK, SHA-256 checksum, and signing-certificate report are written to the ignored dist folder. Create the Melo signing key once with scripts/create-signing-key.ps1 and back up the ignored .signing directory securely. Never commit the signing key or its properties file.
-
-On macOS or Linux, use ./gradlew with the same Gradle property and packaging script.
-
-To build the app without the Spotify runtime archive for development, pass -PnativeRuntime=false. This build cannot play encrypted Spotify audio.
-
-## Playback and evidence
-
-Melo uses native Android protocols for its Spotify integration. The protocol notes document what has been checked statically, with test doubles, and against live services. These are different kinds of evidence. A moving playhead or a populated buffer is not proof of audible playback; full Spotify playback is only confirmed when decoded audio is checked beyond the clear lead-in, after seeks, and across track changes.
-
-See the [native runtime guide](native-runtime/README.md), [audio delivery notes](protocol/07-audio-delivery.md), and [native engine notes](protocol/08-native-engine.md) before changing playback.
-
 ## Contribute
 
-Start with [CONTRIBUTING.md](CONTRIBUTING.md). Please include the Android version and a concise reproduction when reporting a bug. For security concerns, see [SECURITY.md](SECURITY.md).
+Bug reports, device testing, documentation, and code contributions are welcome. Start with the [contribution guide](CONTRIBUTING.md), and see the [build-from-source guide](docs/BUILDING.md) if you want to compile Melo yourself.
 
-## Credits and license
+For bug reports, include your Melo version, Android version, device model, and steps to reproduce. For security issues, use [SECURITY.md](SECURITY.md).
 
-Melo is a better-maintained fork of Spotifeur.
+## Legal
 
-The YouTube Music integration credits [Resona](https://github.com/code-saksham-hash/Resona). The interface uses Jetpack Compose, AndroidX Media3, Coil, and OkHttp. Dot-matrix typography uses [Doto](https://github.com/google/fonts/tree/main/ofl/doto), distributed under the [SIL Open Font License](design/Doto-OFL.txt).
+Melo is distributed under the [GNU General Public License v3](LICENSE). The app is independent of Spotify, YouTube, and Google. Third-party names and marks belong to their respective owners. The Spotify runtime is third-party software and remains subject to its own terms. The YouTube Music integration credits [Resona](https://github.com/code-saksham-hash/Resona); dot-matrix typography uses [Doto](https://github.com/google/fonts/tree/main/ofl/doto), under the [SIL Open Font License](design/Doto-OFL.txt).
 
-The application source is distributed under the [GNU GPL v3](LICENSE). The unmodified Spotify runtime is third-party software and remains subject to its own terms. Melo is not affiliated with or endorsed by Spotify, YouTube, Google.
+For data and privacy details, see [PRIVACY.md](PRIVACY.md).

@@ -2,6 +2,8 @@
 
 Thanks for considering a contribution.
 
+See the [build-from-source guide](docs/BUILDING.md) for the Android SDK requirements and release packaging steps.
+
 ## Ways to help
 
 - Report bugs with clear steps to reproduce.
