@@ -10,7 +10,7 @@ export default {
       const labelWidth = 142;
       const valueWidth = Math.max(45, value.length * 8.25 + 24);
       const width = labelWidth + valueWidth;
-      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="28" role="img" aria-label="${label}: ${value}"><title>${label}: ${value}</title><g shape-rendering="crispEdges"><rect width="${labelWidth}" height="28" fill="#0d1117"/><rect x="${labelWidth}" width="${valueWidth}" height="28" fill="#2ea043"/></g><g fill="#fff" text-anchor="middle" font-family="Verdana,Geneva,DejaVu Sans,sans-serif" text-rendering="geometricPrecision" font-size="100"><text transform="scale(.1)" x="${labelWidth * 5}" y="175" textLength="${(label.length * 6.4) * 10}">${label}</text><text transform="scale(.1)" x="${(labelWidth + valueWidth / 2) * 10}" y="175" textLength="${value.length * 8.25 * 10}" font-weight="bold">${value}</text></g></svg>`;
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="28" role="img" aria-label="${label}: ${value}"><title>${label}: ${value}</title><g shape-rendering="crispEdges"><rect width="${labelWidth}" height="28" fill="#0d1117"/><rect x="${labelWidth}" width="${valueWidth}" height="28" fill="#d6335c"/></g><g fill="#fff" text-anchor="middle" font-family="Verdana,Geneva,DejaVu Sans,sans-serif" text-rendering="geometricPrecision" font-size="100"><text transform="scale(.1)" x="${labelWidth * 5}" y="175" textLength="${(label.length * 6.4) * 10}">${label}</text><text transform="scale(.1)" x="${(labelWidth + valueWidth / 2) * 10}" y="175" textLength="${value.length * 8.25 * 10}" font-weight="bold">${value}</text></g></svg>`;
       return new Response(svg, {
         status: 200,
         headers: {
