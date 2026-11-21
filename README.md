@@ -75,7 +75,7 @@ Melo can check for updates and guide you through installing a newer release. See
 Melo is free to use. If it has earned a place in your rotation, you can support its development with a voluntary UPI contribution. Scan with any UPI app and choose an amount.
 
 <p align="center">
-  <img src="docs/assets/img/readme/support-melo.svg" alt="Melo-branded UPI donation QR code for aarushhh@fam" width="380" />
+  <img src="docs/assets/img/readme/support-melo.svg" alt="Melo-branded UPI donation QR code for aarushhh@fam" width="340" />
 </p>
 
 UPI ID: `aarushhh@fam`
