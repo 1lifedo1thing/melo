@@ -62,6 +62,16 @@ Download **Melo 1.2.0** from the [latest GitHub release](https://github.com/aaru
 
 Melo uses its own application ID and keeps its settings, sign-in, and downloads separate from other apps.
 
+## Support Melo
+
+If Melo is useful to you, you can support its development with a voluntary UPI contribution. Scan the QR code with any UPI app and choose an amount.
+
+<p align="center">
+  <img src="docs/assets/img/readme/support-melo.svg" alt="Melo-branded UPI donation QR code for aarushhh@fam" width="420" />
+</p>
+
+UPI ID: `aarushhh@fam`
+
 ## Updates
 
 Melo checks the public GitHub Releases feed for a newer stable version and can notify you in the app. When you choose to update, Melo downloads the release APK, checks the published SHA-256 digest when available, and confirms the package, version, and signing certificate before opening Android's installer. Android asks you to approve installation.
