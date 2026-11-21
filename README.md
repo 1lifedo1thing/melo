@@ -20,6 +20,7 @@
   <a href="#screenshots">Screenshots</a> ·
   <a href="#support">Support</a> ·
   <a href="#contribute">Contribute</a> ·
+  <a href="https://discord.gg/h3Hzk4seXj">Discord</a> ·
   <a href="PRIVACY.md">Privacy</a>
 </p>
 
@@ -83,6 +84,10 @@ UPI ID: `aarushhh@fam`
 ## Contribute
 
 Bug reports, device testing, documentation, and code contributions are welcome. Start with the [contribution guide](CONTRIBUTING.md), and see the [build-from-source guide](docs/BUILDING.md) if you want to compile Melo yourself.
+
+<p align="center">
+  <a href="https://discord.gg/h3Hzk4seXj"><img alt="Join the Melo Discord server" src="https://img.shields.io/badge/JOIN_US_ON-DISCORD-5865F2?style=for-the-badge&logo=discord&logoColor=white&labelColor=23272A" /></a>
+</p>
 
 For bug reports, include your Melo version, Android version, device model, and steps to reproduce. For security issues, use [SECURITY.md](SECURITY.md).
 
