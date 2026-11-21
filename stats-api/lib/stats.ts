@@ -37,15 +37,6 @@ export function parsePresence(value: unknown): PresenceInput | null {
   return { id: body.id, platform: "android", playbackActive: body.playbackActive };
 }
 
-// Keep the write to one Redis command. Inactive heartbeats do not touch Redis.
-const ACTIVE_COUNT_SCRIPT = `
-local now = tonumber(ARGV[1])
-local ttl = tonumber(ARGV[2])
-local cutoff = now - ttl
-redis.call('ZREMRANGEBYSCORE', KEYS[1], '-inf', cutoff)
-return redis.call('ZCOUNT', KEYS[1], cutoff, '+inf')
-`;
-
 export async function recordPresence(input: PresenceInput): Promise<boolean> {
   if (!input.playbackActive) return true;
 
@@ -58,7 +49,7 @@ export async function recordPresence(input: PresenceInput): Promise<boolean> {
 
 export async function activePlaybackCount(): Promise<number> {
   const now = Date.now();
-  const count = await redis().eval(ACTIVE_COUNT_SCRIPT, ["melo:presence:playback"], [now, PRESENCE_TTL_MS]);
+  const count = await redis().zcount("melo:presence:playback", now - PRESENCE_TTL_MS, "+inf");
   return Number(count ?? 0);
 }
 
