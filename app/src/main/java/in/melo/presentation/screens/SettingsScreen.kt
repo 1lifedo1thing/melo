@@ -365,12 +365,6 @@ private fun AppearanceSettings(model: MeloModel, navController: NavHostControlle
                 leadingIcon = { Icon(Icons.Outlined.Style, null, tint = MaterialTheme.colorScheme.secondary) },
             )
             SwitchSettingItem(stringResource(R.string.settings_compact_mode_title), stringResource(R.string.settings_compact_mode_subtitle), s.navBarCompact, { v -> update { it.copy(navBarCompact = v) } }, leadingIcon = { Icon(painterResource(R.drawable.rounded_view_week_24), null, tint = MaterialTheme.colorScheme.secondary) })
-            SliderSettingsItem(
-                label = stringResource(R.string.settings_navbar_corner_title),
-                value = s.navBarCornerRadius.toFloat(), valueRange = 0f..50f, steps = 49,
-                onValueChange = { v -> update { it.copy(navBarCornerRadius = v.toInt()) } },
-                valueText = { "${it.toInt()} dp" },
-            )
             ThemeSelectorItem(
                 label = stringResource(R.string.settings_default_tab_title),
                 description = stringResource(R.string.settings_default_tab_subtitle),

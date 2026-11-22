@@ -438,6 +438,7 @@ fun HomeScreen(model: MeloModel, navController: NavHostController, paddingValues
         val viewportHeight = maxHeight
         Scaffold(
             modifier = Modifier.fillMaxSize(),
+            containerColor = Color.Transparent,
             topBar = {
                 HomeGradientTopBar(
                     onSettingsClick = { navController.navigateSafely(Screen.Settings.route) },
@@ -457,6 +458,7 @@ fun HomeScreen(model: MeloModel, navController: NavHostController, paddingValues
                     spotifyProfile = spotifyProfile,
                     onProfileClick = { navController.navigateSafely(Screen.SettingsCategory.createRoute("account")) },
                     isScrolled = isScrolled,
+                    transparentContainer = true,
                     refreshing = showHomeSkeleton,
                     pullFraction = { pullState.distanceFraction },
                     animateLogo = settings.homeLoadingAnimations,
@@ -482,7 +484,7 @@ fun HomeScreen(model: MeloModel, navController: NavHostController, paddingValues
                     if (activeDialSource == AppSettings.DIAL_SOURCE_SPOTIFY) spotifyDialRefreshKey++
                     model.refreshHome()
                 },
-                modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
+                modifier = Modifier.fillMaxSize(),
             ) {
                 LazyColumn(
                     state = listState,
@@ -623,7 +625,7 @@ fun HomeScreen(model: MeloModel, navController: NavHostController, paddingValues
 
                     if (youTubeHome.chips.isNotEmpty()) {
                         stickyHeader(key = "home_feed_categories") {
-                            Box(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background)) {
+                            Box(Modifier.fillMaxWidth()) {
                                 HomeCategoryChips(youTubeHome.chips, youTubeHome.selected, selectHomeCategory)
                             }
                         }

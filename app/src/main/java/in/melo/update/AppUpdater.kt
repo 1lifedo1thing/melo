@@ -38,6 +38,7 @@ internal sealed interface UpdateState {
     data class Ready(val release: GitHubRelease, val file: File) : UpdateState
     data class Failed(val release: GitHubRelease? = null) : UpdateState
     data class Notes(val release: GitHubRelease) : UpdateState
+    data object CommunityInvite : UpdateState
 }
 
 /** Independent of the player and Spotify credentials; one operation per application process. */
@@ -85,14 +86,27 @@ internal class AppUpdater private constructor(context: Context) {
     }
 
     private suspend fun showNotesAfterUpgrade() {
-        val previous = preferences.getString("seen_version", null)
-        if (previous == null || previous == BuildConfig.VERSION_NAME) {
-            preferences.edit().putString("seen_version", BuildConfig.VERSION_NAME).apply()
+        val installedVersion = BuildConfig.VERSION_NAME
+        if (preferences.getString(KEY_PENDING_COMMUNITY_INVITE, null) == installedVersion) {
+            mutable.value = UpdateState.CommunityInvite
             return
         }
-        val installed = withContext(Dispatchers.IO) { fetch("${GitHubRelease.API}/tags/v${BuildConfig.VERSION_NAME}") }
-        preferences.edit().putString("seen_version", BuildConfig.VERSION_NAME).apply()
-        if (installed != null && installed.notes.isNotBlank()) mutable.value = UpdateState.Notes(installed)
+        val previous = preferences.getString("seen_version", null)
+        if (previous == null) {
+            preferences.edit().putString("seen_version", installedVersion).apply()
+            return
+        }
+        if (previous == installedVersion) return
+        val release = withContext(Dispatchers.IO) { fetch("${GitHubRelease.API}/tags/v$installedVersion") }
+        if (release != null && release.notes.isNotBlank()) {
+            mutable.value = UpdateState.Notes(release)
+        } else {
+            preferences.edit()
+                .putString("seen_version", installedVersion)
+                .putString(KEY_PENDING_COMMUNITY_INVITE, installedVersion)
+                .apply()
+            mutable.value = UpdateState.CommunityInvite
+        }
     }
 
     private fun fetch(url: String): GitHubRelease? {
@@ -201,6 +215,20 @@ internal class AppUpdater private constructor(context: Context) {
     }
 
     fun dismiss() {
+        when (val current = mutable.value) {
+            is UpdateState.Notes -> {
+                preferences.edit()
+                    .putString("seen_version", BuildConfig.VERSION_NAME)
+                    .putString(KEY_PENDING_COMMUNITY_INVITE, BuildConfig.VERSION_NAME)
+                    .apply()
+                mutable.value = UpdateState.CommunityInvite
+                return
+            }
+            UpdateState.CommunityInvite -> {
+                preferences.edit().remove(KEY_PENDING_COMMUNITY_INVITE).apply()
+            }
+            else -> Unit
+        }
         job?.cancel()
         activeCall.getAndSet(null)?.cancel()
         mutable.value = UpdateState.Idle
@@ -227,6 +255,7 @@ internal class AppUpdater private constructor(context: Context) {
 
     companion object {
         private const val MAX_APK_BYTES = 512L * 1024 * 1024
+        private const val KEY_PENDING_COMMUNITY_INVITE = "pending_community_invite_version"
         @Volatile private var instance: AppUpdater? = null
         fun get(context: Context): AppUpdater = instance ?: synchronized(this) {
             instance ?: AppUpdater(context).also { instance = it }

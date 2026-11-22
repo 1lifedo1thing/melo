@@ -43,7 +43,7 @@ internal fun rememberSheetVisualState(
     currentSheetTranslationY: Animatable<Float, AnimationVector1D>,
     sheetCollapsedTargetY: Float,
     navBarStyle: String,
-    navBarCornerRadiusDp: Dp,
+    floatingNavBarCornerRadiusDp: Dp,
     isNavBarHidden: Boolean,
     isPlaying: Boolean,
     hasCurrentSong: Boolean,
@@ -110,7 +110,7 @@ internal fun rememberSheetVisualState(
         playerContentExpansionFraction,
         predictiveBackCollapseProgress,
         navBarStyle,
-        navBarCornerRadiusDp,
+        floatingNavBarCornerRadiusDp,
         isNavBarHidden,
         swipeDismissProgress,
         currentSheetContentState
@@ -119,11 +119,11 @@ internal fun rememberSheetVisualState(
             val collapsedCornerTarget = if (isNavBarHidden) {
                 32.dp
             } else if (navBarStyle == NavBarStyle.DEFAULT) {
-                navBarCornerRadiusDp
+                floatingNavBarCornerRadiusDp
             } else if (navBarStyle == NavBarStyle.FULL_WIDTH) {
                 32.dp
             } else {
-                navBarCornerRadiusDp
+                floatingNavBarCornerRadiusDp
             }
 
             val effectiveFraction = playerContentExpansionFraction.value * (1f - predictiveBackCollapseProgress)
@@ -133,13 +133,13 @@ internal fun rememberSheetVisualState(
                 lerp(collapsedCornerTarget, expandedTarget, safeFraction)
             } else {
                 if (navBarStyle == NavBarStyle.DEFAULT) {
-                    navBarCornerRadiusDp
+                    floatingNavBarCornerRadiusDp
                 } else if (navBarStyle == NavBarStyle.FULL_WIDTH) {
                     0.dp
                 } else if (isNavBarHidden) {
                     60.dp
                 } else {
-                    navBarCornerRadiusDp
+                    floatingNavBarCornerRadiusDp
                 }
             }
 
@@ -161,7 +161,7 @@ internal fun rememberSheetVisualState(
         predictiveBackCollapseProgress,
         swipeDismissProgress,
         isNavBarHidden,
-        navBarCornerRadiusDp,
+        floatingNavBarCornerRadiusDp,
         currentSheetContentState
     ) {
         {
@@ -172,7 +172,7 @@ internal fun rememberSheetVisualState(
             } else if (navBarStyle == NavBarStyle.FULL_WIDTH) {
                 32.dp
             } else {
-                navBarCornerRadiusDp
+                floatingNavBarCornerRadiusDp
             }
 
             val effectiveFraction = playerContentExpansionFraction.value * (1f - predictiveBackCollapseProgress)
@@ -188,7 +188,7 @@ internal fun rememberSheetVisualState(
                         } else if (navBarStyle == NavBarStyle.DEFAULT) {
                             10.dp
                         } else {
-                            navBarCornerRadiusDp
+                            floatingNavBarCornerRadiusDp
                         }
                     } else {
                         collapsedRadius
@@ -205,10 +205,10 @@ internal fun rememberSheetVisualState(
                 if (navBarStyle == NavBarStyle.FULL_WIDTH) {
                     calculatedNormally
                 } else if (navBarStyle == NavBarStyle.DEFAULT) {
-                    lerp(10.dp, navBarCornerRadiusDp, swipeDismissProgress)
+                    lerp(10.dp, floatingNavBarCornerRadiusDp, swipeDismissProgress)
                 } else {
-                    val baseCollapsedRadius = if (isNavBarHidden) 32.dp else navBarCornerRadiusDp
-                    lerp(baseCollapsedRadius, navBarCornerRadiusDp, swipeDismissProgress)
+                    val baseCollapsedRadius = if (isNavBarHidden) 32.dp else floatingNavBarCornerRadiusDp
+                    lerp(baseCollapsedRadius, floatingNavBarCornerRadiusDp, swipeDismissProgress)
                 }
             } else {
                 calculatedNormally

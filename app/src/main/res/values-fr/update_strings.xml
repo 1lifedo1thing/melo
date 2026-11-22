@@ -25,4 +25,8 @@
     <string name="update_current_title">Application à jour</string>
     <string name="update_current_description">Melo %1$s. Aucune version plus récente n’est disponible.</string>
     <string name="update_notes_title">Nouveautés</string>
+    <string name="community_invite_title">Rejoignez la communauté Melo</string>
+    <string name="community_invite_message">Merci d’avoir mis Melo à jour. Rejoignez-nous sur Discord pour partager vos commentaires, obtenir de l’aide et suivre l’actualité.</string>
+    <string name="community_invite_join">Rejoindre Discord</string>
+    <string name="community_invite_later">Plus tard</string>
 </resources>

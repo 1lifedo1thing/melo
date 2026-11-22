@@ -229,6 +229,7 @@
     <string name="queue_cd_remove_from_playlist">Retirer de la liste de lecture</string>
     <string name="queue_cd_reorder_song">Réorganiser la chanson</string>
     <string name="queue_cd_sleep_timer_action">Minuteur de mise en veille</string>
+    <string name="queue_cd_refresh_recommendations">Actualiser les recommandations</string>
     <string name="queue_cd_toggle_repeat_action">Activer/désactiver la répétition</string>
     <string name="queue_cd_toggle_shuffle_action">Activer/désactiver l\'aléatoire</string>
     <string name="queue_dialog_clear_queue_message">Voulez-vous vraiment supprimer toutes les chansons de la file d\'attente, sauf l\'actuelle ?</string>
@@ -251,6 +252,8 @@
     <string name="queue_save_playlist_named">File d\'attente %1$s</string>
     <string name="queue_song_removed">supprimé</string>
     <string name="queue_source_fallback_label">File d\'attente</string>
+    <string name="queue_recommendations_offline">Connectez-vous à Internet pour actualiser les recommandations.</string>
+    <string name="queue_recommendations_no_new">Aucune nouvelle recommandation trouvée. Réessayez.</string>
     <string name="queue_tracks_empty">La file d\'attente est vide pour le moment.</string>
     <plurals name="queue_tracks_lined_up">
         <item quantity="one">%d piste en attente.</item>
@@ -315,7 +318,6 @@
     <string name="settings_keep_playing_title">Continuer la lecture après fermeture</string>
     <string name="settings_language_system">Système par défaut</string>
     <string name="settings_lyrics_screen_section">Écran des paroles</string>
-    <string name="settings_navbar_corner_title">Rayon des angles de la barre</string>
     <string name="settings_navbar_style_title">Style de la barre de navigation</string>
     <string name="settings_navbar_style_subtitle">Choisissez une barre flottante ou une barre sur toute la largeur.</string>
     <string name="settings_navigation_bar_section">Barre de navigation</string>

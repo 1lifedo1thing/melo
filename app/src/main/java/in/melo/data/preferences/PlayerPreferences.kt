@@ -1,11 +1,5 @@
 package `in`.melo.data.preferences
 
-private const val MIN_NAV_BAR_CORNER_RADIUS = 0
-private const val MAX_NAV_BAR_CORNER_RADIUS = 50
-
-internal fun sanitizeNavBarCornerRadius(radius: Int): Int =
-    radius.coerceIn(MIN_NAV_BAR_CORNER_RADIUS, MAX_NAV_BAR_CORNER_RADIUS)
-
 object ThemePreference {
     const val DEFAULT = "default"
     const val DYNAMIC = "dynamic"

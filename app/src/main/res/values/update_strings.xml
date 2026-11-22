@@ -25,4 +25,8 @@
     <string name="update_current_title">Up to date</string>
     <string name="update_current_description">Melo %1$s. No newer version is available.</string>
     <string name="update_notes_title">What’s new</string>
+    <string name="community_invite_title">Join the Melo community</string>
+    <string name="community_invite_message">Thanks for updating Melo. Join us on Discord to share feedback, get help, and stay in the loop.</string>
+    <string name="community_invite_join">Join Discord</string>
+    <string name="community_invite_later">Maybe later</string>
 </resources>

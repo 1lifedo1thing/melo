@@ -81,6 +81,11 @@ internal fun UpdatePrompt() {
         try { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(release?.page ?: GitHubRelease.LATEST_PAGE))) }
         catch (_: android.content.ActivityNotFoundException) { }
     }
+    fun joinDiscord() {
+        try { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://discord.gg/h3Hzk4seXj"))) }
+        catch (_: android.content.ActivityNotFoundException) { }
+        updater.dismiss()
+    }
     val title = when (state) {
         UpdateState.Checking -> R.string.update_checking
         UpdateState.Current -> R.string.update_current_title
@@ -88,6 +93,7 @@ internal fun UpdatePrompt() {
         is UpdateState.Ready -> R.string.update_ready
         is UpdateState.Failed -> R.string.update_failed_title
         is UpdateState.Notes -> R.string.update_notes_title
+        UpdateState.CommunityInvite -> R.string.community_invite_title
         else -> R.string.update_available
     }
     AlertDialog(
@@ -108,6 +114,11 @@ internal fun UpdatePrompt() {
                         release?.let { ReleaseSummary(it.tag, null) }
                         if (current.release.notes.isNotBlank()) ReleaseNotes(current.release.notes)
                     }
+                    UpdateState.CommunityInvite -> Text(
+                        stringResource(R.string.community_invite_message),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                     is UpdateState.Downloading -> {
                         if (current.total > 0) {
                             LinearProgressIndicator(progress = { (current.done.toFloat() / current.total).coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth())
@@ -127,16 +138,29 @@ internal fun UpdatePrompt() {
         },
         confirmButton = {
             when (val current = state) {
-                is UpdateState.Available -> Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.End) {
-                    Button(
-                        onClick = { if (current.release.apk != null) updater.download(current.release) else openRelease() },
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Text(stringResource(if (current.release.apk != null) R.string.update_download_now else R.string.update_release_page))
+                is UpdateState.Available -> {
+                    Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.End) {
+                        Button(
+                            onClick = { if (current.release.apk != null) updater.download(current.release) else openRelease() },
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text(stringResource(if (current.release.apk != null) R.string.update_download_now else R.string.update_release_page))
+                        }
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            TextButton(onClick = updater::dismiss) { Text(stringResource(R.string.update_later)) }
+                            TextButton(onClick = updater::dontRemindToday) { Text(stringResource(R.string.update_dont_remind_today)) }
+                        }
                     }
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        TextButton(onClick = updater::dismiss) { Text(stringResource(R.string.update_later)) }
-                        TextButton(onClick = updater::dontRemindToday) { Text(stringResource(R.string.update_dont_remind_today)) }
+                }
+                UpdateState.CommunityInvite -> Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Button(onClick = ::joinDiscord, modifier = Modifier.fillMaxWidth()) {
+                        Text(stringResource(R.string.community_invite_join))
+                    }
+                    TextButton(onClick = updater::dismiss) {
+                        Text(stringResource(R.string.community_invite_later))
                     }
                 }
                 is UpdateState.Ready -> TextButton(onClick = {

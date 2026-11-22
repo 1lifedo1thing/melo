@@ -25,7 +25,6 @@ data class AppSettings(
     val collageAutoRotate: Boolean = false,
     val navBarStyle: String = NavBarStyle.FULL_WIDTH,
     val navBarCompact: Boolean = false,
-    val navBarCornerRadius: Int = 0,
     val immersiveLyrics: Boolean = false,
     val immersiveLyricsTimeoutMs: Long = 4000L,
     val lyricsFallback: Boolean = true,
@@ -104,7 +103,7 @@ data class AppSettings(
         .put("palette", palette).put("carouselStyle", carouselStyle).put("showPlayerFileInfo", showPlayerFileInfo)
         .put("showQualityInLists", showQualityInLists).put("collagePattern", collagePattern)
         .put("collageAutoRotate", collageAutoRotate).put("navBarStyle", navBarStyle).put("navBarCompact", navBarCompact)
-        .put("navBarCornerRadius", navBarCornerRadius).put("immersiveLyrics", immersiveLyrics)
+        .put("immersiveLyrics", immersiveLyrics)
         .put("immersiveLyricsTimeoutMs", immersiveLyricsTimeoutMs).put("lyricsFallback", lyricsFallback)
         .put("defaultTab", defaultTab).put("keepPlayingInBackground", keepPlayingInBackground)
         .put("pauseOnVolumeZero", pauseOnVolumeZero).put("resumeOnHeadphones", resumeOnHeadphones)
@@ -174,7 +173,6 @@ data class AppSettings(
                 collageAutoRotate = json.optBoolean("collageAutoRotate", d.collageAutoRotate),
                 navBarStyle = json.optString("navBarStyle", d.navBarStyle),
                 navBarCompact = json.optBoolean("navBarCompact", d.navBarCompact),
-                navBarCornerRadius = sanitizeNavBarCornerRadius(json.optInt("navBarCornerRadius", d.navBarCornerRadius)),
                 immersiveLyrics = json.optBoolean("immersiveLyrics", d.immersiveLyrics),
                 immersiveLyricsTimeoutMs = json.optLong("immersiveLyricsTimeoutMs", d.immersiveLyricsTimeoutMs),
                 lyricsFallback = json.optBoolean("lyricsFallback", d.lyricsFallback),

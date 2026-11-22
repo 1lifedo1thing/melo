@@ -47,6 +47,7 @@ import `in`.melo.data.SpotifyLibrary
 import `in`.melo.data.SpotifyLyricsSource
 import `in`.melo.data.SpotifyRadio
 import `in`.melo.playback.SpotifyPlayer
+import `in`.melo.playback.Playback
 import `in`.melo.data.SessionVault
 import `in`.melo.data.Music
 import `in`.melo.data.SpotifyFailure
@@ -755,8 +756,12 @@ class MeloModel(private val app: Application) : AndroidViewModel(app) {
             }
         }
         viewModelScope.launch {
+            player.state.collect(::considerRadioAutoRefill)
+        }
+        viewModelScope.launch {
             var wasOnline = online.value
             online.collect { now ->
+                if (now) considerRadioAutoRefill(player.state.value)
                 if (now) loadPodcastFeed()
                 if (now && !wasOnline) refreshYouTubeLibrary()
                 if (now && !wasOnline && collections != null) {
@@ -1850,6 +1855,9 @@ class MeloModel(private val app: Application) : AndroidViewModel(app) {
                 val tracks = HomeRecommendationEngine.queue(pick, localHistory)
                 if (tracks.isEmpty()) throw YouTubeFailure("YouTube Music did not return tracks for this recommendation.")
                 play(tracks)
+                // Top Picks starts from a generated recommendation queue. Mark that context so
+                // the player can extend it with another radio batch before the queue runs out.
+                player.markRadioContext()
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (auth: YouTubeAuthRequired) {
@@ -1861,6 +1869,12 @@ class MeloModel(private val app: Application) : AndroidViewModel(app) {
     }
 
     private var upNextJob: Job? = null
+    private var radioRefreshJob: Job? = null
+    private var radioAutoRefillJob: Job? = null
+    private var lastRadioAutoRefillTrackId: String? = null
+    private var radioAutoNoFreshSeedKey: String? = null
+    private val mutableRadioRefreshInProgress = MutableStateFlow(false)
+    val radioRefreshInProgress = mutableRadioRefreshInProgress.asStateFlow()
 
     /**
      * A track chosen on its own plays at once and its radio follows it, as in YouTube Music and Spotify,
@@ -1896,6 +1910,126 @@ class MeloModel(private val app: Application) : AndroidViewModel(app) {
         return radio?.station(seed)?.tracks.orEmpty().filterNot { it.id == seed.id }
     }
 
+    private fun considerRadioAutoRefill(playback: Playback) {
+        val currentId = playback.track?.id
+        val tailId = playback.contextTailId
+        if (!playback.canRefreshRecommendations || currentId == null || tailId == null ||
+            playback.remainingContextTracks > RADIO_REFILL_THRESHOLD
+        ) {
+            lastRadioAutoRefillTrackId = null
+            return
+        }
+        if (currentId == lastRadioAutoRefillTrackId) return
+        if (!online.value) return
+        if (startRadioAutoRefill(tailId)) lastRadioAutoRefillTrackId = currentId
+    }
+
+    /** Starts the next radio fetch while several tracks are still queued. */
+    private fun startRadioAutoRefill(expectedTailId: String): Boolean {
+        if (!online.value || radioAutoRefillJob?.isActive == true) return false
+        val (context, _) = player.context()
+        if (context.lastOrNull()?.id != expectedTailId) return false
+        val seeds = context.asReversed().asSequence()
+            .filter { it.kind == MusicKind.Track && !it.isLocalTrack }
+            .distinctBy(Music::id)
+            .take(RADIO_REFILL_SEED_COUNT)
+            .toList()
+        if (seeds.isEmpty()) return true
+        val seedKey = seeds.joinToString("\u001f") { it.id }
+        if (seedKey == radioAutoNoFreshSeedKey) return true
+        val excludedIds = context.mapTo(HashSet(), Music::id).apply {
+            addAll(player.seenRadioRecommendationIds())
+        }
+
+        radioAutoRefillJob = viewModelScope.launch {
+            try {
+                val recommendations = freshRadioBatch(seeds, excludedIds)
+                if (recommendations.isNotEmpty()) {
+                    if (player.appendRadioRecommendations(expectedTailId, recommendations)) {
+                        radioAutoNoFreshSeedKey = null
+                    }
+                } else if (player.context().first.lastOrNull()?.id == expectedTailId) {
+                    radioAutoNoFreshSeedKey = seedKey
+                }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (auth: YouTubeAuthRequired) {
+                youTubeAccountLost(auth)
+            } catch (_: Exception) {
+                // Playback continues through the existing queue; another track can retry.
+            }
+        }
+        return true
+    }
+
+    /** Merge up to three nearby radio seeds into one deduplicated batch. */
+    private suspend fun freshRadioBatch(seeds: List<Music>, excludedIds: Set<String>): List<Music> {
+        val excluded = excludedIds.toMutableSet()
+        val fresh = linkedMapOf<String, Music>()
+        for (seed in seeds) {
+            for (track in upNext(seed)) {
+                if (track.kind == MusicKind.Track && !track.isLocalTrack && excluded.add(track.id)) {
+                    fresh.putIfAbsent(track.id, track)
+                }
+                if (fresh.size >= RADIO_REFILL_BATCH_SIZE) break
+            }
+            if (fresh.size >= RADIO_REFILL_BATCH_SIZE) break
+        }
+        return fresh.values.toList()
+    }
+
+    /** Fetches a fresh radio tail while keeping the current song and the user's queued tracks. */
+    fun refreshRadioRecommendations() {
+        if (radioRefreshJob?.isActive == true || !player.state.value.canRefreshRecommendations) return
+        radioAutoRefillJob?.cancel()
+        val playback = player.state.value
+        val seed = playback.track ?: return
+        if (seed.isLocalTrack || !online.value) {
+            if (!online.value) mutableMessage.value = app.getString(`in`.melo.R.string.queue_recommendations_offline)
+            return
+        }
+
+        mutableRadioRefreshInProgress.value = true
+        radioRefreshJob = viewModelScope.launch {
+            try {
+                val (context, currentIndex) = player.context()
+                val excludedIds = context.mapTo(HashSet(), Music::id).apply {
+                    addAll(player.seenRadioRecommendationIds())
+                }
+                val alternateSeeds = context.drop((currentIndex + 1 + playback.queuedCount).coerceAtLeast(0))
+                    .asSequence()
+                    .filter { it.kind == MusicKind.Track && !it.isLocalTrack }
+                    .distinctBy(Music::id)
+                    .take(RADIO_REFILL_SEED_COUNT - 1)
+                    .toList()
+
+                val recommendations = freshRadioBatch(
+                    (listOf(seed) + alternateSeeds).distinctBy(Music::id),
+                    excludedIds,
+                )
+
+                if (player.state.value.track?.id != seed.id) return@launch
+                if (recommendations.isEmpty()) {
+                    mutableMessage.value = app.getString(`in`.melo.R.string.queue_recommendations_no_new)
+                    return@launch
+                }
+                if (!player.replaceRadioRecommendations(seed.id, recommendations) &&
+                    player.state.value.track?.id == seed.id
+                ) {
+                    mutableMessage.value = app.getString(`in`.melo.R.string.queue_recommendations_no_new)
+                }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (auth: YouTubeAuthRequired) {
+                youTubeAccountLost(auth)
+            } catch (failure: Exception) {
+                mutableMessage.value = readable(failure)
+            } finally {
+                mutableRadioRefreshInProgress.value = false
+            }
+        }
+    }
+
     fun loadRadio(seed: Music, open: (Music) -> Unit) {
         if (seed.source == `in`.melo.data.MusicSource.YouTubeMusic ||
             (seed.source == `in`.melo.data.MusicSource.Spotify && catalog == null)) {
@@ -1911,7 +2045,11 @@ class MeloModel(private val app: Application) : AndroidViewModel(app) {
                     val tracks = withContext(Dispatchers.IO) {
                         YouTubeMusic.watchQueue("RDAMVM$videoId", videoId, limit = 100)
                     }
-                    play(tracks)
+                    val firstTrack = tracks.indexOfFirst { it.kind == MusicKind.Track }
+                    if (firstTrack >= 0) {
+                        play(tracks, firstTrack)
+                        player.markRadioContext()
+                    }
                 } catch (cancelled: CancellationException) {
                     throw cancelled
                 } catch (failure: Exception) {
@@ -1926,7 +2064,11 @@ class MeloModel(private val app: Application) : AndroidViewModel(app) {
                 val result = source.station(seed)
                 mutableDetails.update { it + (result.item.id to DetailUi(result)) }
                 open(result.item)
-                play(result.tracks, 0)
+                val firstTrack = result.tracks.indexOfFirst { it.kind == MusicKind.Track }
+                if (firstTrack >= 0) {
+                    play(result.tracks, firstTrack)
+                    player.markRadioContext()
+                }
             } catch (cancelled: CancellationException) { throw cancelled }
             catch (failure: Exception) { mutableMessage.value = readable(failure) }
         }
@@ -2072,6 +2214,11 @@ class MeloModel(private val app: Application) : AndroidViewModel(app) {
     fun play(queue: List<Music>, index: Int = 0) {
         upNextJob?.cancel()
         upNextJob = null
+        radioRefreshJob?.cancel()
+        radioAutoRefillJob?.cancel()
+        mutableRadioRefreshInProgress.value = false
+        lastRadioAutoRefillTrackId = null
+        radioAutoNoFreshSeedKey = null
         val tracks = withLocalFiles(queue)
         val selected = tracks.getOrNull(index)
         if (selected != null && selected.isLocalTrack && selected.mediaUri == null) {
@@ -2719,5 +2866,8 @@ class MeloModel(private val app: Application) : AndroidViewModel(app) {
         private const val NAVIGATION_WARMUP_POLL_MS = 300L
         private const val STARTUP_REQUEST_WAIT_MS = 15_000L
         private const val MAX_EXPLORE_ART_PREFETCH = 8
+        private const val RADIO_REFILL_THRESHOLD = 5
+        private const val RADIO_REFILL_SEED_COUNT = 3
+        private const val RADIO_REFILL_BATCH_SIZE = 50
     }
 }

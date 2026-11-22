@@ -62,10 +62,10 @@ import `in`.melo.BottomNavItem
 import `in`.melo.R
 import `in`.melo.MeloModel
 import `in`.melo.data.preferences.NavBarStyle
-import `in`.melo.data.preferences.sanitizeNavBarCornerRadius
 import `in`.melo.presentation.components.DismissUndoBar
 import `in`.melo.presentation.components.MiniPlayerBottomSpacer
 import `in`.melo.presentation.components.MiniPlayerHeight
+import `in`.melo.presentation.components.FloatingNavBarCornerRadius
 import `in`.melo.presentation.components.PlayerInternalNavigationBar
 import `in`.melo.presentation.components.UnifiedPlayerSheetV2
 import `in`.melo.presentation.components.calculatePlayerSheetCollapsedTargetY
@@ -174,7 +174,7 @@ fun MeloMain(model: MeloModel, pendingSharedLink: String? = null, onSharedLinkHa
     val playerConfig by playerViewModel.playerConfigSlice.collectAsStateWithLifecycle()
     val navBarStyle = playerConfig.navBarStyle
     val navBarCompactMode by playerViewModel.navBarCompactMode.collectAsStateWithLifecycle()
-    val navBarCornerRadius = sanitizeNavBarCornerRadius(playerConfig.navBarCornerRadius)
+    val floatingNavBarCornerRadius = FloatingNavBarCornerRadius
     val useSmoothCorners = playerConfig.useSmoothCorners
     val isMiniPlayerDismissing by playerViewModel.isMiniPlayerDismissing.collectAsStateWithLifecycle()
     val disableBlurAllOver by playerViewModel.disableBlurAllOver.collectAsStateWithLifecycle()
@@ -241,12 +241,12 @@ fun MeloMain(model: MeloModel, pendingSharedLink: String? = null, onSharedLinkHa
                 val showPlayerContentArea = currentSongId != null
                 val navBarElevation = 0.dp
                 val animatedNavBarCornerRadius = animateDpAsState(
-                    targetValue = navBarCornerRadius.dp,
+                    targetValue = floatingNavBarCornerRadius,
                     animationSpec = tween(400),
                     label = "NavBarCornerRadius"
                 )
                 val animatedDefaultTopCornerRadius = animateDpAsState(
-                    targetValue = if (showPlayerContentArea && !isMiniPlayerDismissing) 10.dp else navBarCornerRadius.dp,
+                    targetValue = if (showPlayerContentArea && !isMiniPlayerDismissing) 10.dp else floatingNavBarCornerRadius,
                     animationSpec = tween(400),
                     label = "NavBarDefaultTopCornerRadius"
                 )
@@ -284,13 +284,13 @@ fun MeloMain(model: MeloModel, pendingSharedLink: String? = null, onSharedLinkHa
                                 val safeFraction = fraction.coerceIn(0f, 1f)
                                 val topDp = when {
                                     navBarStyle == NavBarStyle.DEFAULT -> animatedDefaultTopCornerRadius.value
-                                    navBarStyle == NavBarStyle.FULL_WIDTH -> lerp(navBarCornerRadius.dp, 26.dp, safeFraction)
+                                    navBarStyle == NavBarStyle.FULL_WIDTH -> lerp(floatingNavBarCornerRadius, 26.dp, safeFraction)
                                     showPlayerContentArea -> if (fraction < 0.2f) {
-                                        lerp(navBarCornerRadius.dp, 26.dp, (fraction / 0.2f).coerceIn(0f, 1f))
+                                        lerp(floatingNavBarCornerRadius, 26.dp, (fraction / 0.2f).coerceIn(0f, 1f))
                                     } else {
                                         26.dp
                                     }
-                                    else -> navBarCornerRadius.dp
+                                    else -> floatingNavBarCornerRadius
                                 }
                                 val bottomDp = when (navBarStyle) {
                                     NavBarStyle.FULL_WIDTH -> 0.dp
@@ -300,7 +300,9 @@ fun MeloMain(model: MeloModel, pendingSharedLink: String? = null, onSharedLinkHa
                                 clip = true
                                 shadowElevation = navBarElevationPx
                             },
-                        color = MaterialTheme.colorScheme.background
+                        // Keep the floating capsule inside; the animated parent surface
+                        // itself must not paint a second dark card behind it.
+                        color = androidx.compose.ui.graphics.Color.Transparent
                     ) {
                         PlayerInternalNavigationBar(
                             navController = navController,

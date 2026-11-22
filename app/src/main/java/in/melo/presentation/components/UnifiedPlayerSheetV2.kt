@@ -63,13 +63,13 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import `in`.melo.data.model.Song
-import `in`.melo.data.preferences.sanitizeNavBarCornerRadius
 import `in`.melo.presentation.components.scoped.PlayerAlbumNavigationEffect
 import `in`.melo.presentation.components.scoped.PlayerArtistNavigationEffect
 import `in`.melo.presentation.components.scoped.PlayerSheetPredictiveBackHandler
 import `in`.melo.presentation.components.scoped.QueueSheetRuntimeEffects
 import `in`.melo.presentation.components.scoped.SheetMotionController
 import `in`.melo.presentation.components.scoped.miniPlayerDismissHorizontalGesture
+import `in`.melo.presentation.components.FloatingNavBarCornerRadius
 import `in`.melo.presentation.components.scoped.playerSheetVerticalDragGesture
 import `in`.melo.presentation.components.scoped.rememberFullPlayerCompositionPolicy
 import `in`.melo.presentation.components.scoped.rememberFullPlayerVisualState
@@ -157,7 +157,6 @@ fun UnifiedPlayerSheetV2(
     val prewarmFullPlayer = rememberPrewarmFullPlayer(infrequentPlayerState.currentSong?.id)
 
     val playerConfig by playerViewModel.playerConfigSlice.collectAsStateWithLifecycle()
-    val navBarCornerRadius = sanitizeNavBarCornerRadius(playerConfig.navBarCornerRadius)
     val navBarStyle = playerConfig.navBarStyle
     val carouselStyle = playerConfig.carouselStyle
     val fullPlayerLoadingTweaks = playerConfig.fullPlayerLoadingTweaks
@@ -298,7 +297,7 @@ fun UnifiedPlayerSheetV2(
         currentSheetTranslationY = currentSheetTranslationY,
         sheetCollapsedTargetY = sheetCollapsedTargetY,
         navBarStyle = navBarStyle,
-        navBarCornerRadiusDp = navBarCornerRadius.dp,
+        floatingNavBarCornerRadiusDp = FloatingNavBarCornerRadius,
         isNavBarHidden = isNavBarHidden,
         isPlaying = infrequentPlayerState.isPlaying,
         hasCurrentSong = infrequentPlayerState.currentSong != null,

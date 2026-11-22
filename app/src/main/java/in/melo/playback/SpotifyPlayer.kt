@@ -34,6 +34,12 @@ data class Playback(
     val audioFormat: String = "",
     /** Tracks the user queued, waiting right after the current one. */
     val queuedCount: Int = 0,
+    /** True while this context can replace its generated radio recommendations. */
+    val canRefreshRecommendations: Boolean = false,
+    /** Number of tracks remaining after the current one in this logical context. */
+    val remainingContextTracks: Int = 0,
+    /** Last track in the logical context, including tracks outside the player's loaded window. */
+    val contextTailId: String? = null,
 ) { val track: Music? get() = queue.getOrNull(index) }
 
 /** Outlives the activity, like the playback service whose queue it describes. */
@@ -81,6 +87,9 @@ class SpotifyPlayer(context: Context, scope: CoroutineScope) : AutoCloseable {
      */
     private var before: List<Music> = emptyList()
     private var after: List<Music> = emptyList()
+    private var hasRadioRecommendations = false
+    /** Prevent a refresh from rotating back to a recommendation batch already shown this session. */
+    private val seenRadioRecommendationIds = LinkedHashSet<String>()
     init {
         ShuffleMemory.load(appContext)
         future.addListener({
@@ -94,6 +103,8 @@ class SpotifyPlayer(context: Context, scope: CoroutineScope) : AutoCloseable {
     fun play(queue: List<Music>, index: Int = 0) {
         val selected = queue.getOrNull(index) ?: return
         if (!selected.isPlayableTrack()) return
+        hasRadioRecommendations = false
+        seenRadioRecommendationIds.clear()
         val playable = queue.filter(Music::isPlayableTrack)
         val first = queue.take(index).count(Music::isPlayableTrack)
         // Shuffle reorders the queue itself: the chosen track plays first and every other one follows.
@@ -161,15 +172,103 @@ class SpotifyPlayer(context: Context, scope: CoroutineScope) : AutoCloseable {
             if (added.isEmpty()) return
             pending = (pendingTracks + added) to index
             ShuffleMemory.original = ShuffleMemory.original?.let { it + added }
+            hasRadioRecommendations = true
+            seenRadioRecommendationIds.addAll(added.map(Music::id))
+            mutableState.value = mutableState.value.copy(
+                canRefreshRecommendations = true,
+                remainingContextTracks = (pendingTracks.size + added.size - index - 1).coerceAtLeast(0),
+                contextTailId = null,
+            )
             return
         }
         if (player.currentMediaItem?.mediaId != seedId) return
         val known = (before + queue + after).mapTo(HashSet(), Music::id)
-        val added = tracks.filter(Music::isPlayableTrack).filter { known.add(it.id) }
+        val added = tracks.filter(Music::isPlayableTrack)
+            .filter { it.id !in seenRadioRecommendationIds }
+            .filter { known.add(it.id) }
         if (added.isEmpty()) return
         after = after + added
         ShuffleMemory.original = ShuffleMemory.original?.let { it + added }
+        hasRadioRecommendations = true
+        seenRadioRecommendationIds.addAll(added.map(Music::id))
         update(player)
+    }
+    /** Marks a queue loaded from a radio station as eligible for recommendation refresh. */
+    fun markRadioContext() {
+        if (mutableState.value.track == null) return
+        hasRadioRecommendations = true
+        val player = controller
+        if (player != null) {
+            val currentIndex = player.currentMediaItemIndex
+            val manuallyQueuedIds = userQueue(player).mapTo(HashSet(), Music::id)
+            val currentAndFollowing = (currentIndex.coerceAtLeast(0) until player.mediaItemCount)
+                .map { music(player.getMediaItemAt(it)) }
+                .filterNot { it.id in manuallyQueuedIds }
+            seenRadioRecommendationIds.addAll((currentAndFollowing + after).map(Music::id))
+            update(player)
+        } else {
+            pending?.let { (tracks, index) ->
+                seenRadioRecommendationIds.addAll(tracks.drop(index + 1).map(Music::id))
+            }
+            mutableState.value = mutableState.value.copy(
+                canRefreshRecommendations = true,
+                contextTailId = null,
+            )
+        }
+    }
+    /** IDs returned in any radio batch for this playback context, including replaced batches. */
+    fun seenRadioRecommendationIds(): Set<String> = seenRadioRecommendationIds.toSet()
+    /** Replaces only the generated radio tail, keeping the current track and the user's queue. */
+    fun replaceRadioRecommendations(seedId: String, tracks: List<Music>): Boolean {
+        val player = controller ?: return false
+        if (!hasRadioRecommendations || player.currentMediaItem?.mediaId != seedId) return false
+
+        val currentIndex = player.currentMediaItemIndex
+        val current = music(player.currentMediaItem ?: return false)
+        val earlier = before + (0 until currentIndex).map { music(player.getMediaItemAt(it)) }
+        val queued = userQueue(player)
+        val known = (earlier + current + queued).mapTo(HashSet(), Music::id)
+        val replacement = tracks.asSequence()
+            .filter(Music::isPlayableTrack)
+            .filter { it.id !in seenRadioRecommendationIds }
+            .filter { known.add(it.id) }
+            .toList()
+        if (replacement.isEmpty()) return false
+
+        if (ShuffleMemory.enabled) {
+            val original = ShuffleMemory.original.orEmpty()
+            val originalIndex = original.indexOfFirst { it.id == seedId }
+            val originalEarlier = if (originalIndex >= 0) original.take(originalIndex) else earlier
+            ShuffleMemory.original = originalEarlier + current + replacement
+        }
+        replaceAroundCurrent(player, earlier, replacement, queued)
+        hasRadioRecommendations = true
+        seenRadioRecommendationIds.addAll(replacement.map(Music::id))
+        queueChanged = true
+        update(player)
+        return true
+    }
+    /** Adds a prefetched batch only if the same radio context is still at its expected tail. */
+    fun appendRadioRecommendations(expectedTailId: String, tracks: List<Music>): Boolean {
+        val player = controller ?: return false
+        if (!hasRadioRecommendations) return false
+        val currentContext = context().first
+        if (currentContext.lastOrNull()?.id != expectedTailId) return false
+
+        val known = currentContext.mapTo(HashSet(), Music::id)
+        val added = tracks.asSequence()
+            .filter(Music::isPlayableTrack)
+            .filter { it.id !in seenRadioRecommendationIds }
+            .filter { known.add(it.id) }
+            .toList()
+        if (added.isEmpty()) return false
+
+        after = after + added
+        ShuffleMemory.original = ShuffleMemory.original?.let { it + added }
+        seenRadioRecommendationIds.addAll(added.map(Music::id))
+        queueChanged = true
+        update(player)
+        return true
     }
     /** The whole context and the position of the current track in it. */
     fun context(): Pair<List<Music>, Int> = (before + queue) + after to before.size + mutableState.value.index
@@ -254,6 +353,8 @@ class SpotifyPlayer(context: Context, scope: CoroutineScope) : AutoCloseable {
         pending = null; ShuffleMemory.original = null
         queueChanged = true
         before = emptyList(); after = emptyList()
+        hasRadioRecommendations = false
+        seenRadioRecommendationIds.clear()
         controller?.stop(); controller?.clearMediaItems(); mutableState.value = Playback(shuffle = ShuffleMemory.enabled)
     }
     fun pause() { controller?.pause() }
@@ -287,6 +388,8 @@ class SpotifyPlayer(context: Context, scope: CoroutineScope) : AutoCloseable {
         if (current > 0) player.removeMediaItems(0, current)
         ShuffleMemory.original = null
         before = emptyList(); after = emptyList()
+        hasRadioRecommendations = false
+        seenRadioRecommendationIds.clear()
         queueChanged = true
         update(player)
     } }
@@ -299,6 +402,9 @@ class SpotifyPlayer(context: Context, scope: CoroutineScope) : AutoCloseable {
         val index = player.currentMediaItemIndex.coerceAtLeast(0)
         val duration = player.duration.takeUnless { it == C.TIME_UNSET || it < 0 }
             ?: queue.getOrNull(index)?.durationMs?.toLong() ?: 0
+        val remainingContextTracks = (player.mediaItemCount - player.currentMediaItemIndex - 1)
+            .coerceAtLeast(0) + after.size
+        val contextTailId = after.lastOrNull()?.id ?: queue.lastOrNull()?.id
         val error = player.playerError?.let { failure ->
             generateSequence<Throwable>(failure) { it.cause }.take(12)
                 .firstOrNull { it is SpotifyFailure || it is `in`.melo.data.youtube.YouTubeFailure }?.message
@@ -308,7 +414,7 @@ class SpotifyPlayer(context: Context, scope: CoroutineScope) : AutoCloseable {
         mutableState.value = Playback(queue, index, player.isPlaying, player.playbackState == Player.STATE_BUFFERING,
             player.currentPosition.coerceIn(0, Int.MAX_VALUE.toLong()).toInt(), duration.coerceAtMost(Int.MAX_VALUE.toLong()).toInt(),
             ShuffleMemory.enabled, player.repeatMode, error, player.hasNextMediaItem() || after.isNotEmpty(), player.playWhenReady, currentAudioFormat(player),
-            userQueue(player).size)
+            userQueue(player).size, hasRadioRecommendations, remainingContextTracks, contextTailId)
     }
     private companion object {
         const val WINDOW_BEHIND = 20

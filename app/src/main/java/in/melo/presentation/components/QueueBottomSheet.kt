@@ -54,6 +54,7 @@ import androidx.compose.material.icons.rounded.DragIndicator
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.Repeat
 import androidx.compose.material.icons.rounded.RepeatOne
+import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Shuffle
 import androidx.compose.material.icons.rounded.Timer
 import androidx.compose.material.icons.rounded.Check
@@ -129,6 +130,8 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.activity.compose.BackHandler
@@ -276,6 +279,8 @@ fun QueueBottomSheet(
     // Read show queue history preference
     val settingsState by viewModel.settings.collectAsStateWithLifecycle()
     val queuedState = remember(viewModel) { viewModel.queuedCount }.collectAsStateWithLifecycle()
+    val canRefreshRecommendations by remember(viewModel) { viewModel.canRefreshRecommendations }.collectAsStateWithLifecycle()
+    val isRefreshingRecommendations by remember(viewModel) { viewModel.isRefreshingRecommendations }.collectAsStateWithLifecycle()
     val showQueueHistory = settingsState.showQueueHistory
 
     // Offset to convert display indices to queue indices when history is hidden.
@@ -755,10 +760,13 @@ fun QueueBottomSheet(
                     isPlaying = isPlaying,
                     queueSourceName = currentQueueSourceName,
                     queueCount = displaySongCount,
+                    canRefreshRecommendations = canRefreshRecommendations,
+                    isRefreshingRecommendations = isRefreshingRecommendations,
                     topPadding = headerTopPadding,
                     onPrevious = { viewModel.previousSong() },
                     onPlayPause = { viewModel.playPause() },
                     onNext = { viewModel.nextSong() },
+                    onRefreshRecommendations = { viewModel.refreshRecommendations() },
                     onLocateCurrentSong = {
                         if (currentSongDisplayIndex in 0..<displaySongCount) {
                             queueCoroutineScope.launch {
@@ -1243,10 +1251,13 @@ private fun QueueHeaderSection(
     isPlaying: Boolean,
     queueSourceName: String,
     queueCount: Int,
+    canRefreshRecommendations: Boolean,
+    isRefreshingRecommendations: Boolean,
     topPadding: Dp,
     onPrevious: () -> Unit,
     onPlayPause: () -> Unit,
     onNext: () -> Unit,
+    onRefreshRecommendations: () -> Unit,
     colorScheme: ColorScheme? = null,
     onLocateCurrentSong: () -> Unit = {},
     modifier: Modifier = Modifier
@@ -1277,6 +1288,9 @@ private fun QueueHeaderSection(
             QueueHeader(
                 queueSourceName = queueSourceName,
                 queueCount = queueCount,
+                canRefreshRecommendations = canRefreshRecommendations,
+                isRefreshingRecommendations = isRefreshingRecommendations,
+                onRefreshRecommendations = onRefreshRecommendations,
                 modifier = Modifier.fillMaxWidth(),
                 onLocateCurrentSong = onLocateCurrentSong
             )
@@ -1288,6 +1302,9 @@ private fun QueueHeaderSection(
 private fun QueueHeader(
     queueSourceName: String,
     queueCount: Int,
+    canRefreshRecommendations: Boolean,
+    isRefreshingRecommendations: Boolean,
+    onRefreshRecommendations: () -> Unit,
     modifier: Modifier = Modifier,
     onLocateCurrentSong: () -> Unit = {}
 ) {
@@ -1334,11 +1351,42 @@ private fun QueueHeader(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+            if (canRefreshRecommendations) {
+                QueueSourceBadge(
+                    queueSourceName = queueSourceName,
+                    modifier = Modifier.padding(top = MeloLayout.Space2)
+                )
+            }
         }
-        QueueSourceBadge(
-            queueSourceName = queueSourceName,
-            modifier = Modifier.padding(top = MeloLayout.Space2)
-        )
+        if (canRefreshRecommendations) {
+            val refreshLabel = stringResource(R.string.queue_cd_refresh_recommendations)
+            FilledTonalIconButton(
+                onClick = onRefreshRecommendations,
+                enabled = !isRefreshingRecommendations,
+                modifier = Modifier
+                    .padding(top = 2.dp)
+                    .size(48.dp)
+                    .semantics { contentDescription = refreshLabel }
+            ) {
+                if (isRefreshingRecommendations) {
+                    androidx.compose.material3.CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Rounded.Refresh,
+                        contentDescription = null,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
+            }
+        } else {
+            QueueSourceBadge(
+                queueSourceName = queueSourceName,
+                modifier = Modifier.padding(top = MeloLayout.Space2)
+            )
+        }
     }
 }
 

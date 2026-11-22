@@ -155,6 +155,7 @@ fun HomeGradientTopBar(
     spotifyProfile: SpotifyUserProfile? = null,
     onProfileClick: (() -> Unit)? = null,
     isScrolled: Boolean = false,
+    transparentContainer: Boolean = false,
     refreshing: Boolean = false,
     pullFraction: () -> Float = { 0f },
     animateLogo: Boolean = true,
@@ -166,6 +167,7 @@ fun HomeGradientTopBar(
     val statusBarInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     MeloStatusBarStyle(color = colors.background)
     Box(Modifier.fillMaxWidth()) {
+        val topBarContainerColor = if (transparentContainer) Color.Transparent else colors.background
         TopAppBar(
             title = {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -177,8 +179,8 @@ fun HomeGradientTopBar(
             // the title's layout and opening a panel can never change the app-bar measurement.
             actions = { Spacer(Modifier.width(0.dp)) },
             colors = topAppBarColors(
-                containerColor = colors.background,
-                scrolledContainerColor = colors.background,
+                containerColor = topBarContainerColor,
+                scrolledContainerColor = topBarContainerColor,
             ),
         )
         MeloTopActionsCapsule(

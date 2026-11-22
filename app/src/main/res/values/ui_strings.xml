@@ -229,6 +229,7 @@
     <string name="queue_cd_remove_from_playlist">Remove from playlist</string>
     <string name="queue_cd_reorder_song">Reorder song</string>
     <string name="queue_cd_sleep_timer_action">Sleep timer</string>
+    <string name="queue_cd_refresh_recommendations">Refresh recommendations</string>
     <string name="queue_cd_toggle_repeat_action">Toggle repeat</string>
     <string name="queue_cd_toggle_shuffle_action">Toggle shuffle</string>
     <string name="queue_dialog_clear_queue_message">Are you sure you want to clear all songs from the queue except the current one?</string>
@@ -251,6 +252,8 @@
     <string name="queue_save_playlist_named">%1$s queue</string>
     <string name="queue_song_removed">removed</string>
     <string name="queue_source_fallback_label">Queue</string>
+    <string name="queue_recommendations_offline">Connect to the internet to refresh recommendations.</string>
+    <string name="queue_recommendations_no_new">No new recommendations were found. Try again.</string>
     <string name="queue_tracks_empty">Queue is empty for now.</string>
     <plurals name="queue_tracks_lined_up">
         <item quantity="one">1 track lined up.</item>
@@ -315,7 +318,6 @@
     <string name="settings_keep_playing_title">Keep playing after closing</string>
     <string name="settings_language_system">System default</string>
     <string name="settings_lyrics_screen_section">Lyrics Screen</string>
-    <string name="settings_navbar_corner_title">NavBar Corner Radius</string>
     <string name="settings_navbar_style_title">NavBar Style</string>
     <string name="settings_navbar_style_subtitle">Choose a floating bar or one that spans the screen.</string>
     <string name="settings_navigation_bar_section">Navigation Bar</string>

@@ -184,7 +184,6 @@ class PlayerViewModel(val model: MeloModel, private val scope: CoroutineScope) {
 
     // Appearance --------------------------------------------------------------------------------
     data class PlayerConfigSlice(
-        val navBarCornerRadius: Int = 32,
         val navBarStyle: String = NavBarStyle.DEFAULT,
         val carouselStyle: String = CarouselStyle.NO_PEEK,
         val fullPlayerLoadingTweaks: FullPlayerLoadingTweaks = FullPlayerLoadingTweaks(),
@@ -197,7 +196,6 @@ class PlayerViewModel(val model: MeloModel, private val scope: CoroutineScope) {
     fun updateSettings(change: (AppSettings) -> AppSettings) = settingsStore.update(change)
     val playerConfigSlice: StateFlow<PlayerConfigSlice> = settings.map { s ->
         PlayerConfigSlice(
-            navBarCornerRadius = s.navBarCornerRadius,
             navBarStyle = s.navBarStyle,
             carouselStyle = s.carouselStyle,
             tapBackgroundClosesPlayer = s.tapBackgroundClosesPlayer,
@@ -320,6 +318,12 @@ class PlayerViewModel(val model: MeloModel, private val scope: CoroutineScope) {
     /** How many tracks the user queued after the current one, for the queue's sections. */
     val queuedCount: StateFlow<Int> = model.player.state.map { it.queuedCount }.distinctUntilChanged()
         .stateIn(scope, SharingStarted.Eagerly, 0)
+    val canRefreshRecommendations: StateFlow<Boolean> = model.player.state
+        .map { it.canRefreshRecommendations }
+        .distinctUntilChanged()
+        .stateIn(scope, SharingStarted.Eagerly, model.player.state.value.canRefreshRecommendations)
+    val isRefreshingRecommendations: StateFlow<Boolean> = model.radioRefreshInProgress
+    fun refreshRecommendations() = model.refreshRadioRecommendations()
     fun nextSong() = if (casting) cast.next() else model.player.next()
     fun previousSong() = if (casting) cast.previous() else model.player.previous()
     /** The previous track itself, whatever the position in the current one (mini player swipe). */

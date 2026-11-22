@@ -60,11 +60,18 @@ internal fun rememberSheetInteractionState(
     val playerShadowShape = remember(
         overallSheetTopCornerRadiusProvider,
         playerContentActualBottomRadiusProvider,
-        playerContentExpansionFraction
+        playerContentExpansionFraction,
+        currentSheetContentState,
+        showPlayerContentArea
     ) {
         PlayerSheetDynamicShape(
             topRadiusProvider = overallSheetTopCornerRadiusProvider,
             bottomRadiusProvider = playerContentActualBottomRadiusProvider,
+            useCircularMiniPlayerCapsuleProvider = {
+                showPlayerContentArea &&
+                    currentSheetContentState == PlayerSheetState.COLLAPSED &&
+                    playerContentExpansionFraction.value < 0.01f
+            },
             useSmoothShapeProvider = {
                 useSmoothCornersState.value &&
                     !isDraggingState.value &&
@@ -124,6 +131,7 @@ internal fun rememberSheetInteractionState(
 private class PlayerSheetDynamicShape(
     private val topRadiusProvider: () -> Dp,
     private val bottomRadiusProvider: () -> Dp,
+    private val useCircularMiniPlayerCapsuleProvider: () -> Boolean,
     private val useSmoothShapeProvider: () -> Boolean
 ) : Shape {
     override fun createOutline(
@@ -133,6 +141,19 @@ private class PlayerSheetDynamicShape(
     ): Outline {
         val topRadius = topRadiusProvider().nonNegative()
         val bottomRadius = bottomRadiusProvider().nonNegative()
+        if (useCircularMiniPlayerCapsuleProvider()) {
+            val radiusPx = minOf(size.height / 2f, size.width / 2f)
+            val radius = CornerRadius(radiusPx, radiusPx)
+            return Outline.Rounded(
+                RoundRect(
+                    rect = Rect(0f, 0f, size.width, size.height),
+                    topLeft = radius,
+                    topRight = radius,
+                    bottomRight = radius,
+                    bottomLeft = radius
+                )
+            )
+        }
         if (topRadius <= 1.dp || bottomRadius <= 1.dp || !useSmoothShapeProvider()) {
             val topRadiusPx = with(density) { topRadius.toPx() }
             val bottomRadiusPx = with(density) { bottomRadius.toPx() }
