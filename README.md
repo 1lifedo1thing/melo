@@ -11,7 +11,6 @@
   <a href="https://github.com/aarush-io/melo/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/aarush-io/melo?style=for-the-badge&label=RELEASE&color=006bb3&labelColor=171717" /></a>
   <a href="LICENSE"><img alt="GPL v3" src="https://img.shields.io/badge/LICENSE-GPL_3.0-b94e00?style=for-the-badge&labelColor=171717" /></a>
   <a href="https://github.com/aarush-io/melo/releases"><img alt="Total GitHub release downloads" src="https://img.shields.io/github/downloads/aarush-io/melo/total?style=for-the-badge&label=DOWNLOADS&color=218838&labelColor=171717" /></a>
-  <a href="https://api.melo.aarushsagar.com/api/stats"><img alt="Active playback sessions" src="https://api.melo.aarushsagar.com/api/stats/live/badge.svg" /></a>
 </p>
 
 <p align="center">
