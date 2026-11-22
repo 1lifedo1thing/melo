@@ -154,6 +154,7 @@ fun HomeScreen(model: MeloModel, navController: NavHostController, paddingValues
     val localPlaylists by model.localPlaylists.collectAsStateWithLifecycle()
     val youTubePlaylists by model.youTubePlaylists.collectAsStateWithLifecycle()
     val youTubeAccount by model.youTubeAccount.collectAsStateWithLifecycle()
+    val spotifyProfile by model.spotifyAccountProfile.collectAsStateWithLifecycle()
     val localBadge = stringResource(R.string.badge_local)
     val playlistsTitle = stringResource(R.string.home_playlists)
     val albumsTitle = stringResource(R.string.home_albums)
@@ -453,6 +454,7 @@ fun HomeScreen(model: MeloModel, navController: NavHostController, paddingValues
                     profileName = youTubeAccount?.name,
                     profileHandle = youTubeAccount?.handle,
                     spotifyConnected = discovery.spotifyEnabled,
+                    spotifyProfile = spotifyProfile,
                     onProfileClick = { navController.navigateSafely(Screen.SettingsCategory.createRoute("account")) },
                     isScrolled = isScrolled,
                     refreshing = showHomeSkeleton,

@@ -1,14 +1,17 @@
 package `in`.melo.presentation.screens
 
 import `in`.melo.ui.theme.MeloAlpha
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.Search
-import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.Icons
 
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -22,9 +25,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -43,7 +48,6 @@ import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -61,13 +65,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.Dp
@@ -96,7 +104,9 @@ import `in`.melo.presentation.components.ListeningStatusCard
 import `in`.melo.presentation.components.ListeningShelfPlaceholder
 import `in`.melo.presentation.navigation.navigateToTopLevelSafely
 import `in`.melo.presentation.components.MiniPlayerHeight
-import `in`.melo.presentation.components.MeloIconButton
+import `in`.melo.presentation.components.MeloTopActionsCapsule
+import `in`.melo.presentation.components.MeloProfileAccountButton
+import `in`.melo.presentation.components.homePress
 import `in`.melo.presentation.components.MusicOptionsHost
 import `in`.melo.presentation.components.PlaylistItem
 import `in`.melo.presentation.components.PlaylistNameDialog
@@ -167,10 +177,14 @@ fun LibraryScreen(model: MeloModel, navController: NavHostController, paddingVal
     val library by model.library.collectAsStateWithLifecycle()
     val stable by ui.stablePlayerState.collectAsStateWithLifecycle()
     val discovery by model.discovery.collectAsStateWithLifecycle()
+    val youTubeAccount by model.youTubeAccount.collectAsStateWithLifecycle()
+    val spotifyProfile by model.spotifyAccountProfile.collectAsStateWithLifecycle()
     val libraryTabs = if (discovery.spotifyEnabled) accountTabs else guestTabs
     var savedTab by rememberSaveable { mutableStateOf(0) }
     val pagerState = rememberPagerState(initialPage = savedTab.coerceIn(0, libraryTabs.lastIndex)) { libraryTabs.size }
+    val tabRowState = rememberLazyListState()
     val scope = rememberCoroutineScope()
+    val haptics = LocalHapticFeedback.current
     val requestedTab by ui.requestedLibraryTab.collectAsStateWithLifecycle()
     LaunchedEffect(requestedTab) {
         val requested = libraryTabs.indexOfFirst { it.storageKey == requestedTab }
@@ -210,6 +224,9 @@ fun LibraryScreen(model: MeloModel, navController: NavHostController, paddingVal
 
     LaunchedEffect(pagerState) {
         snapshotFlow { pagerState.currentPage }.distinctUntilChanged().collect { savedTab = it }
+    }
+    LaunchedEffect(pagerState.currentPage) {
+        if (pagerState.currentPage in libraryTabs.indices) tabRowState.animateScrollToItem(pagerState.currentPage)
     }
 
     val options = remember(currentTab) { sortOptions(currentTab) }
@@ -277,55 +294,90 @@ fun LibraryScreen(model: MeloModel, navController: NavHostController, paddingVal
                         )
                     },
                     actions = {
-                        MeloIconButton(
-                            icon = if (librarySearchOpen) Icons.Rounded.Close else Icons.Rounded.Search,
-                            contentDescription = stringResource(if (librarySearchOpen) R.string.library_search_close else R.string.library_search_open),
-                            onClick = {
-                                if (librarySearchOpen) {
-                                    librarySearchOpen = false
-                                    librarySearchQuery = ""
-                                    searchKeyboard?.hide()
-                                } else librarySearchOpen = true
-                            },
-                            modifier = Modifier.padding(end = MeloLayout.Space1),
-                        )
-                        MeloIconButton(
-                            icon = Icons.Rounded.History,
-                            contentDescription = stringResource(R.string.history_title),
-                            onClick = { navController.navigateSafely(Screen.History.route) },
-                            modifier = Modifier.padding(end = MeloLayout.Space1),
-                        )
-                        MeloIconButton(
-                            icon = Icons.Rounded.Settings,
-                            contentDescription = stringResource(R.string.library_cd_open_settings),
-                            onClick = { navController.navigateSafely(Screen.Settings.route) },
-                            modifier = Modifier.padding(end = MeloLayout.Space3),
-                        )
+                        MeloTopActionsCapsule(Modifier.padding(end = MeloLayout.Space4)) {
+                            IconButton(
+                                onClick = { navController.navigateSafely(Screen.History.route) },
+                                modifier = Modifier.size(48.dp),
+                            ) {
+                                Icon(Icons.Rounded.History, contentDescription = stringResource(R.string.history_title))
+                            }
+                            IconButton(
+                                onClick = { navController.navigateSafely(Screen.Settings.route) },
+                                modifier = Modifier.size(48.dp),
+                            ) {
+                                Icon(painterResource(R.drawable.rounded_settings_24), contentDescription = stringResource(R.string.library_cd_open_settings))
+                            }
+                            MeloProfileAccountButton(
+                                profileImageUrl = youTubeAccount?.photoUrl,
+                                profileName = youTubeAccount?.name,
+                                profileHandle = youTubeAccount?.handle,
+                                spotifyConnected = discovery.spotifyEnabled,
+                                spotifyProfile = spotifyProfile,
+                                onProfileClick = { navController.navigateSafely(Screen.SettingsCategory.createRoute("account")) },
+                                onSettingsClick = { navController.navigateSafely(Screen.Settings.route) },
+                            )
+                        }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = Color.Transparent,
-                        scrolledContainerColor = Color.Transparent
+                        scrolledContainerColor = Color.Transparent,
+                        actionIconContentColor = MaterialTheme.colorScheme.onSurface,
                     )
                 )
-                PrimaryScrollableTabRow(
-                    selectedTabIndex = pagerState.currentPage,
-                    containerColor = Color.Transparent,
-                    edgePadding = 12.dp,
-                    indicator = {},
-                    divider = {},
+                LazyRow(
+                    state = tabRowState,
+                    horizontalArrangement = Arrangement.spacedBy(MeloLayout.Space2),
+                    contentPadding = PaddingValues(horizontal = MeloLayout.PageGutter),
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth(),
                 ) {
-                    libraryTabs.forEachIndexed { index, tab ->
-                        TabAnimation(
-                            index = index,
-                            title = tab.storageKey,
-                            selectedIndex = pagerState.currentPage,
-                            onClick = { scope.launch { pagerState.animateScrollToPage(index) } },
+                    itemsIndexed(libraryTabs, key = { _, tab -> tab.storageKey }) { index, tab ->
+                        val selected = pagerState.currentPage == index
+                        val chipShape = MeloLayout.CardShape
+                        val interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+                        val chipBackground by animateColorAsState(
+                            targetValue = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
+                            animationSpec = tween(240),
+                            label = "libraryTabBackground",
+                        )
+                        val chipForeground by animateColorAsState(
+                            targetValue = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+                            label = "libraryTabForeground",
+                        )
+                        Box(
+                            modifier = Modifier.height(MeloLayout.ControlSize)
+                                .homePress(interactionSource)
+                                .selectable(
+                                    selected = selected,
+                                    role = Role.Tab,
+                                    interactionSource = interactionSource,
+                                    indication = null,
+                                ) {
+                                    haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    scope.launch { pagerState.animateScrollToPage(index) }
+                                },
+                            contentAlignment = Alignment.Center,
                         ) {
-                            Text(
-                                text = stringResource(tab.titleRes),
-                                style = MaterialTheme.typography.labelLarge,
-                                fontWeight = if (pagerState.currentPage == index) FontWeight.Bold else FontWeight.Medium,
-                            )
+                            Box(
+                                modifier = Modifier.height(40.dp)
+                                    .clip(chipShape)
+                                    .background(chipBackground)
+                                    .border(
+                                        width = 0.75.dp,
+                                        color = if (selected) Color.Transparent else MaterialTheme.colorScheme.outlineVariant,
+                                        shape = chipShape,
+                                    )
+                                    .padding(horizontal = MeloLayout.Space4),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Text(
+                                    text = stringResource(tab.titleRes),
+                                    style = MaterialTheme.typography.labelLarge,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = chipForeground,
+                                    maxLines = 1,
+                                )
+                            }
                         }
                     }
                 }
@@ -365,6 +417,15 @@ fun LibraryScreen(model: MeloModel, navController: NavHostController, paddingVal
                                     }
                                 },
                                 iconRotation = 0f,
+                                showSearchButton = true,
+                                isSearchOpen = librarySearchOpen,
+                                onSearchClick = {
+                                    if (librarySearchOpen) {
+                                        librarySearchOpen = false
+                                        librarySearchQuery = ""
+                                        searchKeyboard?.hide()
+                                    } else librarySearchOpen = true
+                                },
                                 showSortButton = options.isNotEmpty(),
                                 onSortClick = { showSortSheet = true },
                                 isPlaylistTab = currentTab == LibraryTabId.PLAYLISTS,

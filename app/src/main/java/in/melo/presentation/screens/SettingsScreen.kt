@@ -1,5 +1,9 @@
 package `in`.melo.presentation.screens
 
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import android.provider.Settings
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.SignalCellularAlt
 import androidx.compose.material.icons.rounded.Wifi
@@ -58,6 +62,7 @@ import androidx.compose.material.icons.rounded.MusicNote
 import androidx.compose.material.icons.rounded.Palette
 import androidx.compose.material.icons.rounded.Storage
 import androidx.compose.material.icons.rounded.Lock
+import androidx.compose.material.icons.rounded.Link
 import androidx.compose.material.icons.rounded.TouchApp
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -646,20 +651,78 @@ private fun BackupSettings(model: MeloModel, navController: NavHostController) {
 
 @Composable
 private fun AccountSettings(model: MeloModel, navController: NavHostController) {
+    val context = LocalContext.current
     val discovery by model.discovery.collectAsStateWithLifecycle()
     val google by model.youTubeAccount.collectAsStateWithLifecycle()
+    val spotifyProfile by model.spotifyAccountProfile.collectAsStateWithLifecycle()
     SettingsScaffold(stringResource(R.string.settings_accounts_title), navController) {
         SettingsSection(title = stringResource(R.string.search_source_spotify), icon = {}) {
-            if (!discovery.spotifyEnabled) SettingsItem(
-                title = stringResource(R.string.settings_account_signin_title),
-                subtitle = stringResource(R.string.settings_account_signin_subtitle),
-                leadingIcon = { Icon(Icons.Rounded.MusicNote, null, tint = MaterialTheme.colorScheme.secondary) },
-                onClick = { model.showSignIn() },
-            ) else SettingsItem(
-                title = stringResource(R.string.settings_logout_title),
-                subtitle = stringResource(R.string.settings_logout_subtitle),
-                leadingIcon = { Icon(Icons.AutoMirrored.Rounded.Logout, null, tint = MaterialTheme.colorScheme.error) },
-                onClick = { model.disconnectSpotify() },
+            if (!discovery.spotifyEnabled) {
+                SettingsItem(
+                    title = stringResource(R.string.settings_account_signin_title),
+                    subtitle = stringResource(R.string.settings_account_signin_subtitle),
+                    leadingIcon = { Icon(Icons.Rounded.MusicNote, null, tint = MaterialTheme.colorScheme.secondary) },
+                    onClick = { model.showSignIn() },
+                )
+            } else Column(verticalArrangement = Arrangement.spacedBy(MeloLayout.Space1)) {
+                spotifyProfile?.let { profile ->
+                    MeloCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = MeloLayout.CardShape,
+                        color = MaterialTheme.colorScheme.surfaceContainer,
+                    ) {
+                        Row(
+                            Modifier.fillMaxWidth().padding(horizontal = MeloLayout.PageGutter, vertical = MeloLayout.Space3),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(MeloLayout.Space3),
+                        ) {
+                            Box(Modifier.size(MeloLayout.ControlVisual), contentAlignment = Alignment.Center) {
+                                if (profile.imageUrl != null) coil.compose.AsyncImage(
+                                    profile.imageUrl,
+                                    null,
+                                    Modifier.size(28.dp).clip(CircleShape),
+                                ) else Icon(
+                                    painterResource(R.drawable.ic_source_spotify),
+                                    null,
+                                    Modifier.size(28.dp),
+                                    tint = MaterialTheme.colorScheme.secondary,
+                                )
+                            }
+                            Column(verticalArrangement = Arrangement.spacedBy(MeloLayout.Space1)) {
+                                Text(
+                                    profile.displayName ?: stringResource(R.string.search_source_spotify),
+                                    style = MaterialTheme.typography.titleMedium,
+                                )
+                            }
+                        }
+                    }
+                }
+                SettingsItem(
+                    title = stringResource(R.string.settings_logout_title),
+                    subtitle = stringResource(R.string.settings_logout_subtitle),
+                    leadingIcon = { Icon(Icons.AutoMirrored.Rounded.Logout, null, tint = MaterialTheme.colorScheme.error) },
+                    onClick = { model.disconnectSpotify() },
+                )
+            }
+        }
+        SettingsSection(title = stringResource(R.string.settings_link_handling_section), icon = {}) {
+            SettingsItem(
+                title = stringResource(R.string.settings_spotify_links_title),
+                subtitle = stringResource(R.string.settings_spotify_links_subtitle),
+                leadingIcon = { Icon(Icons.Rounded.Link, null, tint = MaterialTheme.colorScheme.secondary) },
+                onClick = {
+                    val packageUri = Uri.fromParts("package", context.packageName, null)
+                    val preferredLinks = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        Intent(Settings.ACTION_APP_OPEN_BY_DEFAULT_SETTINGS, packageUri)
+                    } else {
+                        Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, packageUri)
+                    }
+                    try {
+                        context.startActivity(preferredLinks)
+                    } catch (_: Exception) {
+                        context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, packageUri))
+                    }
+                },
             )
         }
         SettingsSection(title = stringResource(R.string.search_source_youtube), icon = {}) {

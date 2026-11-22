@@ -89,6 +89,8 @@ import `in`.melo.ui.theme.LocalMeloDarkTheme
 fun YouTubeExploreScreen(model: MeloModel, navController: NavHostController, paddingValues: PaddingValues) {
     val state by model.youTubeExplore.collectAsStateWithLifecycle()
     val youtubeAccount by model.youTubeAccount.collectAsStateWithLifecycle()
+    val spotifyProfile by model.spotifyAccountProfile.collectAsStateWithLifecycle()
+    val discovery by model.discovery.collectAsStateWithLifecycle()
     val hasSong by model.ui.derivedHasSong.collectAsStateWithLifecycle()
     val reducedMotion = rememberReducedMotion()
     var optionsFor by remember { mutableStateOf<Music?>(null) }
@@ -101,6 +103,8 @@ fun YouTubeExploreScreen(model: MeloModel, navController: NavHostController, pad
                 onSettingsClick = { navController.navigateSafely(Screen.Settings.route) },
                 onHistoryClick = { navController.navigateSafely(Screen.History.route) },
                 profileImageUrl = youtubeAccount?.photoUrl,
+                spotifyConnected = discovery.spotifyEnabled,
+                spotifyProfile = spotifyProfile,
                 onProfileClick = { navController.navigateSafely(Screen.SettingsCategory.createRoute("account")) },
                 isScrolled = false,
                 settingsButtonDirect = true,

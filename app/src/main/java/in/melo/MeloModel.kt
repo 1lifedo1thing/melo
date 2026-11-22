@@ -26,6 +26,8 @@ import `in`.melo.data.HomeRecommendationEngine
 import `in`.melo.data.YouTubeHomeChip
 import `in`.melo.data.YouTubeHomeState
 import `in`.melo.data.YouTubeExploreCategory
+import `in`.melo.data.YouTubeExploreCache
+import `in`.melo.data.YouTubeExploreCacheCodec
 import `in`.melo.data.YouTubeExploreState
 import `in`.melo.data.LOCAL_PLAYLIST_PREFIX
 import `in`.melo.data.LocalLibrary
@@ -48,6 +50,9 @@ import `in`.melo.playback.SpotifyPlayer
 import `in`.melo.data.SessionVault
 import `in`.melo.data.Music
 import `in`.melo.data.SpotifyFailure
+import `in`.melo.data.SpotifyUserProfile
+import `in`.melo.data.SpotifyUserProfileCodec
+import `in`.melo.data.spotifyCurrentUserProfile
 import `in`.melo.data.BackgroundRequests
 import `in`.melo.data.SpotifySearch
 import `in`.melo.data.SpotifySession
@@ -80,6 +85,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.text.SimpleDateFormat
@@ -220,6 +227,10 @@ class MeloModel(private val app: Application) : AndroidViewModel(app) {
     fun refreshLocalTracks() { viewModelScope.launch { mutableLocalTracks.value = localLibrary.load() } }
     val pinnedStoreForBackup get() = pinnedStore
     private val preferences = app.getSharedPreferences("music_library", 0)
+    private val mutableSpotifyAccountProfile = MutableStateFlow<SpotifyUserProfile?>(null)
+    val spotifyAccountProfile = mutableSpotifyAccountProfile.asStateFlow()
+    private var lastOpenedArtist = decodePins(preferences.getString(KEY_LAST_OPEN_ARTIST, null))
+        .firstOrNull { it.kind == MusicKind.Artist }
     private val savedIds = MutableStateFlow<Set<String>>(emptySet())
     val favorites = savedIds.asStateFlow()
     /**
@@ -261,6 +272,7 @@ class MeloModel(private val app: Application) : AndroidViewModel(app) {
     private var catalog: SpotifyCatalog? = null
     private var collections: SpotifyLibrary? = null
     private var radio: SpotifyRadio? = null
+    private var spotifyProfileJob: Job? = null
     private var libraryJob: Job? = null
     private val detailJobs = mutableMapOf<String, Job>()
     private val pendingMutations = mutableSetOf<String>()
@@ -333,10 +345,20 @@ class MeloModel(private val app: Application) : AndroidViewModel(app) {
     private var homeCategoryMoreJob: Job? = null
     private var homeFeedMoreJob: Job? = null
     private var homeCategoryIdentity: String? = null
-    private val mutableYouTubeExplore = MutableStateFlow(YouTubeExploreState())
+    private var exploreRegion = YouTubeMusic.contentRegion()
+    private val initialExploreCache = YouTubeExploreCacheCodec.decode(
+        preferences.getString(KEY_YOUTUBE_EXPLORE_CACHE, null),
+    )?.takeIf { it.region == exploreRegion }
+    private var exploreLoadedAt = initialExploreCache?.savedAtMs ?: 0L
+    private val mutableYouTubeExplore = MutableStateFlow(
+        initialExploreCache?.let { YouTubeExploreState(sections = it.sections) } ?: YouTubeExploreState(),
+    )
     val youTubeExplore = mutableYouTubeExplore.asStateFlow()
     private var exploreJob: Job? = null
     private var exploreCategoryJob: Job? = null
+    private var navigationWarmupJob: Job? = null
+    private var homeStartupSettled = false
+    private val exploreArtworkSemaphore = Semaphore(1)
     private val exploreArtRequests = HashSet<String>()
     private val mutableMessage = MutableStateFlow<String?>(null)
     val message = mutableMessage.asStateFlow()
@@ -738,6 +760,7 @@ class MeloModel(private val app: Application) : AndroidViewModel(app) {
                 if (now) loadPodcastFeed()
                 if (now && !wasOnline) refreshYouTubeLibrary()
                 if (now && !wasOnline && collections != null) {
+                    refreshSpotifyAccountProfile()
                     sendPendingFavorites()
                     val age = withContext(Dispatchers.IO) { store.libraryAgeMs() }
                     if (age > LIBRARY_TTL_MS) refreshLibrary()
@@ -1034,10 +1057,20 @@ class MeloModel(private val app: Application) : AndroidViewModel(app) {
         }
     }
     fun loadDetail(item: Music, refresh: Boolean = false, more: Boolean = false) {
+        if (item.kind == MusicKind.Artist && !more) {
+            if (lastOpenedArtist != item) {
+                lastOpenedArtist = item
+                preferences.edit { putString(KEY_LAST_OPEN_ARTIST, encodePins(listOf(item))) }
+            }
+        }
         if (item.isLocalPlaylist) { installLocalPlaylist(item.id); return }
         if (item.id.startsWith(YTM_PLAYLIST_PREFIX)) { loadYouTubePlaylist(item, refresh || more); return }
         if (item.id.startsWith(`in`.melo.data.youtube.YTM_ALBUM_PREFIX) || item.id.startsWith(`in`.melo.data.youtube.YTM_ARTIST_PREFIX)) {
             loadYouTubePage(item, refresh); return
+        }
+        if (catalog == null && item.id != LIKED_SONGS && item.id.startsWith("spotify:") && item.kind != MusicKind.Track) {
+            loadPublicSpotifyDetail(item, refresh)
+            return
         }
         if (item.id == LIKED_SONGS && catalog == null) {
             // Without a Spotify account the liked songs are the YouTube Music likes kept on the device.
@@ -1113,6 +1146,46 @@ class MeloModel(private val app: Application) : AndroidViewModel(app) {
                     "${item.kind.name.lowercase()} page=${if (more) "next" else "first"} stored=${known != null} ${failure.javaClass.simpleName} \"${readable(failure)}\"")
                 // Known pages stay readable; only what cannot be shown at all is an error.
                 mutableDetails.update { it + (item.id to if (known != null) DetailUi(known) else DetailUi(error = readable(failure))) }
+            }
+        }
+    }
+
+    private fun loadPublicSpotifyDetail(item: Music, refresh: Boolean) {
+        val shown = mutableDetails.value[item.id]
+        if (shown?.loading == true && !refresh) return
+        if (shown?.content != null && !refresh) return
+        detailJobs[item.id]?.cancel()
+        detailJobs[item.id] = viewModelScope.launch {
+            mutableDetails.update { it + (item.id to (shown ?: DetailUi()).copy(loading = true, error = null)) }
+            val stored = shown?.content ?: withContext(Dispatchers.IO) { store.loadDetail(item.id) }
+            if (stored != null) {
+                mutableDetails.update { it + (item.id to DetailUi(stored, loading = online.value && refresh)) }
+                if (!refresh || !online.value) return@launch
+            }
+            if (!online.value) {
+                if (stored == null) mutableDetails.update { it + (item.id to DetailUi(error = app.getString(`in`.melo.R.string.spotify_link_unavailable))) }
+                return@launch
+            }
+            try {
+                val kind = item.id.substringAfter("spotify:").substringBefore(':')
+                val id = item.id.substringAfterLast(':')
+                val public = withContext(Dispatchers.IO) { `in`.melo.data.SpotifyPublicPlaylist.readEntity(kind, id) }
+                val resolved = item.copy(
+                    title = public.name.ifBlank { item.title },
+                    imageUrl = public.imageUrl ?: `in`.melo.data.playlistMosaic(public.tracks),
+                    subtitle = if (item.kind == MusicKind.Playlist) `in`.melo.utils.formatSongCount(public.tracks.size) else item.subtitle,
+                )
+                if (public.tracks.isEmpty() && item.kind != MusicKind.Artist) {
+                    throw java.io.IOException(app.getString(`in`.melo.R.string.spotify_link_unavailable))
+                }
+                val detail = CatalogDetail(resolved, public.tracks, total = public.tracks.size)
+                ui.register(resolved)
+                mutableDetails.update { it + (item.id to DetailUi(detail)) }
+                withContext(Dispatchers.IO) { store.saveDetail(item.id, detail) }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (failure: Exception) {
+                mutableDetails.update { it + (item.id to if (stored != null) DetailUi(stored) else DetailUi(error = readable(failure))) }
             }
         }
     }
@@ -1434,18 +1507,37 @@ class MeloModel(private val app: Application) : AndroidViewModel(app) {
         return merged.filter { it.items.isNotEmpty() }
     }
 
-    /** Loads the server-defined mood and genre grids only after Explore is opened. */
-    fun refreshYouTubeExplore(force: Boolean = false) {
-        if (!online.value) return
-        if (!force && (mutableYouTubeExplore.value.sections.isNotEmpty() || exploreJob?.isActive == true)) return
+    private fun syncExploreRegion() {
+        val currentRegion = YouTubeMusic.contentRegion()
+        if (currentRegion == exploreRegion) return
         exploreJob?.cancel()
-        mutableYouTubeExplore.update { it.copy(loading = true, error = null) }
+        exploreRegion = currentRegion
+        val cached = YouTubeExploreCacheCodec.decode(
+            preferences.getString(KEY_YOUTUBE_EXPLORE_CACHE, null),
+        )?.takeIf { it.region == currentRegion }
+        exploreLoadedAt = cached?.savedAtMs ?: 0L
+        mutableYouTubeExplore.value = cached?.let { YouTubeExploreState(sections = it.sections) }
+            ?: YouTubeExploreState()
+    }
+
+    /** Loads cached Explore categories immediately, then refreshes them when their six-hour cache expires. */
+    fun refreshYouTubeExplore(force: Boolean = false) {
+        syncExploreRegion()
+        if (!online.value) return
+        if (exploreJob?.isActive == true && !force) return
+        if (!force && mutableYouTubeExplore.value.sections.isNotEmpty() &&
+            System.currentTimeMillis() - exploreLoadedAt < YOUTUBE_EXPLORE_TTL_MS
+        ) return
+        exploreJob?.cancel()
+        mutableYouTubeExplore.update { it.copy(loading = force || it.sections.isEmpty(), error = null) }
+        val requestRegion = exploreRegion
         exploreJob = viewModelScope.launch {
             try {
                 val sections = withContext(Dispatchers.IO) {
                     val response = YouTubeLibrary.homeRequest("browse", org.json.JSONObject().put("browseId", "FEmusic_moods_and_genres"))
                     YouTubePages.exploreCategories(response)
                 }
+                if (requestRegion != exploreRegion || requestRegion != YouTubeMusic.contentRegion()) return@launch
                 val previousArt = mutableYouTubeExplore.value.sections.flatMap { it.categories }
                     .mapNotNull { category -> category.imageUrl?.let { category.key to it } }.toMap()
                 val enriched = sections.map { section ->
@@ -1453,13 +1545,65 @@ class MeloModel(private val app: Application) : AndroidViewModel(app) {
                         category.copy(imageUrl = category.imageUrl ?: previousArt[category.key])
                     })
                 }
+                val savedAt = System.currentTimeMillis()
+                exploreLoadedAt = savedAt
+                preferences.edit {
+                    putString(
+                        KEY_YOUTUBE_EXPLORE_CACHE,
+                        YouTubeExploreCacheCodec.encode(YouTubeExploreCache(requestRegion, savedAt, enriched)),
+                    )
+                }
                 mutableYouTubeExplore.update { it.copy(sections = enriched, loading = false, error = null) }
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (failure: Exception) {
-                mutableYouTubeExplore.update { it.copy(loading = false, error = readable(failure)) }
+                if (requestRegion == exploreRegion) mutableYouTubeExplore.update {
+                    it.copy(loading = false, error = if (it.sections.isEmpty()) readable(failure) else null)
+                }
             }
         }
+    }
+
+    /** Queues one quiet-start pass for Explore and the last artist the user opened. */
+    fun scheduleNavigationWarmup(
+        includeLastArtist: Boolean = true,
+        includeExploreArtwork: Boolean = true,
+    ) {
+        if (navigationWarmupJob?.isActive == true) return
+        navigationWarmupJob = viewModelScope.launch {
+            delay(NAVIGATION_WARMUP_DELAY_MS)
+            if (!awaitHomeStartupQuiet()) return@launch
+            if (!canWarmNavigation()) return@launch
+
+            refreshYouTubeExplore()
+            exploreJob?.join()
+            if (includeLastArtist && canWarmNavigation()) preloadLastOpenedArtist()
+            if (includeExploreArtwork && canWarmNavigation()) preloadYouTubeExploreArtwork()
+        }
+    }
+
+    fun cancelNavigationWarmup() {
+        navigationWarmupJob?.cancel()
+        navigationWarmupJob = null
+    }
+
+    private fun canWarmNavigation(): Boolean {
+        return navigationWarmupAllowed() && !player.state.value.buffering
+    }
+
+    private fun navigationWarmupAllowed(): Boolean {
+        if (!online.value) return false
+        val connectivity = app.getSystemService(android.net.ConnectivityManager::class.java)
+        if (connectivity?.isActiveNetworkMetered != false) return false
+        val activityManager = app.getSystemService(android.app.ActivityManager::class.java)
+        return activityManager?.isLowRamDevice != true
+    }
+
+    private suspend fun preloadLastOpenedArtist() {
+        val artist = lastOpenedArtist?.takeIf { it.kind == MusicKind.Artist } ?: return
+        if (artist.id.startsWith("spotify:") && (catalog == null || offlineSyncJob?.isActive == true)) return
+        loadDetail(artist)
+        detailJobs[artist.id]?.join()
     }
 
     /** Starts a category's playlist shelves and keeps the category card's artwork for later visits. */
@@ -1503,29 +1647,112 @@ class MeloModel(private val app: Application) : AndroidViewModel(app) {
         mutableYouTubeExplore.update { it.copy(selected = null, shelves = emptyList(), loadingCategory = false, categoryError = null) }
     }
 
-    /** Artwork is fetched only for Explore cards the lazy list has composed. */
+    /** Fetches artwork for visible Explore cards without competing with Home's first load. */
     fun loadYouTubeExploreArtwork(category: YouTubeExploreCategory) {
         if (!online.value || category.imageUrl != null || !exploreArtRequests.add(category.key)) return
         viewModelScope.launch {
             try {
-                val art = withContext(Dispatchers.IO) {
-                    val body = org.json.JSONObject().put("browseId", category.browseId)
-                    category.params?.let { body.put("params", it) }
-                    val response = YouTubeLibrary.homeRequest("browse", body)
-                    YouTubePages.browseShelves(response).asSequence()
-                        .flatMap { it.items.asSequence() }.mapNotNull(Music::imageUrl).firstOrNull()
-                }
-                if (art != null) mutableYouTubeExplore.update { current ->
-                    current.copy(sections = current.sections.map { section ->
-                        section.copy(categories = section.categories.map { if (it.key == category.key) it.copy(imageUrl = art) else it })
-                    })
-                }
+                resolveYouTubeExploreArtwork(category, prefetchImage = false)
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (_: Exception) {
                 // The card keeps its service-provided color and can still open the category.
             } finally {
                 exploreArtRequests.remove(category.key)
+            }
+        }
+    }
+
+    private suspend fun awaitHomeStartupQuiet(): Boolean {
+        if (homeStartupSettled) return true
+        val deadline = android.os.SystemClock.elapsedRealtime() + STARTUP_REQUEST_WAIT_MS
+        while (android.os.SystemClock.elapsedRealtime() < deadline) {
+            if (!isHomeStartupBusy()) {
+                delay(NAVIGATION_WARMUP_QUIET_MS)
+                if (!isHomeStartupBusy()) {
+                    homeStartupSettled = true
+                    return true
+                }
+            }
+            delay(NAVIGATION_WARMUP_POLL_MS)
+        }
+        return false
+    }
+
+    private fun isHomeStartupBusy(): Boolean = mutableAccount.value.restoring || mutableLibrary.value.loading || listOfNotNull(
+        youTubeJob,
+        podcastFeedJob,
+        homeCategoriesJob,
+        homeCategoryJob,
+        homeRecommendationJob,
+    ).any(Job::isActive)
+
+    private suspend fun preloadYouTubeExploreArtwork() {
+        mutableYouTubeExplore.value.sections.asSequence()
+            .flatMap { it.categories.asSequence() }
+            .distinctBy(YouTubeExploreCategory::key)
+            .take(MAX_EXPLORE_ART_PREFETCH)
+            .forEach { category ->
+                if (!canWarmNavigation()) return
+                try {
+                    resolveYouTubeExploreArtwork(category, prefetchImage = true)
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
+                } catch (_: Exception) {
+                    // One unavailable category should not stop the remaining warm-up.
+                }
+            }
+    }
+
+    private suspend fun resolveYouTubeExploreArtwork(
+        category: YouTubeExploreCategory,
+        prefetchImage: Boolean,
+    ) {
+        val latestCategory = mutableYouTubeExplore.value.sections.asSequence()
+            .flatMap { it.categories.asSequence() }
+            .firstOrNull { it.key == category.key } ?: return
+        val art = latestCategory.imageUrl ?: exploreArtworkSemaphore.withPermit {
+            val refreshed = mutableYouTubeExplore.value.sections.asSequence()
+                .flatMap { it.categories.asSequence() }
+                .firstOrNull { it.key == category.key } ?: return@withPermit null
+            refreshed.imageUrl ?: withContext(Dispatchers.IO) {
+                val body = org.json.JSONObject().put("browseId", refreshed.browseId)
+                refreshed.params?.let { body.put("params", it) }
+                val response = YouTubeLibrary.homeRequest("browse", body)
+                YouTubePages.browseShelves(response).asSequence()
+                    .flatMap { it.items.asSequence() }.mapNotNull(Music::imageUrl).firstOrNull()
+            }?.also { resolved -> updateYouTubeExploreArtwork(category, resolved) }
+        } ?: return
+
+        if (prefetchImage) {
+            val request = coil.request.ImageRequest.Builder(app)
+                .data(art)
+                .size(coil.size.Size(300, 300))
+                .memoryCachePolicy(coil.request.CachePolicy.ENABLED)
+                .diskCachePolicy(coil.request.CachePolicy.ENABLED)
+                .allowHardware(false)
+                .build()
+            coil.Coil.imageLoader(app).execute(request)
+        }
+    }
+
+    private fun updateYouTubeExploreArtwork(category: YouTubeExploreCategory, imageUrl: String) {
+        var updatedSections: List<`in`.melo.data.YouTubeExploreSection>? = null
+        mutableYouTubeExplore.update { current ->
+            if (current.sections.none { section -> section.categories.any { it.key == category.key } }) return@update current
+            current.sections.map { section ->
+                section.copy(categories = section.categories.map {
+                    if (it.key == category.key) it.copy(imageUrl = imageUrl) else it
+                })
+            }.also { updatedSections = it }.let { current.copy(sections = it) }
+        }
+        updatedSections?.let { sections ->
+            val savedAt = exploreLoadedAt.takeIf { it > 0L } ?: System.currentTimeMillis()
+            preferences.edit {
+                putString(
+                    KEY_YOUTUBE_EXPLORE_CACHE,
+                    YouTubeExploreCacheCodec.encode(YouTubeExploreCache(exploreRegion, savedAt, sections)),
+                )
             }
         }
     }
@@ -2069,6 +2296,8 @@ class MeloModel(private val app: Application) : AndroidViewModel(app) {
 
     private fun finishAccount(session: SpotifySession) {
         SpotifyAccount.attach(session)
+        spotifyProfileJob?.cancel()
+        mutableSpotifyAccountProfile.value = null
         // A guest who signs in keeps the multi-service playlists; the library now comes from Spotify.
         if (mutableLibrary.value.content?.let { it.playlists.isEmpty() && it.savedTrackCount == 0 } == true) mutableLibrary.value = LibraryUi()
         catalog = SpotifyCatalog(transport, session,
@@ -2080,8 +2309,40 @@ class MeloModel(private val app: Application) : AndroidViewModel(app) {
         remote = SpotifySearch(transport, session)
         lyrics = SpotifyLyricsSource(transport, session)
         mutableDiscovery.update { it.copy(spotifyEnabled = true) }
+        refreshSpotifyAccountProfile(session)
         search(discovery.value.query)
         viewModelScope.launch { openCatalog() }
+    }
+
+    private fun refreshSpotifyAccountProfile(session: SpotifySession? = SpotifyAccount.current()) {
+        val activeSession = session ?: return
+        if (spotifyProfileJob?.isActive == true) return
+        spotifyProfileJob = viewModelScope.launch {
+            try {
+                val username = activeSession.username()
+                if (SpotifyAccount.current() !== activeSession) return@launch
+                val cached = SpotifyUserProfileCodec.decode(preferences.getString(KEY_SPOTIFY_PROFILE, null))
+                    ?.takeIf { it.username.equals(username, ignoreCase = true) }
+                mutableSpotifyAccountProfile.value = cached
+                if (!online.value) return@launch
+
+                val fresh = spotifyCurrentUserProfile(transport, activeSession)
+                if (SpotifyAccount.current() !== activeSession || !fresh.username.equals(username, ignoreCase = true)) return@launch
+                val profile = fresh.copy(
+                    displayName = fresh.displayName ?: cached?.displayName,
+                    imageUrl = fresh.imageUrl ?: cached?.imageUrl,
+                )
+                mutableSpotifyAccountProfile.value = profile
+                preferences.edit { putString(KEY_SPOTIFY_PROFILE, SpotifyUserProfileCodec.encode(profile)) }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (failure: Exception) {
+                `in`.melo.data.diagnostics.DiagnosticLog.record(
+                    "spotify-account",
+                    "profile unavailable (${failure.javaClass.simpleName})",
+                )
+            }
+        }
     }
 
     /** The library on disk comes first. The service is asked afterwards, and only when it can add something. */
@@ -2147,6 +2408,9 @@ class MeloModel(private val app: Application) : AndroidViewModel(app) {
 
     fun disconnectSpotify() {
         accountJob?.cancel()
+        spotifyProfileJob?.cancel()
+        spotifyProfileJob = null
+        mutableSpotifyAccountProfile.value = null
         pendingCode?.cancel()
         pendingCode = null
         searchJob?.cancel()
@@ -2156,6 +2420,7 @@ class MeloModel(private val app: Application) : AndroidViewModel(app) {
         favoriteChanges.clear(); savePendingFavorites()
         player.stop(); SpotifyAccount.clear()
         vault.clear()
+        preferences.edit { remove(KEY_SPOTIFY_PROFILE) }
         viewModelScope.launch(Dispatchers.IO) { store.clear() }
         remote = null
         catalog = null; collections = null; radio = null; lyrics = null
@@ -2377,6 +2642,24 @@ class MeloModel(private val app: Application) : AndroidViewModel(app) {
         return createImported(content.name.ifBlank { "Spotify" }, content.tracks)
     }
 
+    /** Resolves a Spotify share link before Melo opens its detail page or starts its track. */
+    suspend fun resolveSpotifySharedLink(link: String): Music? {
+        val item = `in`.melo.data.resolveSpotifyDeepLink(link) ?: return null
+        if (item.kind != MusicKind.Track) return item
+
+        val source = catalog
+        if (source != null) {
+            try { source.hydrate(listOf(item.id)).firstOrNull()?.let { return it } }
+            catch (cancelled: CancellationException) { throw cancelled }
+            catch (_: Exception) { }
+        }
+        val publicTrack = try {
+            withContext(Dispatchers.IO) { `in`.melo.data.SpotifyPublicPlaylist.readTrack(item.id.substringAfterLast(':')) }
+        } catch (cancelled: CancellationException) { throw cancelled }
+        catch (_: Exception) { null }
+        return publicTrack ?: item.takeIf { source != null }
+    }
+
     /** With an account, Spotify tracks read from a file get their covers and current metadata. */
     private suspend fun completeSpotifyTracks(tracks: List<Music>): List<Music> {
         val source = catalog ?: return tracks
@@ -2404,6 +2687,7 @@ class MeloModel(private val app: Application) : AndroidViewModel(app) {
         const val TRACKS_FILES = "files"
         private const val KEY_GUEST = "guest"
         private const val KEY_PENDING_LIKES = "pending_likes"
+        private const val KEY_SPOTIFY_PROFILE = "spotify_account_profile"
         private const val KEY_YOUTUBE_LIKES = "youtube_likes"
         private const val KEY_PLAYLIST_COVERS = "playlist_covers"
         private const val KEY_HOME_RECOMMENDATIONS = "home_recommendations"
@@ -2425,6 +2709,15 @@ class MeloModel(private val app: Application) : AndroidViewModel(app) {
         private const val MAX_DETAIL_PAGES = 30
         private const val MAX_LOCAL_RESULTS = 60
         private const val COVERS_PER_PAGE = 60
-        private const val MAX_BACKGROUND_COVERS = 1500
+        /** Keep disk artwork warming useful but bounded while catalog pages sync in the background. */
+        private const val MAX_BACKGROUND_COVERS = 120
+        private const val KEY_LAST_OPEN_ARTIST = "last_opened_artist"
+        private const val KEY_YOUTUBE_EXPLORE_CACHE = "youtube_explore_cache"
+        private const val YOUTUBE_EXPLORE_TTL_MS = 6L * 60 * 60 * 1000
+        private const val NAVIGATION_WARMUP_DELAY_MS = 1_500L
+        private const val NAVIGATION_WARMUP_QUIET_MS = 600L
+        private const val NAVIGATION_WARMUP_POLL_MS = 300L
+        private const val STARTUP_REQUEST_WAIT_MS = 15_000L
+        private const val MAX_EXPLORE_ART_PREFETCH = 8
     }
 }

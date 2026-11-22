@@ -24,8 +24,15 @@ fun spotifyPlaylistId(input: String): String? {
 internal object SpotifyPublicPlaylist {
     data class Content(val name: String, val imageUrl: String?, val tracks: List<Music>)
 
-    fun read(id: String): Content {
-        val request = Request.Builder().url("https://open.spotify.com/embed/playlist/$id")
+    fun read(id: String): Content = readEntity("playlist", id)
+
+    /** Public embed metadata is also enough to match a shared Spotify track in YouTube Music. */
+    fun readTrack(id: String): Music? = readEntity("track", id).tracks.firstOrNull()
+
+    fun readEntity(kind: String, id: String): Content {
+        require(kind in setOf("track", "album", "artist", "playlist"))
+        require(canonicalMusicUri("spotify:$kind:$id") != null)
+        val request = Request.Builder().url("https://open.spotify.com/embed/$kind/$id")
             .header("User-Agent", "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36")
             .build()
         val html = YouTubeMusic.http.newCall(request).execute().use { response ->
@@ -40,8 +47,8 @@ internal object SpotifyPublicPlaylist {
             .find(html)?.groupValues?.get(1) ?: return null
         val entity = JSONObject(data).optJSONObject("props")?.optJSONObject("pageProps")?.optJSONObject("state")
             ?.optJSONObject("data")?.optJSONObject("entity") ?: return null
-        val list = entity.optJSONArray("trackList") ?: return null
-        val tracks = (0 until list.length()).mapNotNull { list.optJSONObject(it) }.mapNotNull { row ->
+        val list = entity.optJSONArray("trackList")
+        val tracks = (0 until (list?.length() ?: 0)).mapNotNull { list?.optJSONObject(it) }.mapNotNull { row ->
             val uri = row.optString("uri")
             spotifyLocalTrack(uri) ?: canonicalMusicUri(uri)?.takeIf { it.startsWith("spotify:track:") }?.let { id ->
                 Music(id = id, title = row.optString("title"), subtitle = row.optString("subtitle"), kind = MusicKind.Track,
@@ -50,6 +57,12 @@ internal object SpotifyPublicPlaylist {
         }
         val sources = entity.optJSONObject("coverArt")?.optJSONArray("sources")
         val image = sources?.optJSONObject(0)?.optString("url")?.takeIf(String::isNotBlank)
-        return Content(entity.optString("name").ifBlank { entity.optString("title") }, image, tracks)
+        val name = entity.optString("name").ifBlank { entity.optString("title") }
+        val directTrack = entity.optString("uri").takeIf { it.startsWith("spotify:track:") }
+            ?.let(::canonicalMusicUri)?.let { id ->
+                Music(id = id, title = name, subtitle = entity.optString("subtitle"), kind = MusicKind.Track,
+                    imageUrl = image, durationMs = entity.optInt("duration"))
+            }
+        return Content(name, image, tracks.ifEmpty { listOfNotNull(directTrack) })
     }
 }

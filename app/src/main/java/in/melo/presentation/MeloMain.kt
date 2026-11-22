@@ -50,6 +50,7 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -72,6 +73,7 @@ import `in`.melo.presentation.components.resolveNavBarOccupiedHeight
 import `in`.melo.presentation.components.resolveNavBarSurfaceHeight
 import `in`.melo.presentation.components.sanitizeNavigationBarBottomInset
 import `in`.melo.presentation.navigation.AppNavigation
+import `in`.melo.presentation.navigation.openMusic
 import `in`.melo.presentation.navigation.Screen
 import `in`.melo.presentation.screens.AccountScreen
 import `in`.melo.presentation.utils.AppHapticsConfig
@@ -87,10 +89,11 @@ private data class DismissUndoBarSlice(val isVisible: Boolean = false, val durat
 
 /** Main scaffold: floating bar, blurred content, unified player sheet. */
 @Composable
-fun MeloMain(model: MeloModel) {
+fun MeloMain(model: MeloModel, pendingSharedLink: String? = null, onSharedLinkHandled: () -> Unit = {}) {
     val discovery by model.discovery.collectAsStateWithLifecycle()
     val account by model.account.collectAsStateWithLifecycle()
     val guest by model.guest.collectAsStateWithLifecycle()
+    val online by model.online.collectAsStateWithLifecycle()
     // Signing in is optional: a guest uses local files, YouTube Music and multi-service playlists.
     if (!discovery.spotifyEnabled && !guest) {
         if (account.restoring) {
@@ -101,8 +104,14 @@ fun MeloMain(model: MeloModel) {
         return
     }
     var returnedFromBackground by remember { mutableStateOf(false) }
-    LifecycleEventEffect(Lifecycle.Event.ON_PAUSE) { returnedFromBackground = true }
+    var appInForeground by remember { mutableStateOf(true) }
+    LifecycleEventEffect(Lifecycle.Event.ON_PAUSE) {
+        appInForeground = false
+        returnedFromBackground = true
+        model.cancelNavigationWarmup()
+    }
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        appInForeground = true
         if (returnedFromBackground) model.refreshLibrary()
         returnedFromBackground = false
     }
@@ -111,8 +120,23 @@ fun MeloMain(model: MeloModel) {
     val navController = rememberNavController()
     val snackbar = remember { SnackbarHostState() }
     val message by model.message.collectAsStateWithLifecycle()
+    val spotifyLinkUnavailable = stringResource(R.string.spotify_link_unavailable)
     LaunchedEffect(message) {
         message?.let { snackbar.showSnackbar(it); model.consumeMessage() }
+    }
+    LaunchedEffect(pendingSharedLink) {
+        val link = pendingSharedLink ?: return@LaunchedEffect
+        try {
+            val item = model.resolveSpotifySharedLink(link)
+            if (item == null) model.showMessage(spotifyLinkUnavailable)
+            else navController.openMusic(playerViewModel, item)
+        } catch (cancelled: kotlinx.coroutines.CancellationException) {
+            throw cancelled
+        } catch (_: Exception) {
+            model.showMessage(spotifyLinkUnavailable)
+        } finally {
+            onSharedLinkHandled()
+        }
     }
 
     val commonNavItems = remember {
@@ -126,6 +150,16 @@ fun MeloMain(model: MeloModel) {
     }
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+    LaunchedEffect(model, online, appInForeground, currentRoute) {
+        model.cancelNavigationWarmup()
+        if (online && appInForeground) {
+            val onExplore = currentRoute == Screen.Explore.route
+            model.scheduleNavigationWarmup(
+                includeLastArtist = !onExplore,
+                includeExploreArtwork = !onExplore,
+            )
+        }
+    }
     var isSearchBarActive by remember { mutableStateOf(false) }
     val routesWithHiddenNavigationBar = remember {
         setOf(Screen.Settings.route, Screen.Equalizer.route, Screen.SettingsCategory.route, Screen.PlaylistDetail.route, Screen.AlbumDetail.route,

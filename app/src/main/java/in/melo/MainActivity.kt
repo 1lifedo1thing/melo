@@ -1,6 +1,7 @@
 package `in`.melo
 
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.os.Build
 import android.Manifest
@@ -18,6 +19,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.flow.MutableStateFlow
 import `in`.melo.presentation.MeloMain
 import `in`.melo.data.model.Song
 import `in`.melo.data.LocalLibrary
@@ -28,6 +30,8 @@ import `in`.melo.ui.theme.MeloTheme
 import `in`.melo.utils.AppLocales
 
 class MainActivity : ComponentActivity() {
+    private val pendingSharedLink = MutableStateFlow<String?>(null)
+
     override fun attachBaseContext(newBase: Context) = super.attachBaseContext(AppLocales.wrap(newBase))
 
     override fun onStart() {
@@ -37,9 +41,11 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        pendingSharedLink.value = sharedSpotifyLink(intent)
         enableEdgeToEdge()
         setContent {
             val model: MeloModel = viewModel()
+            val sharedLink by pendingSharedLink.collectAsStateWithLifecycle()
             val settings by model.ui.settings.collectAsStateWithLifecycle()
             val downloads by model.ui.downloadCollections.collectAsStateWithLifecycle()
             val notifications = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
@@ -96,10 +102,22 @@ class MainActivity : ComponentActivity() {
                     `in`.melo.presentation.components.LocalSourceBadges provides settings.showSourceBadges,
                     `in`.melo.presentation.components.LocalTrackSwipe provides swipe,
                 ) {
-                    MeloMain(model)
+                    MeloMain(model, sharedLink) { pendingSharedLink.value = null }
                     `in`.melo.update.UpdatePrompt()
                 }
             }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        pendingSharedLink.value = sharedSpotifyLink(intent)
+    }
+
+    private fun sharedSpotifyLink(intent: Intent?): String? = when (intent?.action) {
+        Intent.ACTION_VIEW -> intent.dataString
+        Intent.ACTION_SEND -> intent.getCharSequenceExtra(Intent.EXTRA_TEXT)?.toString() ?: intent.dataString
+        else -> null
     }
 }

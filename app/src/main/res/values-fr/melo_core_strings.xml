@@ -313,6 +313,11 @@
     <string name="import_done">« %1$s » importée : %2$d morceaux</string>
     <string name="import_no_tracks">Aucun morceau à importer.</string>
     <string name="import_unknown_link">Ce lien n’est pas une playlist YouTube, YouTube Music ou Spotify.</string>
+    <string name="spotify_link_unavailable">Melo n’a pas pu ouvrir ce lien Spotify.</string>
+    <string name="share_spotify_link">Ouvrir le lien Spotify dans Melo</string>
+    <string name="settings_link_handling_section">Gestion des liens</string>
+    <string name="settings_spotify_links_title">Liens Spotify</string>
+    <string name="settings_spotify_links_subtitle">Gérer l’ouverture dans Melo des liens Spotify depuis les autres applications.</string>
     <string name="import_default_name">Playlist importée</string>
     <string name="import_failed">Cette playlist n’a pas pu être importée.</string>
     <string name="settings_source_badges_title">Badges de provenance</string>

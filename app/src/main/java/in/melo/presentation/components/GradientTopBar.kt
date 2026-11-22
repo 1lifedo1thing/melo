@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
@@ -81,6 +82,7 @@ import androidx.compose.ui.zIndex
 import androidx.compose.ui.draw.clip
 import coil.compose.AsyncImage
 import `in`.melo.R
+import `in`.melo.data.SpotifyUserProfile
 import `in`.melo.ui.theme.GoogleSansRounded
 import `in`.melo.ui.theme.MeloStatusBarStyle
 import androidx.compose.ui.res.stringResource
@@ -150,6 +152,7 @@ fun HomeGradientTopBar(
     profileName: String? = null,
     profileHandle: String? = null,
     spotifyConnected: Boolean = false,
+    spotifyProfile: SpotifyUserProfile? = null,
     onProfileClick: (() -> Unit)? = null,
     isScrolled: Boolean = false,
     refreshing: Boolean = false,
@@ -160,7 +163,6 @@ fun HomeGradientTopBar(
     val colors = MaterialTheme.colorScheme
     var menuExpanded by remember { mutableStateOf(false) }
     var dialSettingsExpanded by remember { mutableStateOf(false) }
-    var accountMenuExpanded by remember { mutableStateOf(false) }
     val statusBarInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     MeloStatusBarStyle(color = colors.background)
     Box(Modifier.fillMaxWidth()) {
@@ -179,12 +181,9 @@ fun HomeGradientTopBar(
                 scrolledContainerColor = colors.background,
             ),
         )
-        Row(
-            Modifier.align(Alignment.CenterEnd).offset(y = statusBarInset / 2).zIndex(1f)
-                .padding(end = 16.dp)
-                .background(colors.surface.copy(alpha = 1f), CircleShape)
-                .border(0.75.dp, colors.outlineVariant.copy(alpha = MeloAlpha.Scrim), CircleShape),
-            verticalAlignment = Alignment.CenterVertically,
+        MeloTopActionsCapsule(
+            modifier = Modifier.align(Alignment.CenterEnd).offset(y = statusBarInset / 2).zIndex(1f)
+                .padding(end = 16.dp),
         ) {
             IconButton(onClick = onHistoryClick, modifier = Modifier.size(48.dp)) {
                 Icon(Icons.Rounded.History, stringResource(R.string.history_title))
@@ -218,22 +217,15 @@ fun HomeGradientTopBar(
                 }
             }
             if (onProfileClick != null) {
-                IconButton(onClick = { accountMenuExpanded = true }, modifier = Modifier.size(48.dp)) {
-                    if (!profileImageUrl.isNullOrBlank()) {
-                        AsyncImage(
-                            model = profileImageUrl,
-                            contentDescription = stringResource(R.string.settings_accounts_title),
-                            modifier = Modifier.size(34.dp).clip(CircleShape),
-                            contentScale = ContentScale.Crop,
-                        )
-                    } else {
-                        Icon(
-                            Icons.Rounded.AccountCircle,
-                            contentDescription = stringResource(R.string.settings_accounts_title),
-                            modifier = Modifier.size(26.dp),
-                        )
-                    }
-                }
+                MeloProfileAccountButton(
+                    profileImageUrl = profileImageUrl,
+                    profileName = profileName,
+                    profileHandle = profileHandle,
+                    spotifyConnected = spotifyConnected,
+                    spotifyProfile = spotifyProfile,
+                    onProfileClick = onProfileClick,
+                    onSettingsClick = onSettingsClick,
+                )
             }
         }
     }
@@ -249,12 +241,58 @@ fun HomeGradientTopBar(
             },
         )
     }
-    if (accountMenuExpanded && onProfileClick != null) {
+}
+
+@Composable
+fun MeloTopActionsCapsule(
+    modifier: Modifier = Modifier,
+    content: @Composable RowScope.() -> Unit,
+) {
+    val colors = MaterialTheme.colorScheme
+    Row(
+        modifier = modifier
+            .background(colors.surface, CircleShape)
+            .border(0.75.dp, colors.outlineVariant.copy(alpha = MeloAlpha.Scrim), CircleShape),
+        verticalAlignment = Alignment.CenterVertically,
+        content = content,
+    )
+}
+
+@Composable
+fun MeloProfileAccountButton(
+    profileImageUrl: String?,
+    profileName: String? = null,
+    profileHandle: String? = null,
+    spotifyConnected: Boolean = false,
+    spotifyProfile: SpotifyUserProfile? = null,
+    onProfileClick: () -> Unit,
+    onSettingsClick: () -> Unit,
+) {
+    var accountMenuExpanded by remember { mutableStateOf(false) }
+    val accountAvatarUrl = profileImageUrl?.takeIf(String::isNotBlank) ?: spotifyProfile?.imageUrl
+    IconButton(onClick = { accountMenuExpanded = true }, modifier = Modifier.size(48.dp)) {
+        if (!accountAvatarUrl.isNullOrBlank()) {
+            AsyncImage(
+                model = accountAvatarUrl,
+                contentDescription = stringResource(R.string.settings_accounts_title),
+                modifier = Modifier.size(34.dp).clip(CircleShape),
+                contentScale = ContentScale.Crop,
+            )
+        } else {
+            Icon(
+                Icons.Rounded.AccountCircle,
+                contentDescription = stringResource(R.string.settings_accounts_title),
+                modifier = Modifier.size(26.dp),
+            )
+        }
+    }
+    if (accountMenuExpanded) {
         HomeAccountMenuOverlay(
             profileName = profileName,
             profileHandle = profileHandle,
             profileImageUrl = profileImageUrl,
             spotifyConnected = spotifyConnected,
+            spotifyProfile = spotifyProfile,
             onDismiss = { accountMenuExpanded = false },
             onManageAccountsClick = {
                 accountMenuExpanded = false
@@ -356,6 +394,7 @@ private fun HomeAccountMenuOverlay(
     profileHandle: String?,
     profileImageUrl: String?,
     spotifyConnected: Boolean,
+    spotifyProfile: SpotifyUserProfile?,
     onDismiss: () -> Unit,
     onManageAccountsClick: () -> Unit,
     onSettingsClick: () -> Unit,
@@ -433,8 +472,9 @@ private fun HomeAccountMenuOverlay(
                         )
                         HomeAccountServiceRow(
                             title = stringResource(R.string.search_source_spotify),
-                            detail = null,
+                            detail = spotifyProfile?.displayName?.takeIf(String::isNotBlank),
                             connected = spotifyConnected,
+                            imageUrl = spotifyProfile?.imageUrl,
                             useYouTubeIcon = false,
                         )
                         HorizontalDivider(
@@ -475,7 +515,7 @@ private fun HomeAccountServiceRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        if (useYouTubeIcon && connected && !imageUrl.isNullOrBlank()) {
+        if (connected && !imageUrl.isNullOrBlank()) {
             AsyncImage(
                 model = imageUrl,
                 contentDescription = null,
@@ -485,7 +525,7 @@ private fun HomeAccountServiceRow(
         } else {
             Box(Modifier.size(44.dp), contentAlignment = Alignment.Center) {
                 if (useYouTubeIcon) {
-                    Icon(painterResource(R.drawable.ic_source_youtube_music), null, modifier = Modifier.size(28.dp), tint = MaterialTheme.colorScheme.secondary)
+                    Icon(painterResource(R.drawable.ic_source_youtube_music), null, modifier = Modifier.size(44.dp), tint = MaterialTheme.colorScheme.secondary)
                 } else {
                     Icon(painterResource(R.drawable.ic_source_spotify), null, modifier = Modifier.size(44.dp), tint = MaterialTheme.colorScheme.secondary)
                 }

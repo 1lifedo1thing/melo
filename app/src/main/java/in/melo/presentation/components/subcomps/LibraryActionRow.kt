@@ -37,6 +37,8 @@ import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.MyLocation
 import androidx.compose.material.icons.rounded.Shuffle
 import androidx.compose.material.icons.rounded.FilterList
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Cloud
 import androidx.compose.material.icons.rounded.Dataset
 import androidx.compose.material.icons.rounded.Home
@@ -87,6 +89,9 @@ fun LibraryActionRow(
     onMainActionClick: () -> Unit,
     iconRotation: Float,
     onSortClick: () -> Unit,
+    onSearchClick: () -> Unit = {},
+    showSearchButton: Boolean = false,
+    isSearchOpen: Boolean = false,
     onLocateClick: () -> Unit = {},
     showSortButton: Boolean,
     showLocateButton: Boolean = false,
@@ -255,7 +260,7 @@ fun LibraryActionRow(
 
         Spacer(modifier = Modifier.width(8.dp))
 
-        if (showSortButton) {
+        if (showSearchButton || showSortButton) {
             val outerCorner = 26.dp
             
             // Logic for Sort Button (Rightmost)
@@ -293,6 +298,19 @@ fun LibraryActionRow(
 
 
             Row(verticalAlignment = Alignment.CenterVertically) {
+                if (showSearchButton) {
+                    FilledTonalIconButton(
+                        onClick = onSearchClick,
+                        shape = CircleShape,
+                        modifier = Modifier.size(genHeight)
+                    ) {
+                        Icon(
+                            imageVector = if (isSearchOpen) Icons.Rounded.Close else Icons.Rounded.Search,
+                            contentDescription = stringResource(if (isSearchOpen) R.string.library_search_close else R.string.library_search_open),
+                        )
+                    }
+                    if (showSortButton) Spacer(Modifier.width(8.dp))
+                }
                 // Locate Button
                 AnimatedVisibility(
                     visible = showLocateButton,
