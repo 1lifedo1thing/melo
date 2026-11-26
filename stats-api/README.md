@@ -41,14 +41,7 @@ node -e "process.stdout.write(require('crypto').randomBytes(32).toString('hex'))
 
 `wrangler deploy` prints the Worker's `workers.dev` address. The app sends pings to `https://api.melo.aarushsagar.com/api/presence` by default; to use another address, build with `-PmeloStatsEndpoint=https://…/api/presence`.
 
-To keep `api.melo.aarushsagar.com` while its DNS stays where it is, the Vercel project on that domain can forward to the Worker. Replace its contents with an empty `public/` directory and this `vercel.json`:
-
-```json
-{
-  "outputDirectory": "public",
-  "rewrites": [{ "source": "/:path*", "destination": "https://melo-live.<your-subdomain>.workers.dev/:path*" }]
-}
-```
+It is deployed at `https://melo-live.melo-live.workers.dev`. `api.melo.aarushsagar.com` stays on Vercel, where this directory is also deployed: `vercel.json` there has no functions or build, only a rewrite that forwards every request to the Worker, so released apps keep their address. If the Worker moves, change the rewrite's destination.
 
 The Worker reads the app's address from `X-Forwarded-For` when the request comes through Vercel, so the rate limit still applies to each app rather than to Vercel.
 
