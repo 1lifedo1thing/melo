@@ -11,6 +11,7 @@ Spotify, YouTube Music and the music on your phone, in one native Android player
 
 [![Latest release](https://img.shields.io/github/v/release/aarush-io/melo?style=for-the-badge&label=release&color=8FE3BC&labelColor=0B0B0C)](https://github.com/aarush-io/melo/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/aarush-io/melo/total?style=for-the-badge&label=downloads&color=8FE3BC&labelColor=0B0B0C)](https://github.com/aarush-io/melo/releases)
+[![Listening now](https://api.melo.aarushsagar.com/api/stats/live/badge.svg)](https://api.melo.aarushsagar.com/api/stats/live)
 [![License](https://img.shields.io/badge/license-GPL--3.0-8FE3BC?style=for-the-badge&labelColor=0B0B0C)](LICENSE)
 [![Discord](https://img.shields.io/badge/Discord-join_us-5865F2?style=for-the-badge&logo=discord&logoColor=white&labelColor=0B0B0C)](https://discord.gg/h3Hzk4seXj)
 
