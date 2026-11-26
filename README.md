@@ -14,6 +14,8 @@ Spotify, YouTube Music and the music on your phone, in one native Android player
 [![License](https://img.shields.io/badge/license-GPL--3.0-8FE3BC?style=for-the-badge&labelColor=0B0B0C)](LICENSE)
 [![Discord](https://img.shields.io/badge/Discord-join_us-5865F2?style=for-the-badge&logo=discord&logoColor=white&labelColor=0B0B0C)](https://discord.gg/h3Hzk4seXj)
 
+<a href="https://trendshift.io/repositories/358544?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-358544" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/358544/daily?language=Kotlin" alt="aarush-io%2Fmelo | Trendshift" width="250" height="55"/></a>
+
 [**Download**](#download) · [**Screenshots**](#screenshots) · [**Features**](#features) · [**Support**](#support) · [**Credits**](#credits)
 
 <br />
