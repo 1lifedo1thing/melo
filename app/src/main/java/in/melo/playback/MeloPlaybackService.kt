@@ -56,6 +56,9 @@ class MeloPlaybackService : MediaSessionService() {
                 ProgressiveMediaSource.Factory(youtube.kept).setLoadErrorHandlingPolicy(ResilientLoadPolicy())))
             .setAudioAttributes(AudioAttributes.Builder().setUsage(C.USAGE_MEDIA).setContentType(C.AUDIO_CONTENT_TYPE_MUSIC).build(), true)
             .setHandleAudioBecomingNoisy(true).setWakeMode(C.WAKE_MODE_NETWORK).build()
+        // Buffering between tracks is still listening: count the intent to play, not only sound.
+        fun updateListening() = `in`.melo.data.MeloTelemetry.setPlaying(player.isPlaying ||
+            (player.playWhenReady && player.playbackState == androidx.media3.common.Player.STATE_BUFFERING))
         var lastTelemetryTrack: String? = null
         var bufferingStartedAt: Long? = null
         var listeningStartedAt: Long? = null
@@ -109,6 +112,7 @@ class MeloPlaybackService : MediaSessionService() {
                 } else {
                     finishListeningSegment()
                 }
+                updateListening()
             }
             override fun onPlaybackStateChanged(playbackState: Int) {
                 if (playbackState == androidx.media3.common.Player.STATE_BUFFERING) {
@@ -116,6 +120,7 @@ class MeloPlaybackService : MediaSessionService() {
                 } else {
                     finishBuffering()
                 }
+                updateListening()
             }
             override fun onMediaItemTransition(mediaItem: androidx.media3.common.MediaItem?, reason: Int) {
                 finishBuffering()
@@ -141,6 +146,7 @@ class MeloPlaybackService : MediaSessionService() {
                 }
                 UsageAnalytics.playbackError(this@MeloPlaybackService, telemetryCatalog(), errorCategory(error))
                 finishListeningSegment()
+                updateListening()
             }
         })
         effectsScope.launch {
@@ -253,6 +259,7 @@ class MeloPlaybackService : MediaSessionService() {
         if (!keepPlaying || mediaSession?.player?.playWhenReady != true) stopSelf()
     }
     override fun onDestroy() {
+        `in`.melo.data.MeloTelemetry.setPlaying(false)
         behavior?.close(); behavior = null
         preloader?.close(); preloader = null
         recovery?.close(); recovery = null

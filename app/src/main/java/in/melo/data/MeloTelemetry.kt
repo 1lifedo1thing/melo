@@ -12,6 +12,8 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import okhttp3.Call
@@ -29,8 +31,9 @@ import kotlin.coroutines.resume
 import kotlin.random.Random
 
 /**
- * Tells Melo's API that the app is open, for the public live count. The app counts from coming
- * to the foreground until it leaves it; music playing in the background does not. Only a random
+ * Tells Melo's API that someone is using Melo, for the public live count. An install counts while
+ * the app is in the foreground or music is playing, so listening with the screen off or from
+ * another app counts too. Only a random
  * install ID and the platform are sent, never anything about the listener or what they play, so
  * it runs whatever the analytics setting says.
  */
@@ -43,6 +46,7 @@ object MeloTelemetry {
     private val client = OkHttpClient.Builder().callTimeout(15, TimeUnit.SECONDS).build()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val foreground = MutableStateFlow(false)
+    private val playing = MutableStateFlow(false)
     @Volatile private var installationId = ""
     @Volatile private var intervalSec = Presence.DEFAULT_INTERVAL_SEC
     /** Whether the server may be counting this install, so a close is owed. */
@@ -59,9 +63,9 @@ object MeloTelemetry {
             override fun onStop(owner: LifecycleOwner) { foreground.value = false }
         })
         scope.launch {
-            // collectLatest: leaving the app cancels the wait for the next ping, and coming back
-            // cancels a close still waiting out its debounce.
-            foreground.collectLatest { open ->
+            // collectLatest: leaving the app or stopping the music cancels the wait for the next
+            // ping, and coming back cancels a close still waiting out its debounce.
+            combine(foreground, playing) { shown, listening -> shown || listening }.distinctUntilChanged().collectLatest { open ->
                 if (open) {
                     while (true) {
                         announced = true
@@ -74,6 +78,11 @@ object MeloTelemetry {
                 }
             }
         }
+    }
+
+    /** Whether music is playing, or about to once it has buffered. Called by the playback service. */
+    fun setPlaying(value: Boolean) {
+        playing.value = value
     }
 
     /** Posts one ping and returns the interval the server asks for, or null if it failed. */

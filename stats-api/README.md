@@ -4,7 +4,7 @@ A Cloudflare Worker that counts how many Melo apps are open right now. It runs o
 
 ## What it counts
 
-An app is counted from the moment it comes to the foreground until it goes to the background or closes. Music playing with the app in the background does not count. While it is open, the app sends `{"id", "platform", "open": true}` every five minutes (the server sets the interval in its reply); on leaving, it sends `"open": false` and drops out of the count at once. An app that stops pinging without saying so, because it crashed or lost its connection, drops out 90 seconds after its next ping was due.
+An app is counted while it is in the foreground or playing music, so listening with the screen off counts. While it is counted, the app sends `{"id", "platform", "open": true}` every five minutes (the server sets the interval in its reply); once it has left the foreground and the music has stopped, it sends `"open": false` and drops out of the count at once. An app that stops pinging without saying so, because it crashed or lost its connection, drops out 90 seconds after its next ping was due.
 
 The count is split by platform: `android`, `pc` and `browser`. Melo ships on Android; the other two are accepted for clients to come.
 
