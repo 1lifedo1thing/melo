@@ -12,8 +12,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import okhttp3.Call
@@ -31,9 +29,10 @@ import kotlin.coroutines.resume
 import kotlin.random.Random
 
 /**
- * Tells Melo's API that the app is open, for the live count, while the user's analytics setting
- * allows it. The app counts from coming to the foreground until it leaves it; music playing in
- * the background does not. Only a random install ID and the platform are sent.
+ * Tells Melo's API that the app is open, for the public live count. The app counts from coming
+ * to the foreground until it leaves it; music playing in the background does not. Only a random
+ * install ID and the platform are sent, never anything about the listener or what they play, so
+ * it runs whatever the analytics setting says.
  */
 object MeloTelemetry {
     private const val PREFS = "melo_telemetry"
@@ -44,19 +43,17 @@ object MeloTelemetry {
     private val client = OkHttpClient.Builder().callTimeout(15, TimeUnit.SECONDS).build()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val foreground = MutableStateFlow(false)
-    private val enabled = MutableStateFlow(false)
     @Volatile private var installationId = ""
     @Volatile private var intervalSec = Presence.DEFAULT_INTERVAL_SEC
     /** Whether the server may be counting this install, so a close is owed. */
     @Volatile private var announced = false
 
-    fun initialize(application: Application, analyticsEnabled: Boolean) {
+    fun initialize(application: Application) {
         if (BuildConfig.MELO_STATS_ENDPOINT.isBlank() || installationId.isNotEmpty()) return
         val preferences = application.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         installationId = preferences.getString(INSTALL_ID, null) ?: UUID.randomUUID().toString().also {
             preferences.edit().putString(INSTALL_ID, it).apply()
         }
-        enabled.value = analyticsEnabled
         ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
             override fun onStart(owner: LifecycleOwner) { foreground.value = true }
             override fun onStop(owner: LifecycleOwner) { foreground.value = false }
@@ -64,7 +61,7 @@ object MeloTelemetry {
         scope.launch {
             // collectLatest: leaving the app cancels the wait for the next ping, and coming back
             // cancels a close still waiting out its debounce.
-            combine(foreground, enabled) { open, allowed -> open && allowed }.distinctUntilChanged().collectLatest { open ->
+            foreground.collectLatest { open ->
                 if (open) {
                     while (true) {
                         announced = true
@@ -77,10 +74,6 @@ object MeloTelemetry {
                 }
             }
         }
-    }
-
-    fun setEnabled(value: Boolean) {
-        enabled.value = value
     }
 
     /** Posts one ping and returns the interval the server asks for, or null if it failed. */

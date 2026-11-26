@@ -4,7 +4,7 @@ A Cloudflare Worker that counts how many Melo apps are open right now. It runs o
 
 ## What it counts
 
-An opted-in app is counted from the moment it comes to the foreground until it goes to the background or closes. Music playing with the app in the background does not count. While it is open, the app sends `{"id", "platform", "open": true}` every five minutes (the server sets the interval in its reply); on leaving, it sends `"open": false` and drops out of the count at once. An app that stops pinging without saying so, because it crashed or lost its connection, drops out 90 seconds after its next ping was due.
+An app is counted from the moment it comes to the foreground until it goes to the background or closes. Music playing with the app in the background does not count. While it is open, the app sends `{"id", "platform", "open": true}` every five minutes (the server sets the interval in its reply); on leaving, it sends `"open": false` and drops out of the count at once. An app that stops pinging without saying so, because it crashed or lost its connection, drops out 90 seconds after its next ping was due.
 
 The count is split by platform: `android`, `pc` and `browser`. Melo ships on Android; the other two are accepted for clients to come.
 
@@ -53,6 +53,6 @@ The Worker reads the app's address from `X-Forwarded-For` when the request comes
 
 ## Firebase Analytics
 
-Detailed playback summaries (play starts, elapsed time while the player reports playing, buffering duration, and playback errors grouped by catalog source) go to Firebase Analytics, not to this API. Elapsed player time is an estimate; it cannot prove that audio was audible to a person. Search and Radio usage are not collected. The same **Share usage analytics** setting controls Firebase collection and the live count.
+Detailed playback summaries (play starts, elapsed time while the player reports playing, buffering duration, and playback errors grouped by catalog source) go to Firebase Analytics, not to this API. Elapsed player time is an estimate; it cannot prove that audio was audible to a person. Search and Radio usage are not collected. The **Share usage analytics** setting controls Firebase collection; the live count runs either way, as it carries nothing about the listener.
 
 To display summed durations in Google Analytics reports, register the event parameters `playing_ms` and `buffering_ms` as event-scoped custom metrics for `melo_player_playing_time` and `melo_buffering`. Firebase's Events report shows event counts by default; parameter reports need custom definitions and may take time to populate.
