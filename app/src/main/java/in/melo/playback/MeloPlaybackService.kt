@@ -24,7 +24,6 @@ import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.cache.CacheDataSource
 import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import `in`.melo.MainActivity
-import `in`.melo.data.MeloTelemetry
 import `in`.melo.data.MusicSource
 import `in`.melo.data.musicSourceOf
 import `in`.melo.data.UsageAnalytics
@@ -57,9 +56,6 @@ class MeloPlaybackService : MediaSessionService() {
                 ProgressiveMediaSource.Factory(youtube.kept).setLoadErrorHandlingPolicy(ResilientLoadPolicy())))
             .setAudioAttributes(AudioAttributes.Builder().setUsage(C.USAGE_MEDIA).setContentType(C.AUDIO_CONTENT_TYPE_MUSIC).build(), true)
             .setHandleAudioBecomingNoisy(true).setWakeMode(C.WAKE_MODE_NETWORK).build()
-        fun updatePlaybackPresence() {
-            MeloTelemetry.setPlaybackActive(player.isPlaying)
-        }
         var lastTelemetryTrack: String? = null
         var bufferingStartedAt: Long? = null
         var listeningStartedAt: Long? = null
@@ -113,7 +109,6 @@ class MeloPlaybackService : MediaSessionService() {
                 } else {
                     finishListeningSegment()
                 }
-                updatePlaybackPresence()
             }
             override fun onPlaybackStateChanged(playbackState: Int) {
                 if (playbackState == androidx.media3.common.Player.STATE_BUFFERING) {
@@ -121,7 +116,6 @@ class MeloPlaybackService : MediaSessionService() {
                 } else {
                     finishBuffering()
                 }
-                updatePlaybackPresence()
             }
             override fun onMediaItemTransition(mediaItem: androidx.media3.common.MediaItem?, reason: Int) {
                 finishBuffering()
@@ -147,7 +141,6 @@ class MeloPlaybackService : MediaSessionService() {
                 }
                 UsageAnalytics.playbackError(this@MeloPlaybackService, telemetryCatalog(), errorCategory(error))
                 finishListeningSegment()
-                updatePlaybackPresence()
             }
         })
         effectsScope.launch {
@@ -260,7 +253,6 @@ class MeloPlaybackService : MediaSessionService() {
         if (!keepPlaying || mediaSession?.player?.playWhenReady != true) stopSelf()
     }
     override fun onDestroy() {
-        MeloTelemetry.setPlaybackActive(false)
         behavior?.close(); behavior = null
         preloader?.close(); preloader = null
         recovery?.close(); recovery = null
