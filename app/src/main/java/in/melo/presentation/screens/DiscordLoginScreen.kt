@@ -5,9 +5,11 @@ import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.ConsoleMessage
+import android.webkit.CookieManager
 import android.webkit.JsResult
 import android.webkit.WebChromeClient
 import android.webkit.WebView
+import android.webkit.WebStorage
 import android.webkit.WebViewClient
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
@@ -64,6 +66,15 @@ private const val TOKEN_SNIPPET = """
 private const val MAX_TOKEN_ATTEMPTS = 12
 private const val TOKEN_RETRY_MS = 500L
 private const val LOGIN_URL = "https://discord.com/login"
+
+/**
+ * Removes the Discord session the sign-in WebView keeps (its token in the page's storage, and its
+ * cookies). Left in place, signing out of Melo would sign straight back in on the next visit.
+ */
+internal fun forgetDiscordWebSession(then: () -> Unit = {}) {
+    runCatching { WebStorage.getInstance().deleteOrigin("https://discord.com") }
+    runCatching { CookieManager.getInstance().removeAllCookies { CookieManager.getInstance().flush(); then() } }.onFailure { then() }
+}
 
 private val WEBVIEW_VERSION_TOKEN = Regex("""Version/\d+(\.\d+)*\s*""")
 
@@ -209,13 +220,17 @@ fun DiscordLoginScreen(model: MeloModel, navController: NavHostController) {
                                 // Hidden first, so the Discord client does not flash up while leaving.
                                 view.visibility = View.GONE
                                 store.save(DiscordAccount(token = token))
+                                // The token is now kept encrypted: the WebView's own session is removed.
+                                view.stopLoading()
+                                forgetDiscordWebSession()
                                 navController.popBackStack()
                                 return true
                             }
                         }
 
                         webView = this
-                        loadUrl(LOGIN_URL)
+                        // A clean start: a session left by an earlier sign-in is not reused.
+                        forgetDiscordWebSession { loadUrl(LOGIN_URL) }
                     }
                 },
                 onRelease = { it.stopLoading(); it.destroy() },
