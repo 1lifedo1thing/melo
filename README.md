@@ -99,7 +99,7 @@ Melo checks for new releases and walks you through updating. See [how updates wo
 
 ## Support
 
-Melo is free. If it has earned a place in your rotation, you can support it with a voluntary UPI contribution: scan with any UPI app and choose an amount.
+Melo is free and will always be. If it has earned a place in your rotation, you can support it with a voluntary UPI contribution: scan with any UPI app and choose an amount.
 
 <div align="center">
 <img src="docs/assets/img/readme/support-melo.svg" alt="UPI QR code for aarushhh@fam" width="300" />
