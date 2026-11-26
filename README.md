@@ -21,7 +21,7 @@ Spotify, YouTube Music and the music on your phone, in one native Android player
 
 <br />
 
-<img src="docs/assets/img/readme/melo-hero.png" width="100%" alt="Melo: Explore, Now Playing and the Speed Dial on Home" />
+<img src="docs/assets/img/readme/melo-hero.png" width="100%" alt="Melo: the artist dial, Now Playing and the Speed Dial on Home" />
 
 </div>
 
@@ -36,7 +36,7 @@ Spotify, YouTube Music and the music on your phone, in one native Android player
 
 <img src="docs/assets/img/readme/home.png" width="100%" alt="Home: the Speed Dial, the artist dial, Explore and Podcasts" />
 
-<img src="docs/assets/img/readme/library.png" width="100%" alt="Library and search: recent searches, the library and an artist page" />
+<img src="docs/assets/img/readme/library.png" width="100%" alt="Library and search: search results, the library and an artist page" />
 
 <img src="docs/assets/img/readme/player.png" width="100%" alt="Player: Now Playing with colours from the artwork, and the queue" />
 
