@@ -117,11 +117,10 @@ Bug reports, device testing, documentation and code are all welcome. Start with 
 
 ## Credits
 
-- [BitChord](https://github.com/kushagrasinghx/BitChord) by kushagrasinghx: add-on support and add-on track matching are adapted from it.
-- [Dial](https://github.com/steeben/Dial) by steeben: several interface ideas, such as the dials on Home, follow its lead.
-- [Resona](https://github.com/code-saksham-hash/Resona): the YouTube Music integration.
-- [Kizzy](https://github.com/dead8309/Kizzy): the Discord presence gateway.
-- [Doto](https://github.com/google/fonts/tree/main/ofl/doto): the dot-matrix wordmark, under the [SIL Open Font License](design/Doto-OFL.txt).
+- BitChord and Dial — inspiration and adapted features.
+- [Resona](https://github.com/code-saksham-hash/Resona) — YouTube Music integration.
+- [Kizzy](https://github.com/dead8309/Kizzy) — Discord Rich Presence.
+- [Doto](https://github.com/google/fonts/tree/main/ofl/doto) — wordmark font (SIL Open Font License).
 
 ## Legal
 
