@@ -158,7 +158,9 @@ async function handlePresence(request: Request, env: Env): Promise<Response> {
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const { pathname } = new URL(request.url);
-    const route = `${request.method} ${pathname.replace(/\/+$/, "") || "/"}`;
+    // HEAD is answered as GET; the runtime drops the body. Link checkers and image proxies send it.
+    const method = request.method === "HEAD" ? "GET" : request.method;
+    const route = `${method} ${pathname.replace(/\/+$/, "") || "/"}`;
     switch (route) {
       case "GET /":
         return json({ name: "Melo live", endpoints: ["POST /api/presence", "GET /api/stats/live", "GET /api/stats/live/badge.svg"] });
