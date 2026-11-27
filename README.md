@@ -117,7 +117,7 @@ Bug reports, device testing, documentation and code are all welcome. Start with 
 
 ## Credits
 
-- [BitChord] (https://github.com/kushagrasinghx/BitChord) — inspiration and adapted features.
+- [BitChord](https://github.com/kushagrasinghx/BitChord) — inspiration and adapted features.
 - [Resona](https://github.com/code-saksham-hash/Resona) — YouTube Music integration.
 - [Kizzy](https://github.com/dead8309/Kizzy) — Discord Rich Presence.
 - [Doto](https://github.com/google/fonts/tree/main/ofl/doto) — wordmark font (SIL Open Font License).
