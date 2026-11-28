@@ -115,6 +115,12 @@ Bug reports, device testing, documentation and code are all welcome. Start with 
 
 ---
 
+## Star History
+
+[![Star History chart for Melo](https://api.star-history.com/svg?repos=aarush-io%2Fmelo&type=date&legend=top-left)](https://www.star-history.com/?repos=aarush-io%2Fmelo&type=date&legend=top-left)
+
+---
+
 ## Credits
 
 - [BitChord](https://github.com/kushagrasinghx/BitChord) — inspiration and adapted features.
