@@ -117,7 +117,13 @@ Bug reports, device testing, documentation and code are all welcome. Start with 
 
 ## Star History
 
-[![Star History chart for Melo](https://api.star-history.com/svg?repos=aarush-io%2Fmelo&type=date&legend=top-left)](https://www.star-history.com/?repos=aarush-io%2Fmelo&type=date&legend=top-left)
+<a href="https://www.star-history.com/?repos=aarush-io%2Fmelo&type=timeline&legend=bottom-right">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=aarush-io/melo&type=timeline&theme=dark&legend=bottom-right" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=aarush-io/melo&type=timeline&legend=bottom-right" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=aarush-io/melo&type=timeline&legend=bottom-right" />
+ </picture>
+</a>
 
 ---
 
